@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share your story</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260530">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260615b">
+</head>
+<body class="hss-page" data-page="submit-story" data-i18n-title="pages.submitStory.title">
+    <div id="site-nav"></div>
+
+    <main class="hss-story-page">
+        <div class="hss-wrap">
+            <a href="index.html#patient-stories" class="hss-story-back" data-i18n="pages.submitStory.backLink">—</a>
+        </div>
+
+        <div class="hss-wrap hss-story-layout">
+            <aside class="hss-story-intro">
+                <h1 class="hss-serif" data-i18n="pages.submitStory.heroTitle">—</h1>
+                <p data-i18n="pages.submitStory.heroDesc">—</p>
+            </aside>
+
+            <div class="hss-story-form-wrap">
+                <div id="story-success" class="hss-alert" hidden data-i18n="pages.submitStory.success">—</div>
+
+                <form class="hss-form hss-story-form" id="submit-story-form" novalidate>
+                    <fieldset class="hss-form__section">
+                        <legend data-i18n="pages.submitStory.sectionInfo">—</legend>
+                        <div class="hss-form__row">
+                            <label class="hss-field hss-field--req">
+                                <span data-i18n="pages.submitStory.firstName">—</span>
+                                <input type="text" name="firstName" required autocomplete="given-name">
+                            </label>
+                            <label class="hss-field hss-field--req">
+                                <span data-i18n="pages.submitStory.lastName">—</span>
+                                <input type="text" name="lastName" required autocomplete="family-name">
+                            </label>
+                        </div>
+                        <div class="hss-form__row">
+                            <label class="hss-field hss-field--req">
+                                <span data-i18n="pages.submitStory.email">—</span>
+                                <input type="email" name="email" required autocomplete="email">
+                            </label>
+                            <label class="hss-field hss-field--req">
+                                <span data-i18n="pages.submitStory.phone">—</span>
+                                <input type="tel" name="phone" required autocomplete="tel">
+                            </label>
+                        </div>
+                        <div class="hss-form__row hss-form__row--3">
+                            <label class="hss-field">
+                                <span data-i18n="pages.submitStory.country">—</span>
+                                <input type="text" name="country" autocomplete="country-name">
+                            </label>
+                            <label class="hss-field">
+                                <span data-i18n="pages.submitStory.state">—</span>
+                                <input type="text" name="state" autocomplete="address-level1">
+                            </label>
+                            <label class="hss-field hss-field--req">
+                                <span data-i18n="pages.submitStory.city">—</span>
+                                <input type="text" name="city" required autocomplete="address-level2">
+                            </label>
+                        </div>
+                        <p class="hss-story-hint" data-i18n="pages.submitStory.dobHint">—</p>
+                        <label class="hss-field hss-field--req">
+                            <span data-i18n="pages.submitStory.dob">—</span>
+                            <input type="text" name="dob" required placeholder="MM/DD/YYYY" pattern="\d{2}/\d{2}/\d{4}" inputmode="numeric">
+                        </label>
+                    </fieldset>
+
+                    <fieldset class="hss-form__section">
+                        <legend data-i18n="pages.submitStory.sectionProviders">—</legend>
+                        <div id="providers-list">
+                            <div class="hss-form__row hss-dynamic-row" data-provider-row>
+                                <label class="hss-field hss-field--req">
+                                    <span data-i18n="pages.submitStory.provider">—</span>
+                                    <input type="text" name="provider[]" required>
+                                </label>
+                                <label class="hss-field">
+                                    <span data-i18n="pages.submitStory.providerOptional">—</span>
+                                    <input type="text" name="providerOptional[]">
+                                </label>
+                            </div>
+                        </div>
+                        <button type="button" class="hss-form__add" id="add-provider" data-i18n="pages.submitStory.addProvider">—</button>
+                    </fieldset>
+
+                    <fieldset class="hss-form__section">
+                        <legend data-i18n="pages.submitStory.sectionStory">—</legend>
+                        <p class="hss-story-hint" data-i18n="pages.submitStory.storyHint">—</p>
+                        <div id="conditions-list">
+                            <div class="hss-form__row hss-dynamic-row" data-condition-row>
+                                <label class="hss-field hss-field--req">
+                                    <span data-i18n="pages.submitStory.conditionPrimary">—</span>
+                                    <input type="text" name="condition[]" required>
+                                </label>
+                                <label class="hss-field">
+                                    <span data-i18n="pages.submitStory.conditionSecondary">—</span>
+                                    <input type="text" name="conditionSecondary[]">
+                                </label>
+                            </div>
+                        </div>
+                        <button type="button" class="hss-form__add" id="add-condition" data-i18n="pages.submitStory.addCondition">—</button>
+                        <label class="hss-field hss-field--req">
+                            <span data-i18n="pages.submitStory.story">—</span>
+                            <textarea name="story" rows="8" required></textarea>
+                        </label>
+                    </fieldset>
+
+                    <fieldset class="hss-form__section">
+                        <legend data-i18n="pages.submitStory.sectionMedia">—</legend>
+                        <p class="hss-story-hint" data-i18n="pages.submitStory.mediaHint">—</p>
+                        <div class="hss-form__row">
+                            <label class="hss-field hss-field--file hss-field--req">
+                                <span data-i18n="pages.submitStory.image1">—</span>
+                                <input type="file" name="image1" accept="image/jpeg,image/png,image/webp" required>
+                            </label>
+                            <label class="hss-field hss-field--file">
+                                <span data-i18n="pages.submitStory.image2">—</span>
+                                <input type="file" name="image2" accept="image/jpeg,image/png,image/webp">
+                            </label>
+                        </div>
+                        <div class="hss-form__row">
+                            <label class="hss-field hss-field--file">
+                                <span data-i18n="pages.submitStory.image3">—</span>
+                                <input type="file" name="image3" accept="image/jpeg,image/png,image/webp">
+                            </label>
+                            <label class="hss-field">
+                                <span data-i18n="pages.submitStory.video1">—</span>
+                                <input type="url" name="video1" placeholder="https://">
+                            </label>
+                        </div>
+                        <label class="hss-field">
+                            <span data-i18n="pages.submitStory.video2">—</span>
+                            <input type="url" name="video2" placeholder="https://">
+                        </label>
+                    </fieldset>
+
+                    <fieldset class="hss-form__section">
+                        <legend data-i18n="pages.submitStory.sectionConsent">—</legend>
+
+                        <h3 class="hss-story-subhead" data-i18n="pages.submitStory.consentPhotoTitle">—</h3>
+                        <div class="hss-consent-box" data-i18n-html="pages.submitStory.consentPhotoText">—</div>
+                        <p class="hss-story-hint" data-i18n="pages.submitStory.consentPhotoHint">—</p>
+                        <label class="hss-check hss-field--req">
+                            <input type="checkbox" name="consentPhoto" required>
+                            <span data-i18n="pages.submitStory.consentAccept">—</span>
+                        </label>
+
+                        <h3 class="hss-story-subhead" data-i18n="pages.submitStory.consentPrivacyTitle">—</h3>
+                        <div class="hss-consent-box" data-i18n-html="pages.submitStory.consentPrivacyText">—</div>
+                        <p class="hss-story-hint" data-i18n="pages.submitStory.consentPrivacyHint">—</p>
+                        <label class="hss-check hss-field--req">
+                            <input type="checkbox" name="consentPrivacy" required>
+                            <span data-i18n="pages.submitStory.consentAccept">—</span>
+                        </label>
+
+                        <p class="hss-story-subhead" data-i18n="pages.submitStory.rolePrompt">—</p>
+                        <label class="hss-radio hss-field--req">
+                            <input type="radio" name="role" value="patient" required>
+                            <span data-i18n="pages.submitStory.rolePatient">—</span>
+                        </label>
+                        <label class="hss-radio hss-field--req">
+                            <input type="radio" name="role" value="representative" required>
+                            <span data-i18n="pages.submitStory.roleRepresentative">—</span>
+                        </label>
+                    </fieldset>
+
+                    <button type="submit" class="hss-btn hss-btn--primary hss-btn--lg hss-story-submit" data-i18n="pages.submitStory.submit">—</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="site-footer"></div>
+
+    <script src="data/hospital.embed.js"></script>
+    <script src="lang/hy.embed.js"></script>
+    <script src="lang/ru.embed.js"></script>
+    <script src="lang/en.embed.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/submit-story.js"></script>
+</body>
+</html>

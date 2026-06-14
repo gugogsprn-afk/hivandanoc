@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260530">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260615b">
+</head>
+<body class="hss-page" data-page="contacts" data-i18n-title="pages.contacts.title">
+    <div id="site-nav"></div>
+    <header class="hss-hero hss-hero--inner">
+        <div class="hss-wrap">
+            <h1 data-i18n="pages.contacts.heroTitle">—</h1>
+            <p class="hss-hero__tagline" data-i18n="pages.contacts.heroDesc">—</p>
+        </div>
+    </header>
+    <section class="hss-section">
+        <div class="hss-wrap">
+            <div class="hss-emergency">
+                <span data-i18n="pages.contacts.emergency">—</span>: <strong id="contact-emergency">103</strong>
+            </div>
+            <div class="hss-contact-grid reveal">
+                <div class="hss-contact-card">
+                    <h3 data-i18n="pages.contacts.phoneLabel">—</h3>
+                    <p id="contact-phone"></p>
+                    <a href="appointment.html" class="hss-link" data-i18n="common.bookOnline">—</a>
+                </div>
+                <div class="hss-contact-card">
+                    <h3 data-i18n="pages.contacts.emailLabel">—</h3>
+                    <p id="contact-email"></p>
+                </div>
+                <div class="hss-contact-card">
+                    <h3 data-i18n="pages.contacts.addressLabel">—</h3>
+                    <p id="contact-address"></p>
+                </div>
+                <div class="hss-contact-card">
+                    <h3 data-i18n="pages.contacts.hoursLabel">—</h3>
+                    <p id="contact-hours"></p>
+                </div>
+            </div>
+            <div class="hss-map reveal" id="map-placeholder"></div>
+        </div>
+    </section>
+    <section class="hss-section hss-section--alt">
+        <div class="hss-wrap hss-feedback">
+            <h2 data-i18n="pages.contacts.feedbackTitle">—</h2>
+            <p class="hss-feedback__intro" data-i18n="pages.contacts.feedbackDesc">—</p>
+            <form class="hss-form hss-form--narrow" id="feedback-form">
+                <div class="hss-form__row">
+                    <label class="hss-field">
+                        <span data-i18n="pages.contacts.name">—</span>
+                        <input type="text" name="name" required>
+                    </label>
+                    <label class="hss-field">
+                        <span data-i18n="pages.appointment.email">—</span>
+                        <input type="email" name="email" required>
+                    </label>
+                </div>
+                <label class="hss-field">
+                    <span data-i18n="pages.contacts.message">—</span>
+                    <textarea name="message" rows="5" required></textarea>
+                </label>
+                <button type="submit" class="hss-btn hss-btn--primary" data-i18n="pages.contacts.send">—</button>
+            </form>
+        </div>
+    </section>
+    <div id="site-footer"></div>
+    <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/pages.js"></script>
+    <script>
+      document.getElementById('feedback-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert(I18n.t('pages.contacts.feedbackThanks'));
+        e.target.reset();
+      });
+    </script>
+</body>
+</html>

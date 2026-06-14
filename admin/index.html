@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <link rel="stylesheet" href="../css/hospital-theme.css">
+</head>
+<body class="admin-body" data-page="admin" data-i18n-title="admin.title">
+    <div id="site-nav"></div>
+
+    <div id="login-view" class="admin-login admin-card">
+        <h1 style="margin-bottom:1rem;color:var(--blue);" data-i18n="admin.loginTitle">—</h1>
+        <p class="form-hint" style="margin-bottom:1rem;"><span data-i18n="admin.demoPassword">—</span> <code>admin123</code></p>
+        <form id="login-form" class="contact-form">
+            <input type="password" name="password" data-i18n-placeholder="admin.password" required style="width:100%;margin-bottom:1rem;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;">
+            <button type="submit" class="submit-btn" data-i18n="admin.login">—</button>
+        </form>
+        <p id="login-error" style="color:#dc2626;margin-top:0.75rem;" hidden data-i18n="admin.wrongPassword">—</p>
+    </div>
+
+    <div id="admin-view" class="admin-wrap" hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+            <h1 style="color:var(--blue);" data-i18n="admin.panelTitle">—</h1>
+            <button type="button" id="logout-btn" class="filter-btn" data-i18n="admin.logout">—</button>
+        </div>
+        <div class="admin-tabs">
+            <button type="button" class="admin-tab active" data-tab="appointments" data-i18n="admin.tabAppointments">—</button>
+            <button type="button" class="admin-tab" data-tab="content" data-i18n="admin.tabContent">—</button>
+        </div>
+        <div id="tab-appointments" class="admin-card">
+            <h2 data-i18n="admin.appointmentsTitle">—</h2>
+            <p class="form-hint" data-i18n="admin.storageHint">—</p>
+            <div style="overflow-x:auto;margin-top:1rem;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="admin.colCreated">—</th>
+                            <th data-i18n="admin.colPatient">—</th>
+                            <th data-i18n="admin.colPhone">—</th>
+                            <th data-i18n="admin.colDept">—</th>
+                            <th data-i18n="admin.colVisit">—</th>
+                            <th data-i18n="admin.colStatus">—</th>
+                            <th data-i18n="admin.colActions">—</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointments-tbody"></tbody>
+                </table>
+            </div>
+            <p id="no-appointments" class="form-hint" hidden data-i18n="admin.noAppointments">—</p>
+        </div>
+        <div id="tab-content" class="admin-card" hidden>
+            <h2 data-i18n="admin.contentTitle">—</h2>
+            <p class="form-hint" data-i18n="admin.contentHint">—</p>
+            <form id="content-form" class="contact-form" style="margin-top:1rem;">
+                <label data-i18n="admin.hospitalName">—</label>
+                <input type="text" name="hospitalName" required style="width:100%;padding:0.75rem;margin:0.5rem 0 1rem;border:1px solid #e2e8f0;border-radius:8px;">
+                <label data-i18n="admin.shortName">—</label>
+                <input type="text" name="shortName" required style="width:100%;padding:0.75rem;margin:0.5rem 0 1rem;border:1px solid #e2e8f0;border-radius:8px;">
+                <label data-i18n="admin.tagline">—</label>
+                <input type="text" name="tagline" required style="width:100%;padding:0.75rem;margin:0.5rem 0 1rem;border:1px solid #e2e8f0;border-radius:8px;">
+                <label data-i18n="admin.phone">—</label>
+                <input type="text" name="phone" required style="width:100%;padding:0.75rem;margin:0.5rem 0 1rem;border:1px solid #e2e8f0;border-radius:8px;">
+                <label data-i18n="admin.about">—</label>
+                <textarea name="aboutText" required style="width:100%;min-height:100px;margin:0.5rem 0 1rem;"></textarea>
+                <label data-i18n="admin.mission">—</label>
+                <textarea name="missionText" required style="width:100%;min-height:80px;margin:0.5rem 0 1rem;"></textarea>
+                <button type="submit" class="submit-btn" data-i18n="admin.save">—</button>
+                <button type="button" id="reset-content" class="filter-btn" style="margin-left:0.5rem;" data-i18n="admin.reset">—</button>
+            </form>
+            <p id="content-saved" class="alert-success" hidden style="margin-top:1rem;" data-i18n="admin.saved">—</p>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/i18n.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>

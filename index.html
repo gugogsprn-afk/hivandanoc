@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Առողջ ողնաշար — реабилитационный центр позвоночника и суставов">
+    <title>Առողջ ողնաշար</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260613b">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260615c">
+</head>
+<body class="hss-page" data-page="home" data-i18n-title="pages.home.title">
+    <div id="site-nav"></div>
+
+    <main id="main-content">
+
+        <!-- 1. Hero (white, H1 + subtitle + single CTA) -->
+        <section class="hss-hero" id="home">
+            <div class="hss-wrap">
+                <h1 id="hero-title">—</h1>
+                <p class="hss-hero__tagline" id="hero-subtitle"><strong>—</strong></p>
+                <a href="appointment.html" class="hss-btn hss-btn--primary" data-i18n="common.bookAppointment">—</a>
+            </div>
+        </section>
+
+        <!-- Search band (HSS Find a Doctor) -->
+        <section class="hss-search-band" id="find-doctor">
+            <div class="hss-wrap">
+                <h2 class="hss-search-band__title" data-i18n="pages.home.searchTitle">—</h2>
+                <form class="hss-search-band__form" id="doctor-search-form" action="doctors.html" method="get">
+                    <input type="search" name="q" id="doctor-search-input" list="search-suggestions" data-i18n-placeholder="pages.home.searchPlaceholder" autocomplete="off" required>
+                    <datalist id="search-suggestions"></datalist>
+                    <select name="category" id="doctor-search-category">
+                        <option value="" data-i18n="pages.home.searchCategoryAll">—</option>
+                    </select>
+                    <button type="submit" class="hss-btn hss-btn--bright" data-i18n="pages.home.searchNext">—</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Quick services row -->
+        <section class="hss-quick-services">
+            <div class="hss-wrap hss-quick-services__grid">
+                <a href="departments.html" class="hss-ghost-card" data-i18n="pages.home.quickPhysio">—</a>
+                <div class="hss-quick-services__col">
+                    <p class="hss-quick-services__note" data-i18n="pages.home.quickUrgent">—</p>
+                    <a href="appointment.html" class="hss-ghost-card" data-i18n="pages.home.quickSameDay">—</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Multidisciplinary intro -->
+        <section class="hss-section" id="intro">
+            <div class="hss-wrap">
+                <h2 data-i18n="pages.home.introTitle">—</h2>
+                <div class="hss-prose" id="home-intro-prose"></div>
+                <p class="hss-prose"><a href="about.html" class="hss-link" data-i18n="pages.home.rankingsLink">—</a></p>
+            </div>
+        </section>
+
+        <!-- 3. Action tiles -->
+        <section class="hss-tiles" aria-label="Quick actions">
+            <div class="hss-wrap hss-tiles__grid">
+                <a href="doctors.html" class="hss-tile">
+                    <span class="hss-tile__icon" aria-hidden="true">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </span>
+                    <h3 data-i18n="pages.home.tileDoctors">—</h3>
+                </a>
+                <a href="appointment.html" class="hss-tile">
+                    <span class="hss-tile__icon" aria-hidden="true">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </span>
+                    <h3 data-i18n="pages.home.tileAppointment">—</h3>
+                </a>
+                <a href="contacts.html" class="hss-tile">
+                    <span class="hss-tile__icon" aria-hidden="true">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </span>
+                    <h3 data-i18n="pages.home.tileContacts">—</h3>
+                </a>
+            </div>
+        </section>
+
+        <!-- Video hero — patient story -->
+        <section class="hss-video-hero" id="patient-hero">
+            <img class="hss-video-hero__bg" id="patient-hero-image" src="" alt="">
+            <div class="hss-video-hero__box">
+                <p class="hss-serif" id="patient-hero-quote">—</p>
+                <a href="#patient-stories" class="hss-btn hss-btn--primary" id="patient-hero-cta">—</a>
+            </div>
+            <button type="button" class="hss-video-hero__play" aria-label="Play video">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+        </section>
+
+        <!-- 4. Complex cases -->
+        <section class="hss-section hss-section--alt" id="conditions">
+            <div class="hss-wrap">
+                <h2 data-i18n="pages.home.conditionsTitle">—</h2>
+                <div class="hss-prose">
+                    <p data-i18n="pages.home.complexCasesLead">—</p>
+                    <p data-i18n="pages.home.complexCasesDetail">—</p>
+                    <p data-i18n="pages.home.conditionsIntro">—</p>
+                    <ul class="hss-list" id="home-conditions"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Video / innovation feature -->
+        <section class="hss-feature" id="feature">
+            <div class="hss-wrap hss-feature__grid">
+                <div class="hss-feature__media">
+                    <img id="home-feature-image" src="" alt="">
+                    <span class="hss-feature__play" aria-hidden="true">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </span>
+                </div>
+                <div class="hss-feature__caption">
+                    <h3 id="home-feature-title">—</h3>
+                    <p id="home-feature-desc">—</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back in the game — brand story split -->
+        <section class="hss-split hss-brand-story" id="brand-story">
+            <div class="hss-wrap hss-split__grid">
+                <div class="hss-split__media">
+                    <img id="back-in-game-image" src="" alt="">
+                </div>
+                <div class="hss-split__text">
+                    <div class="hss-brand-story__logo">
+                        <img src="images/brand/logo-chic.png" alt="CHIC" width="48" height="48" class="logo-img--mark">
+                        <span id="back-in-game-title">—</span>
+                    </div>
+                    <div class="hss-prose" id="back-in-game-text"></div>
+                    <p><a href="#patient-stories" class="hss-link" id="back-in-game-link">—</a></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Conservative approach -->
+        <section class="hss-split" id="approach">
+            <div class="hss-wrap hss-split__grid">
+                <div class="hss-split__media">
+                    <img id="home-approach-image" src="" alt="">
+                </div>
+                <div class="hss-split__text">
+                    <h2 data-i18n="pages.home.approachTitle">—</h2>
+                    <div class="hss-prose" id="home-approach-text"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Top experts -->
+        <section class="hss-split hss-split--reverse" id="experts">
+            <div class="hss-wrap hss-split__grid">
+                <div class="hss-split__text">
+                    <h2 data-i18n="pages.home.expertsTitle">—</h2>
+                    <div class="hss-prose" id="home-experts-text"></div>
+                </div>
+                <div class="hss-split__media">
+                    <img id="home-experts-image" src="" alt="">
+                </div>
+            </div>
+        </section>
+
+        <!-- Expertise overlay band -->
+        <section class="hss-expertise" id="expertise">
+            <img class="hss-expertise__bg" id="expertise-image" src="" alt="">
+            <div class="hss-expertise__box">
+                <h2 class="hss-serif" id="expertise-title">—</h2>
+                <p id="expertise-text">—</p>
+                <ul class="hss-expertise__links" id="expertise-links"></ul>
+            </div>
+        </section>
+
+        <!-- 8. Imaging -->
+        <section class="hss-split" id="imaging">
+            <div class="hss-wrap hss-split__grid">
+                <div class="hss-split__media">
+                    <img id="home-imaging-image" src="" alt="">
+                </div>
+                <div class="hss-split__text">
+                    <h2 data-i18n="pages.home.equipmentTitle">—</h2>
+                    <div class="hss-prose" id="home-imaging-text"></div>
+                    <ul class="hss-list hss-list--compact" id="home-imaging-list"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Awards & recognition -->
+        <section class="hss-awards" id="awards">
+            <div class="hss-wrap hss-awards__grid" id="home-awards-grid"></div>
+        </section>
+
+        <!-- 9. Patient video stories -->
+        <section class="hss-section hss-section--alt" id="reviews">
+            <div class="hss-wrap">
+                <h2 data-i18n="pages.home.reviewsTitle">—</h2>
+                <div class="hss-videos" id="home-story-videos"></div>
+            </div>
+        </section>
+
+        <!-- 10. News cards -->
+        <section class="hss-section" id="news">
+            <div class="hss-wrap">
+                <div class="hss-news-cards__head">
+                    <h2 class="hss-news-cards__title" data-i18n="pages.home.newsTitle">—</h2>
+                    <a href="#" class="hss-link" data-i18n="pages.home.newsViewAll">—</a>
+                </div>
+                <div class="hss-news-cards__grid" id="home-news"></div>
+            </div>
+        </section>
+
+        <!-- 11. Patient stories grid -->
+        <section class="hss-section hss-section--alt" id="patient-stories">
+            <div class="hss-wrap">
+                <div class="hss-section-head">
+                    <h2 data-i18n="pages.home.storiesTitle">—</h2>
+                    <a href="submit-story.html" class="hss-link" data-i18n="footer.linkStory">—</a>
+                </div>
+                <div class="hss-patients" id="home-patient-stories"></div>
+            </div>
+        </section>
+
+        <!-- 12. Footer CTA -->
+        <section class="hss-cta-band">
+            <div class="hss-wrap hss-cta-band__inner">
+                <p class="hss-cta-band__text" data-i18n="pages.home.footerCta">—</p>
+                <a href="appointment.html" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="common.bookAppointment">—</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Mobile sticky bar (HSS pattern) -->
+    <div class="hss-mobile-bar" id="mobile-bar">
+        <a href="#" class="hss-mobile-bar__phone" id="mobile-bar-phone" data-i18n="common.callUs">—</a>
+        <a href="appointment.html" class="hss-btn hss-btn--primary" data-i18n="common.bookAppointment">—</a>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script src="data/hospital.embed.js"></script>
+    <script src="lang/hy.embed.js"></script>
+    <script src="lang/ru.embed.js"></script>
+    <script src="lang/en.embed.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/doctor-search.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>

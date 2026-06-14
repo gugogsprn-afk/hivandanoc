@@ -1,0 +1,9 @@
+{
+  "default": "hy",
+  "storageKey": "gkb_lang",
+  "languages": [
+    { "code": "hy", "label": "HY", "name": "Հայերեն", "dir": "ltr" },
+    { "code": "ru", "label": "RU", "name": "Русский", "dir": "ltr" },
+    { "code": "en", "label": "EN", "name": "English", "dir": "ltr" }
+  ]
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctors</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260613b">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260615b">
+</head>
+<body class="hss-page" data-page="doctors" data-i18n-title="pages.doctors.title">
+    <div id="site-nav"></div>
+    <header class="hss-hero hss-hero--inner">
+        <div class="hss-wrap">
+            <h1 data-i18n="pages.doctors.heroTitle">—</h1>
+            <p class="hss-hero__tagline" data-i18n="pages.doctors.heroDesc">—</p>
+        </div>
+    </header>
+    <section class="hss-search-band">
+        <div class="hss-wrap">
+            <h2 class="hss-search-band__title" data-i18n="pages.home.searchTitle">—</h2>
+            <form class="hss-search-band__form" id="doctor-search-form" action="doctors.html" method="get">
+                <input type="search" name="q" list="search-suggestions" data-i18n-placeholder="pages.home.searchPlaceholder" required>
+                <datalist id="search-suggestions"></datalist>
+                <select name="category" id="doctor-search-category">
+                    <option value="" data-i18n="pages.home.searchCategoryAll">—</option>
+                </select>
+                <button type="submit" class="hss-btn hss-btn--bright" data-i18n="pages.home.searchNext">—</button>
+            </form>
+        </div>
+    </section>
+    <section class="hss-section">
+        <div class="hss-wrap">
+            <label class="hss-filter-toggle" id="surgeon-filter-label">
+                <input type="checkbox" id="surgeon-only-filter" />
+                <span data-i18n="pages.doctors.filterSurgeons">—</span>
+            </label>
+            <div class="hss-doctor-list" id="doctors-grid"></div>
+        </div>
+    </section>
+    <div id="site-footer"></div>
+    <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/doctor-search.js"></script>
+    <script src="js/pages.js"></script>
+</body>
+</html>
