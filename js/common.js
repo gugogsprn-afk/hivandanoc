@@ -120,7 +120,7 @@ const HospitalApp = (function () {
             <a href="${prefix}index.html" class="logo logo--brand" aria-label="CHIC">
               ${logoMarkup(prefix, 'header')}
             </a>
-            <ul class="nav-links nav-links--hss">${links}</ul>
+            <ul class="nav-links nav-links--hss" id="primary-nav">${links}</ul>
             <div class="nav-actions">
               <button type="button" class="nav-search" aria-label="${I18n.t('nav.search')}" id="nav-search-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -132,7 +132,7 @@ const HospitalApp = (function () {
               </a>
               <a href="${prefix}appointment.html" class="nav-cta hss-btn hss-btn--primary">${I18n.t('common.bookAppointment')}</a>
             </div>
-            <div class="mobile-menu" aria-label="${I18n.t('nav.menuAria')}">
+            <div class="mobile-menu" role="button" tabindex="0" aria-expanded="false" aria-controls="primary-nav">
               <span></span><span></span><span></span>
             </div>
           </div>
@@ -142,6 +142,8 @@ const HospitalApp = (function () {
     I18n.renderSwitcher(mount.querySelector('.lang-switcher'));
     initMobileMenu();
     initHeaderScroll();
+    initNavSearch();
+    injectSkipLink();
   }
 
   function socialIconSvg(name) {
@@ -412,20 +414,19 @@ const HospitalApp = (function () {
     const navActions = document.querySelector('.nav-actions');
     if (!mobileMenu || !navLinks) return;
 
-    mobileMenu.replaceWith(mobileMenu.cloneNode(true));
-    const menu = document.querySelector('.mobile-menu');
-    const links = document.querySelector('.nav-links');
-
-    const toggle = () => {
-      links.classList.toggle('active');
-      navActions?.classList.toggle('active');
+    const setExpanded = (open) => {
+      mobileMenu.setAttribute('aria-expanded', String(open));
+      mobileMenu.setAttribute('aria-label', I18n.t('nav.menuAria'));
     };
 
-    menu.addEventListener('click', () => {
-      toggle();
-      const spans = menu.querySelectorAll('span');
+    const toggle = () => {
+      const open = !navLinks.classList.contains('active');
+      navLinks.classList.toggle('active');
+      navActions?.classList.toggle('active');
+      setExpanded(open);
+      const spans = mobileMenu.querySelectorAll('span');
       spans.forEach((span, index) => {
-        span.style.transform = links.classList.contains('active')
+        span.style.transform = open
           ? index === 0
             ? 'rotate(45deg) translate(5px, 5px)'
             : index === 1
@@ -433,14 +434,83 @@ const HospitalApp = (function () {
               : 'rotate(-45deg) translate(7px, -6px)'
           : 'none';
       });
+    };
+
+    mobileMenu.addEventListener('click', toggle);
+    mobileMenu.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
     });
 
-    links.querySelectorAll('a').forEach((a) => {
+    navLinks.querySelectorAll('a').forEach((a) => {
       a.addEventListener('click', () => {
-        links.classList.remove('active');
+        navLinks.classList.remove('active');
         navActions?.classList.remove('active');
+        setExpanded(false);
       });
     });
+
+    setExpanded(false);
+  }
+
+  function initNavSearch() {
+    const btn = document.getElementById('nav-search-btn');
+    if (!btn || btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => {
+      const prefix = pathPrefix();
+      const q = window.prompt(I18n.t('pages.home.searchPlaceholder') || 'Search');
+      if (q === null) return;
+      const params = new URLSearchParams();
+      if (q.trim()) params.set('q', q.trim());
+      window.location.href = `${prefix}doctors.html${params.toString() ? `?${params}` : ''}`;
+    });
+  }
+
+  function ensureMainLandmark() {
+    if (document.getElementById('main-content')) return;
+    const main =
+      document.querySelector('main') ||
+      document.querySelector('.hss-booking') ||
+      document.querySelector('.hss-section') ||
+      document.querySelector('.hss-hero--inner');
+    if (main) main.id = 'main-content';
+  }
+
+  function injectSkipLink() {
+    ensureMainLandmark();
+    if (document.getElementById('skip-link')) return;
+    const prefix = pathPrefix();
+    const link = document.createElement('a');
+    link.id = 'skip-link';
+    link.className = 'skip-link';
+    link.href = `${prefix}#main-content`;
+    link.textContent = I18n.t('common.skipToContent') || 'Skip to content';
+    document.body.prepend(link);
+  }
+
+  function injectTrustStrip() {
+    if (document.getElementById('trust-strip')) return;
+    const h = getData()?.hospital || {};
+    const prefix = pathPrefix();
+    const tel = (h.phone || '').replace(/[^\d+]/g, '');
+    const strip = document.createElement('div');
+    strip.id = 'trust-strip';
+    strip.className = 'hss-trust-strip';
+    strip.innerHTML = `
+      <div class="hss-trust-strip__inner">
+        <span class="hss-trust-strip__item">✓ ${I18n.t('footer.infoPatients')}</span>
+        <span class="hss-trust-strip__item">✓ ${I18n.t('pages.home.expertsTitle')}</span>
+        <span class="hss-trust-strip__emergency">
+          ${I18n.t('pages.appointment.emergencyHint') || 'Emergency'}: <a href="tel:103">103</a>
+          · <a href="tel:${tel}">${h.phone || ''}</a>
+        </span>
+        <a href="${prefix}appointment.html" class="hss-btn hss-btn--primary hss-btn--sm">${I18n.t('common.bookAppointment')}</a>
+      </div>`;
+    const nav = document.getElementById('site-nav');
+    if (nav) nav.after(strip);
   }
 
   async function loadData() {
@@ -689,6 +759,8 @@ const HospitalApp = (function () {
     renderNav();
     renderFooter();
     applyBranding();
+    if (typeof SiteSEO !== 'undefined') SiteSEO.refresh(getData());
+    injectTrustStrip();
     I18n.applyDOM();
     document.querySelectorAll('[data-anim-observed]').forEach((el) => {
       delete el.dataset.animObserved;
@@ -717,12 +789,14 @@ const HospitalApp = (function () {
       try {
         await loadData();
         applyBranding();
+        if (typeof SiteSEO !== 'undefined') SiteSEO.refresh(getData());
+        injectTrustStrip();
       } catch (err) {
-        showPreviewNotice(
-          '<strong>Запустите файл <code>СМОТРЕТЬ.bat</code></strong> в папке проекта. ' +
-            'Ссылка: <a href="http://127.0.0.1:8765/index.html">http://127.0.0.1:8765/index.html</a>'
-        );
-        console.error(err);
+        if (!window.__HOSPITAL_BASE__) {
+          showPreviewNotice(
+            '<strong>Запустите локальный сервер</strong> для загрузки данных.'
+          );
+        }
       }
 
       I18n.applyDOM();

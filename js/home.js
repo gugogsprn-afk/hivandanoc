@@ -3,9 +3,9 @@ function proseHtml(paragraphs) {
 }
 
 const SPLIT_IMAGES = {
-  approach: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&q=80',
-  experts: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=80',
-  imaging: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&q=80'
+  approach: 'images/about-image-01.jpg',
+  experts: 'images/team-member-01.jpg',
+  imaging: 'images/team-member-02.jpg'
 };
 
 function initDoctorSearch(data) {
@@ -17,7 +17,14 @@ function renderPatientHero(ph) {
   const img = document.getElementById('patient-hero-image');
   const quote = document.getElementById('patient-hero-quote');
   const cta = document.getElementById('patient-hero-cta');
-  if (img) img.src = ph.image || '';
+  if (img) {
+    img.src = ph.image || 'images/about-image-01.jpg';
+    img.alt = ph.quote ? ph.quote.slice(0, 120) : I18n.t('pages.home.reviewsTitle');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.width = 1200;
+    img.height = 675;
+  }
   if (quote) quote.textContent = ph.quote || '';
   if (cta) cta.textContent = ph.ctaText || I18n.t('pages.home.patientHeroCta');
 }
@@ -82,7 +89,7 @@ function renderNewsCards(news) {
       (n) => `
     <a href="#" class="hss-news-card">
       <div class="hss-news-card__img">
-        <img src="${n.image || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80'}" alt="" loading="lazy">
+        <img src="${n.image || 'images/about-image-01.jpg'}" alt="${n.title || ''}" loading="lazy" decoding="async" width="400" height="260">
       </div>
       <div class="hss-news-card__cat">${n.category || ''}</div>
       <h3>${n.title}</h3>
@@ -125,8 +132,12 @@ function renderHomePage() {
   const feature = data.feature || {};
   const featImg = document.getElementById('home-feature-image');
   if (featImg) {
-    featImg.src = feature.image || h.heroImage || '';
-    featImg.alt = feature.title || '';
+    featImg.src = feature.image || h.heroImage || 'images/about-image-01.jpg';
+    featImg.alt = feature.title || h.name || '';
+    featImg.loading = 'lazy';
+    featImg.decoding = 'async';
+    featImg.width = 800;
+    featImg.height = 500;
   }
   const featTitle = document.getElementById('home-feature-title');
   if (featTitle) featTitle.textContent = feature.title || '';
@@ -137,6 +148,10 @@ function renderHomePage() {
   if (approachImg) {
     approachImg.src = SPLIT_IMAGES.approach;
     approachImg.alt = t('pages.home.approachTitle');
+    approachImg.loading = 'lazy';
+    approachImg.decoding = 'async';
+    approachImg.width = 800;
+    approachImg.height = 533;
   }
   const approachText = document.getElementById('home-approach-text');
   if (approachText) approachText.innerHTML = proseHtml(data.approachParagraphs);
@@ -145,6 +160,10 @@ function renderHomePage() {
   if (expertsImg) {
     expertsImg.src = SPLIT_IMAGES.experts;
     expertsImg.alt = t('pages.home.expertsTitle');
+    expertsImg.loading = 'lazy';
+    expertsImg.decoding = 'async';
+    expertsImg.width = 800;
+    expertsImg.height = 533;
   }
   const expertsText = document.getElementById('home-experts-text');
   if (expertsText) expertsText.innerHTML = proseHtml(data.expertsParagraphs);
@@ -153,6 +172,10 @@ function renderHomePage() {
   if (imagingImg) {
     imagingImg.src = data.equipment?.[0]?.image || SPLIT_IMAGES.imaging;
     imagingImg.alt = t('pages.home.equipmentTitle');
+    imagingImg.loading = 'lazy';
+    imagingImg.decoding = 'async';
+    imagingImg.width = 800;
+    imagingImg.height = 533;
   }
   const imagingText = document.getElementById('home-imaging-text');
   if (imagingText) imagingText.innerHTML = proseHtml(data.imagingParagraphs);
@@ -171,7 +194,7 @@ function renderHomePage() {
         (v) => `
       <article class="hss-video-card">
         <div class="hss-video-card__thumb">
-          <img src="${v.image}" alt="" loading="lazy" />
+          <img src="${v.image || 'images/team-member-03.jpg'}" alt="${v.title || ''}" loading="lazy" decoding="async" width="360" height="202" />
           <span class="hss-video-card__play" aria-hidden="true">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           </span>
@@ -191,7 +214,7 @@ function renderHomePage() {
         (s) => `
       <article class="hss-patient">
         <div class="hss-patient__photo">
-          <img src="${s.image}" alt="${s.name}" loading="lazy" />
+          <img src="${s.image || 'images/team-member-03.jpg'}" alt="${s.name}" loading="lazy" decoding="async" width="320" height="320" />
         </div>
         <h3>${s.name}</h3>
         <p class="hss-patient__loc">${s.location}</p>

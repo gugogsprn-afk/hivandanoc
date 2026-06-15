@@ -34,7 +34,8 @@
     "originalTemplate": "Original template",
     "callUs": "Call",
     "getConsultation": "Get a consultation",
-    "bookOnline": "Book Online"
+    "bookOnline": "Book Online",
+    "skipToContent": "Skip to main content"
   },
   "footer": {
     "tagline": "Modern medical care with compassion for every patient.",
@@ -288,6 +289,7 @@
   "admin": {
     "title": "Admin — CCH No. 1",
     "loginTitle": "Admin login",
+    "loginHint": "Authorized staff only. Contact IT if you need access.",
     "demoPassword": "Demo password:",
     "password": "Password",
     "login": "Sign in",

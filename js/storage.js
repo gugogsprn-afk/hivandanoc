@@ -23,18 +23,45 @@ const HospitalStorage = (function () {
     localStorage.setItem(key, JSON.stringify(value));
   }
 
+  function sanitizeText(str, maxLen) {
+    if (typeof str !== 'string') return '';
+    return str.trim().slice(0, maxLen || 500).replace(/[<>]/g, '');
+  }
+
+  function canSubmitForm(key, cooldownMs) {
+    try {
+      const last = parseInt(localStorage.getItem(key) || '0', 10);
+      const wait = cooldownMs || 30000;
+      if (Date.now() - last < wait) return false;
+      localStorage.setItem(key, String(Date.now()));
+      return true;
+    } catch {
+      return true;
+    }
+  }
+
   return {
     getAppointments() {
       return read(KEYS.appointments, []);
     },
 
     addAppointment(record) {
+      if (!canSubmitForm('gkb_last_appointment', 30000)) {
+        throw new Error('rate_limit');
+      }
       const list = read(KEYS.appointments, []);
       const entry = {
         id: 'apt-' + Date.now(),
         status: 'new',
         createdAt: new Date().toISOString(),
-        ...record
+        patientName: sanitizeText(record.patientName, 120),
+        phone: sanitizeText(record.phone, 40),
+        email: sanitizeText(record.email, 120),
+        departmentId: sanitizeText(record.departmentId, 40),
+        doctorId: sanitizeText(record.doctorId, 40),
+        date: sanitizeText(record.date, 20),
+        time: sanitizeText(record.time, 20),
+        comment: sanitizeText(record.comment, 1000)
       };
       list.unshift(entry);
       write(KEYS.appointments, list);
@@ -60,6 +87,9 @@ const HospitalStorage = (function () {
     },
 
     addPatientStory(record) {
+      if (!canSubmitForm('gkb_last_story', 60000)) {
+        throw new Error('rate_limit');
+      }
       const list = read(KEYS.patientStories, []);
       const entry = {
         id: 'story-' + Date.now(),

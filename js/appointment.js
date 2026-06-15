@@ -78,16 +78,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(form);
-    HospitalStorage.addAppointment({
-      patientName: fd.get('patientName'),
-      phone: fd.get('phone'),
-      email: fd.get('email') || '',
-      departmentId: fd.get('departmentId'),
-      doctorId: fd.get('doctorId') || '',
-      date: fd.get('date'),
-      time: fd.get('time'),
-      comment: fd.get('comment') || ''
-    });
+    const phone = String(fd.get('phone') || '').trim();
+    if (phone.length < 6) {
+      alert(I18n.t('pages.appointment.phone') || 'Enter a valid phone');
+      return;
+    }
+    try {
+      HospitalStorage.addAppointment({
+        patientName: fd.get('patientName'),
+        phone,
+        email: fd.get('email') || '',
+        departmentId: fd.get('departmentId'),
+        doctorId: fd.get('doctorId') || '',
+        date: fd.get('date'),
+        time: fd.get('time'),
+        comment: fd.get('comment') || ''
+      });
+    } catch (err) {
+      if (err.message === 'rate_limit') {
+        alert(I18n.t('pages.appointment.rateLimit') || 'Please wait before submitting again.');
+        return;
+      }
+      throw err;
+    }
 
     const msg = document.getElementById('appointment-success');
     msg.hidden = false;

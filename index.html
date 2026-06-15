@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Առողջ ողնաշար — реабилитационный центр позвоночника и суставов">
+    <meta name="description" content="Առողջ ողնաշար — spine and joint rehabilitation center in Yerevan">
+    <meta name="theme-color" content="#0E4B8A">
     <title>Առողջ ողնաշար</title>
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260613b">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260615c">
+    <link rel="icon" href="images/brand/logo-chic.png" type="image/png">
+    <link rel="preload" as="image" href="images/about-image-01.jpg" fetchpriority="high">
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260616">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260616">
+    <link rel="stylesheet" href="css/audit-fixes.css?v=20260616">
+    <script src="js/seo.js" defer></script>
 </head>
 <body class="hss-page" data-page="home" data-i18n-title="pages.home.title">
     <div id="site-nav"></div>
@@ -27,11 +32,17 @@
             <div class="hss-wrap">
                 <h2 class="hss-search-band__title" data-i18n="pages.home.searchTitle">—</h2>
                 <form class="hss-search-band__form" id="doctor-search-form" action="doctors.html" method="get">
-                    <input type="search" name="q" id="doctor-search-input" list="search-suggestions" data-i18n-placeholder="pages.home.searchPlaceholder" autocomplete="off" required>
+                    <label class="hss-field hss-field--search">
+                        <span class="visually-hidden" data-i18n="pages.home.searchPlaceholder">—</span>
+                        <input type="search" name="q" id="doctor-search-input" list="search-suggestions" data-i18n-placeholder="pages.home.searchPlaceholder" autocomplete="off" required aria-label="Doctor search">
+                    </label>
                     <datalist id="search-suggestions"></datalist>
-                    <select name="category" id="doctor-search-category">
+                    <label class="hss-field hss-field--category" for="doctor-search-category">
+                        <span class="visually-hidden" data-i18n="pages.home.searchCategoryAll">—</span>
+                        <select name="category" id="doctor-search-category" aria-label="Service category">
                         <option value="" data-i18n="pages.home.searchCategoryAll">—</option>
                     </select>
+                    </label>
                     <button type="submit" class="hss-btn hss-btn--bright" data-i18n="pages.home.searchNext">—</button>
                 </form>
             </div>
@@ -83,7 +94,7 @@
 
         <!-- Video hero — patient story -->
         <section class="hss-video-hero" id="patient-hero">
-            <img class="hss-video-hero__bg" id="patient-hero-image" src="" alt="">
+            <img class="hss-video-hero__bg" id="patient-hero-image" src="images/about-image-01.jpg" alt="" loading="eager" decoding="async" fetchpriority="high" width="1400" height="788">
             <div class="hss-video-hero__box">
                 <p class="hss-serif" id="patient-hero-quote">—</p>
                 <a href="#patient-stories" class="hss-btn hss-btn--primary" id="patient-hero-cta">—</a>
@@ -241,14 +252,11 @@
 
     <div id="site-footer"></div>
 
-    <script src="data/hospital.embed.js"></script>
-    <script src="lang/hy.embed.js"></script>
-    <script src="lang/ru.embed.js"></script>
-    <script src="lang/en.embed.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/i18n.js"></script>
-    <script src="js/common.js"></script>
-    <script src="js/doctor-search.js"></script>
-    <script src="js/home.js"></script>
+    <script src="data/hospital.embed.js" defer></script>
+    <script src="js/storage.js" defer></script>
+    <script src="js/i18n.js" defer></script>
+    <script src="js/common.js" defer></script>
+    <script src="js/doctor-search.js" defer></script>
+    <script src="js/home.js" defer></script>
 </body>
 </html>

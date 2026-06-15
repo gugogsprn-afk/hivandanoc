@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0E4B8A">
     <title>Admin</title>
-    <link rel="stylesheet" href="../css/hospital-theme.css">
+    <link rel="icon" href="../images/brand/logo-chic.png" type="image/png">
+    <link rel="stylesheet" href="../css/hospital-theme.css?v=20260616">
+    <link rel="stylesheet" href="../css/audit-fixes.css?v=20260616">
 </head>
 <body class="admin-body" data-page="admin" data-i18n-title="admin.title">
     <div id="site-nav"></div>
 
     <div id="login-view" class="admin-login admin-card">
         <h1 style="margin-bottom:1rem;color:var(--blue);" data-i18n="admin.loginTitle">—</h1>
-        <p class="form-hint" style="margin-bottom:1rem;"><span data-i18n="admin.demoPassword">—</span> <code>admin123</code></p>
+        <p class="form-hint" style="margin-bottom:1rem;" data-i18n="admin.loginHint">—</p>
         <form id="login-form" class="contact-form">
             <input type="password" name="password" data-i18n-placeholder="admin.password" required style="width:100%;margin-bottom:1rem;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;">
             <button type="submit" class="submit-btn" data-i18n="admin.login">—</button>
@@ -72,9 +76,9 @@
         </div>
     </div>
 
-    <script src="../js/storage.js"></script>
-    <script src="../js/i18n.js"></script>
-    <script src="../js/common.js"></script>
-    <script src="../js/admin.js"></script>
+    <script src="../js/storage.js" defer></script>
+    <script src="../js/i18n.js" defer></script>
+    <script src="../js/common.js" defer></script>
+    <script src="../js/admin.js" defer></script>
 </body>
 </html>
