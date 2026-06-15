@@ -3,15 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Առողջ ողնաշար — spine and joint rehabilitation center in Yerevan">
-    <meta name="theme-color" content="#0E4B8A">
+    <meta name="description" content="«Առողջ ողնաշար» — պոզանոցի և հոդերի վերականգնողական կենտրոն">
     <title>Առողջ ողնաշար</title>
-    <link rel="icon" href="images/brand/logo-chic.png" type="image/png">
-    <link rel="preload" as="image" href="images/about-image-01.jpg" fetchpriority="high">
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260616">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260616">
-    <link rel="stylesheet" href="css/audit-fixes.css?v=20260616">
-    <script src="js/seo.js" defer></script>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260617c">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260617c">
 </head>
 <body class="hss-page" data-page="home" data-i18n-title="pages.home.title">
     <div id="site-nav"></div>
@@ -32,17 +27,11 @@
             <div class="hss-wrap">
                 <h2 class="hss-search-band__title" data-i18n="pages.home.searchTitle">—</h2>
                 <form class="hss-search-band__form" id="doctor-search-form" action="doctors.html" method="get">
-                    <label class="hss-field hss-field--search">
-                        <span class="visually-hidden" data-i18n="pages.home.searchPlaceholder">—</span>
-                        <input type="search" name="q" id="doctor-search-input" list="search-suggestions" data-i18n-placeholder="pages.home.searchPlaceholder" autocomplete="off" required aria-label="Doctor search">
-                    </label>
+                    <input type="search" name="q" id="doctor-search-input" list="search-suggestions" data-i18n-placeholder="pages.home.searchPlaceholder" autocomplete="off" required>
                     <datalist id="search-suggestions"></datalist>
-                    <label class="hss-field hss-field--category" for="doctor-search-category">
-                        <span class="visually-hidden" data-i18n="pages.home.searchCategoryAll">—</span>
-                        <select name="category" id="doctor-search-category" aria-label="Service category">
+                    <select name="category" id="doctor-search-category">
                         <option value="" data-i18n="pages.home.searchCategoryAll">—</option>
                     </select>
-                    </label>
                     <button type="submit" class="hss-btn hss-btn--bright" data-i18n="pages.home.searchNext">—</button>
                 </form>
             </div>
@@ -94,7 +83,7 @@
 
         <!-- Video hero — patient story -->
         <section class="hss-video-hero" id="patient-hero">
-            <img class="hss-video-hero__bg" id="patient-hero-image" src="images/about-image-01.jpg" alt="" loading="eager" decoding="async" fetchpriority="high" width="1400" height="788">
+            <img class="hss-video-hero__bg" id="patient-hero-image" src="" alt="">
             <div class="hss-video-hero__box">
                 <p class="hss-serif" id="patient-hero-quote">—</p>
                 <a href="#patient-stories" class="hss-btn hss-btn--primary" id="patient-hero-cta">—</a>
@@ -246,17 +235,20 @@
 
     <!-- Mobile sticky bar (HSS pattern) -->
     <div class="hss-mobile-bar" id="mobile-bar">
-        <a href="#" class="hss-mobile-bar__phone" id="mobile-bar-phone" data-i18n="common.callUs">—</a>
+        <a href="tel:+37410000000" class="hss-mobile-bar__phone" id="mobile-bar-phone" data-i18n="common.callUs">—</a>
         <a href="appointment.html" class="hss-btn hss-btn--primary" data-i18n="common.bookAppointment">—</a>
     </div>
 
     <div id="site-footer"></div>
 
-    <script src="data/hospital.embed.js" defer></script>
-    <script src="js/storage.js" defer></script>
-    <script src="js/i18n.js" defer></script>
-    <script src="js/common.js" defer></script>
-    <script src="js/doctor-search.js" defer></script>
-    <script src="js/home.js" defer></script>
+    <script src="data/hospital.embed.js"></script>
+    <script src="lang/hy.embed.js"></script>
+    <script src="lang/ru.embed.js"></script>
+    <script src="lang/en.embed.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/doctor-search.js"></script>
+    <script src="js/home.js"></script>
 </body>
 </html>

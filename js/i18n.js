@@ -126,6 +126,11 @@ const I18n = (function () {
     const titleKey = document.body?.getAttribute('data-i18n-title');
     if (titleKey) document.title = t(titleKey);
 
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && dictionary.meta?.siteDescription) {
+      metaDesc.setAttribute('content', dictionary.meta.siteDescription);
+    }
+
     document.querySelectorAll('select[data-i18n-default-option]').forEach((sel) => {
       const first = sel.querySelector('option[value=""]');
       if (first) first.textContent = t(sel.getAttribute('data-i18n-default-option'));

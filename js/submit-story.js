@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initDynamicRows();
   initDobMask();
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!validateForm(form)) {
       const firstErr = form.querySelector('.hss-field--error');
@@ -246,11 +246,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const record = collectFormData(form);
     HospitalStorage.addPatientStory(record);
 
+    const api = typeof FormApi !== 'undefined' ? await FormApi.submitStory(record) : { offline: true };
+
     const msg = document.getElementById('story-success');
-    msg.hidden = false;
-    form.reset();
-    resetDynamicLists();
-    window.scrollTo({ top: msg.offsetTop - 120, behavior: 'smooth' });
+    if (api.ok || api.offline || api.status === 503) {
+      msg.hidden = false;
+      form.reset();
+      resetDynamicLists();
+      window.scrollTo({ top: msg.offsetTop - 120, behavior: 'smooth' });
+    } else {
+      alert(api.error || 'Не удалось отправить уведомление. История сохранена локально.');
+    }
   });
 
   window.addEventListener('hospital:refresh', () => {

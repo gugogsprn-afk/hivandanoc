@@ -1,6 +1,7 @@
 {
   "meta": {
-    "siteTitle": "Healthy Spine — Medical Rehabilitation Center"
+    "siteTitle": "Healthy Spine — Medical Rehabilitation Center",
+    "siteDescription": "Healthy Spine — rehabilitation center for spine and joints"
   },
   "nav": {
     "home": "Home",
@@ -152,8 +153,29 @@
       "heroLabel": "About us",
       "heroTitle": "About the hospital",
       "heroDesc": "History, mission and values of our medical institution",
+      "subnavOverview": "Expertise",
+      "subnavLeadership": "Leadership",
+      "subnavAwards": "Accreditations & Awards",
+      "subnavMission": "Mission",
+      "subnavHistory": "History",
+      "subnavContact": "Contact",
+      "overviewTitle": "About CHIC Rehabilitation Center",
+      "overviewBody": "Healthy Spine specializes in conservative treatment and rehabilitation of spine, joint and musculoskeletal conditions. Our team brings together orthopedists, neurologists, physical therapists and rehabilitation specialists to develop an individual plan for every patient.",
+      "signCaption": "Armenia Republic Medical Center — CHIC",
+      "leadershipTitle": "Leadership",
+      "leadershipLead": "Our experienced specialists lead a multidisciplinary team delivering high-quality rehabilitation care.",
+      "leadershipCoChairs": "Co-Chairs",
+      "leadershipMembers": "Members",
+      "awardsTitle": "Awards and recognition",
+      "awardsLead": "Our center delivers high-quality rehabilitation care based on evidence-based methods and personalized treatment plans.",
       "missionLabel": "Our mission",
-      "missionTitle": "Patient health is our top priority",
+      "missionTitle": "Mission and values",
+      "historyTitle": "History",
+      "historyBody": "Healthy Spine Rehabilitation Center was founded to help people return to active life without unnecessary surgery. Over the years, the center has become one of Armenia's leading destinations for conservative spine and joint care.",
+      "value1": "Conservative treatment first",
+      "value2": "Individual rehabilitation programs",
+      "value3": "Modern equipment and evidence-based methods",
+      "value4": "Compassionate care for every patient",
       "feature1": "24/7 inpatient care",
       "feature2": "Modern diagnostics",
       "feature3": "Experienced specialists",
@@ -328,7 +350,7 @@
       "name": "Healthy Spine",
       "shortName": "Healthy Spine",
       "tagline": "Spine, joints and musculoskeletal care",
-      "address": "15 Medical St., Moscow",
+      "address": "Yerevan, 1 Example St.",
       "hours": "Mon–Fri: 8:00–20:00, Sat: 9:00–15:00, Sun: closed",
       "about": "Healthy Spine rehabilitation center provides specialized care for spine, joint and musculoskeletal conditions using conservative treatment and individual recovery programs.",
       "mission": "Restore mobility and quality of life through evidence-based rehabilitation and a multidisciplinary approach.",
@@ -373,7 +395,7 @@
         "text": "Imaging studies to accurately determine the cause of pain."
       },
       {
-        "icon": "💚",
+        "icon": "shield",
         "title": "Without surgery",
         "text": "Conservative treatment and recovery methods are our priority."
       }
@@ -382,297 +404,297 @@
       {
         "id": "consult-spine",
         "name": "Orthopedic consultation",
-        "description": "Первичный и повторный приём, оценка состояния позвоночника и суставов, план лечения.",
+        "description": "Initial and follow-up visits, spine and joint assessment, treatment planning.",
         "services": [
-          "Первичная консультация",
-          "Повторный приём",
-          "Составление плана реабилитации"
+          "Initial consultation",
+          "Follow-up visit",
+          "Rehabilitation plan"
         ]
       },
       {
         "id": "consult-neuro",
         "name": "Neurologist consultation",
-        "description": "Диагностика неврологических проявлений при заболеваниях позвоночника.",
+        "description": "Diagnosis of neurological symptoms in spinal conditions.",
         "services": [
-          "Неврологический осмотр",
-          "Оценка болевого синдрома",
-          "Назначение обследований"
+          "Neurological exam",
+          "Pain syndrome assessment",
+          "Test referrals"
         ]
       },
       {
         "id": "manual-therapy",
         "name": "Manual therapy",
-        "description": "Ручные техники для снятия боли, восстановления подвижности позвоночника и суставов.",
+        "description": "Hands-on techniques to relieve pain and restore spine and joint mobility.",
         "services": [
-          "Сегментарная мобилизация",
-          "Мягкие мануальные техники",
-          "Курс процедур"
+          "Segmental mobilization",
+          "Gentle manual techniques",
+          "Treatment course"
         ]
       },
       {
         "id": "osteopathy",
         "name": "Osteopathy",
-        "description": "Целостный подход к восстановлению баланса опорно-двигательного аппарата.",
+        "description": "Holistic approach to restoring musculoskeletal balance.",
         "services": [
-          "Остеопатический приём",
-          "Коррекция дисфункций",
-          "Курс лечения"
+          "Osteopathic session",
+          "Dysfunction correction",
+          "Treatment course"
         ]
       },
       {
         "id": "physiotherapy",
         "name": "Physiotherapy",
-        "description": "Аппаратные методы лечения боли и воспаления в позвоночнике и суставах.",
+        "description": "Device-based methods to treat pain and inflammation in spine and joints.",
         "services": [
-          "Электротерапия",
-          "УЗ-терапия",
-          "Магнитотерапия",
-          "Лазеротерапия"
+          "Electrotherapy",
+          "Ultrasound therapy",
+          "Magnetotherapy",
+          "Laser therapy"
         ]
       },
       {
         "id": "kinesiotherapy",
         "name": "Therapeutic exercise (kinesiotherapy)",
-        "description": "Индивидуальные упражнения для укрепления мышечного корсета и восстановления подвижности.",
+        "description": "Individual exercises to strengthen the muscle corset and restore mobility.",
         "services": [
-          "Индивидуальное занятие",
-          "Групповое занятие",
-          "Домашняя программа"
+          "Individual session",
+          "Group session",
+          "Home program"
         ]
       },
       {
         "id": "massage",
         "name": "Therapeutic massage",
-        "description": "Массаж спины, шеи и суставов для снятия напряжения и улучшения кровообращения.",
+        "description": "Back, neck and joint massage to relieve tension and improve circulation.",
         "services": [
-          "Классический массаж",
-          "Точечный массаж",
-          "Спортивный массаж"
+          "Classic massage",
+          "Trigger point massage",
+          "Sports massage"
         ]
       },
       {
         "id": "acupuncture",
         "name": "Acupuncture",
-        "description": "Воздействие на биологически активные точки для снятия боли и восстановления.",
+        "description": "Stimulation of active points to relieve pain and support recovery.",
         "services": [
-          "Классическая акупунктура",
-          "Электроакупунктура",
-          "Курс процедур"
+          "Classic acupuncture",
+          "Electroacupuncture",
+          "Treatment course"
         ]
       },
       {
         "id": "electrotherapy",
         "name": "Electrotherapy",
-        "description": "Лечение токами различной частоты при болях в спине и суставах.",
+        "description": "Treatment with currents of various frequencies for back and joint pain.",
         "services": [
-          "Диадинамические токи",
-          "Интерференционные токи",
-          "Миостимуляция"
+          "Diadynamic currents",
+          "Interference currents",
+          "Muscle stimulation"
         ]
       },
       {
         "id": "ultrasound-therapy",
         "name": "Ultrasound therapy",
-        "description": "Ультразвуковое лечение мягких тканей и суставов.",
+        "description": "Ultrasound treatment of soft tissues and joints.",
         "services": [
-          "УЗ-терапия позвоночника",
-          "УЗ-терапия суставов"
+          "Spine ultrasound therapy",
+          "Joint ultrasound therapy"
         ]
       },
       {
         "id": "magnetotherapy",
         "name": "Magnetotherapy",
-        "description": "Магнитное поле для уменьшения боли и ускорения восстановления тканей.",
+        "description": "Magnetic field therapy to reduce pain and speed tissue recovery.",
         "services": [
-          "Локальная магнитотерапия",
-          "Общая магнитотерапия"
+          "Local magnetotherapy",
+          "General magnetotherapy"
         ]
       },
       {
         "id": "laser-therapy",
         "name": "Laser therapy",
-        "description": "Низкоинтенсивное лазерное излучение при воспалении и боли.",
+        "description": "Low-intensity laser for inflammation and pain.",
         "services": [
-          "Лазеротерапия спины",
-          "Лазеротерапия суставов"
+          "Back laser therapy",
+          "Joint laser therapy"
         ]
       },
       {
         "id": "shockwave",
         "name": "Shock wave therapy",
-        "description": "УВТ при хронических болях в спине, пяточной шпоре и суставах.",
+        "description": "Shock wave therapy for chronic pain, heel spurs and joints.",
         "services": [
-          "УВТ позвоночника",
-          "УВТ суставов",
-          "УВТ мягких тканей"
+          "Spine shock wave",
+          "Joint shock wave",
+          "Soft tissue shock wave"
         ]
       },
       {
         "id": "traction",
         "name": "Spinal traction therapy",
-        "description": "Вытяжение позвоночника для снижения давления на межпозвонковые диски.",
+        "description": "Spinal traction to reduce pressure on intervertebral discs.",
         "services": [
-          "Сухое вытяжение",
-          "Подводное вытяжение",
-          "Курс процедур"
+          "Dry traction",
+          "Underwater traction",
+          "Treatment course"
         ]
       },
       {
         "id": "taping",
         "name": "Kinesio taping",
-        "description": "Фиксация и поддержка мышц и суставов эластичными лентами.",
+        "description": "Elastic tape support for muscles and joints.",
         "services": [
-          "Тейпирование спины",
-          "Тейпирование суставов",
-          "Спортивное тейпирование"
+          "Back taping",
+          "Joint taping",
+          "Sports taping"
         ]
       },
       {
         "id": "hernia-treatment",
         "name": "Spinal disc hernia treatment",
-        "description": "Консервативное лечение грыжи межпозвонкового диска без операции.",
+        "description": "Conservative treatment of disc herniation without surgery.",
         "services": [
-          "Комплексная терапия",
-          "Медикаментозная поддержка",
-          "Реабилитация"
+          "Combined therapy",
+          "Medication support",
+          "Rehabilitation"
         ]
       },
       {
         "id": "osteochondrosis",
         "name": "Osteochondrosis treatment",
-        "description": "Комплексное лечение дегенеративных изменений позвоночника.",
+        "description": "Comprehensive treatment of degenerative spine changes.",
         "services": [
-          "Шейный остеохондроз",
-          "Поясничный остеохондроз",
-          "Курс лечения"
+          "Cervical osteochondrosis",
+          "Lumbar osteochondrosis",
+          "Treatment course"
         ]
       },
       {
         "id": "scoliosis",
         "name": "Scoliosis treatment",
-        "description": "Коррекция и лечение искривления позвоночника у взрослых и детей.",
+        "description": "Correction and treatment of spinal curvature in adults and children.",
         "services": [
-          "Консервативная коррекция",
-          "ЛФК при сколиозе",
-          "Наблюдение"
+          "Conservative correction",
+          "Exercise therapy for scoliosis",
+          "Monitoring"
         ]
       },
       {
         "id": "protrusion",
         "name": "Disc protrusion treatment",
-        "description": "Лечение выпячивания диска на ранней стадии.",
+        "description": "Early-stage treatment of disc bulging.",
         "services": [
-          "Консервативная терапия",
-          "Физиотерапия",
-          "ЛФК"
+          "Conservative therapy",
+          "Physiotherapy",
+          "Therapeutic exercise"
         ]
       },
       {
         "id": "radiculitis",
         "name": "Radiculitis treatment",
-        "description": "Снятие боли и воспаления при защемлении нервных корешков.",
+        "description": "Pain and inflammation relief when nerve roots are compressed.",
         "services": [
-          "Медикаментозная терапия",
-          "Физиопроцедуры",
-          "Блокады"
+          "Medication therapy",
+          "Physiotherapy procedures",
+          "Nerve blocks"
         ]
       },
       {
         "id": "arthrosis",
         "name": "Joint arthrosis treatment",
-        "description": "Консервативное лечение артроза коленных, тазобедренных и других суставов.",
+        "description": "Conservative treatment of knee, hip and other joint arthrosis.",
         "services": [
-          "Консультация",
-          "Физиотерапия",
-          "ЛФК и массаж"
+          "Consultation",
+          "Physiotherapy",
+          "Exercise and massage"
         ]
       },
       {
         "id": "posture",
         "name": "Posture correction",
-        "description": "Диагностика и исправление нарушений осанки.",
+        "description": "Diagnosis and correction of posture disorders.",
         "services": [
-          "Оценка осанки",
-          "Упражнения",
-          "Контроль динамики"
+          "Posture assessment",
+          "Exercises",
+          "Progress monitoring"
         ]
       },
       {
         "id": "block-injection",
         "name": "Nerve blocks and injections",
-        "description": "Инъекционная терапия при выраженном болевом синдроме.",
+        "description": "Injection therapy for severe pain syndromes.",
         "services": [
-          "Паравертебральная блокада",
-          "Внутрисуставные инъекции"
+          "Paravertebral block",
+          "Intra-articular injections"
         ]
       },
       {
         "id": "rehab-trauma",
         "name": "Rehabilitation after injury",
-        "description": "Восстановление после травм позвоночника и суставов.",
+        "description": "Recovery after spine and joint injuries.",
         "services": [
-          "Индивидуальная программа",
-          "Постепенное нагружение",
-          "Контроль врача"
+          "Individual program",
+          "Gradual loading",
+          "Medical supervision"
         ]
       },
       {
         "id": "rehab-surgery",
         "name": "Post-surgical rehabilitation",
-        "description": "Восстановление после операций на позвоночнике и суставах.",
+        "description": "Recovery after spine and joint surgery.",
         "services": [
-          "Ранний этап",
-          "Поздний этап",
-          "Амбулаторная реабилитация"
+          "Early stage",
+          "Late stage",
+          "Outpatient rehabilitation"
         ]
       },
       {
         "id": "sports-rehab",
         "name": "Sports rehabilitation",
-        "description": "Возвращение к тренировкам после травм опорно-двигательного аппарата.",
+        "description": "Return to training after musculoskeletal injuries.",
         "services": [
-          "Оценка готовности",
-          "Программа восстановления",
-          "Профилактика"
+          "Readiness assessment",
+          "Recovery program",
+          "Prevention"
         ]
       },
       {
         "id": "pediatric-spine",
         "name": "Pediatric orthopedics and scoliosis",
-        "description": "Наблюдение и лечение нарушений осанки и сколиоза у детей.",
+        "description": "Monitoring and treatment of posture disorders and scoliosis in children.",
         "services": [
-          "Осмотр",
-          "ЛФК",
-          "Корсетная коррекция"
+          "Examination",
+          "Therapeutic exercise",
+          "Brace correction"
         ]
       },
       {
         "id": "ultrasound-diag",
         "name": "Ultrasound diagnostics",
-        "description": "Ультразвуковое исследование суставов и мягких тканей.",
+        "description": "Ultrasound imaging of joints and soft tissues.",
         "services": [
-          "УЗИ суставов",
-          "УЗИ мягких тканей",
-          "УЗИ позвоночника"
+          "Joint ultrasound",
+          "Soft tissue ultrasound",
+          "Spine ultrasound"
         ]
       },
       {
         "id": "xray",
         "name": "X-ray imaging",
-        "description": "Рентгенологическое исследование позвоночника и суставов.",
+        "description": "X-ray imaging of spine and joints.",
         "services": [
-          "Рентген позвоночника",
-          "Рентген суставов",
-          "Функциональные снимки"
+          "Spine X-ray",
+          "Joint X-ray",
+          "Functional images"
         ]
       },
       {
         "id": "mri-referral",
         "name": "MRI (referral)",
-        "description": "Направление на МРТ и интерпретация результатов исследования.",
+        "description": "MRI referral and interpretation of results.",
         "services": [
-          "Направление на МРТ",
-          "Консультация по результатам"
+          "MRI referral",
+          "Results consultation"
         ]
       }
     ],
@@ -762,22 +784,22 @@
       {
         "id": "eq-traction",
         "name": "Traction table",
-        "description": "Safe spinal decompression"
+        "description": "Safe spinal decompression for hernias, protrusions and osteochondrosis."
       },
       {
         "id": "eq-physio",
         "name": "Device-based physiotherapy",
-        "description": "Electro, ultrasound and laser therapy"
+        "description": "Electro, ultrasound, magnetic and laser therapy to relieve pain and inflammation."
       },
       {
         "id": "eq-shockwave",
         "name": "Shock wave therapy",
-        "description": "Treatment of chronic pain"
+        "description": "Effective treatment of chronic back and joint pain."
       },
       {
         "id": "eq-ultrasound",
         "name": "Ultrasound diagnostics",
-        "description": "Joint and soft tissue imaging"
+        "description": "On-site ultrasound imaging of joints and soft tissues."
       }
     ],
     "programs": [
@@ -785,47 +807,47 @@
         "id": "prog-spine",
         "name": "Spine treatment program",
         "duration": "2–4 weeks",
-        "description": "Комплекс: консультация, мануальная терапия, физиопроцедуры и ЛФК при болях в спине."
+        "description": "Combined consultation, manual therapy, physiotherapy and exercise for back pain."
       },
       {
         "id": "prog-postop",
         "name": "Post-surgical rehabilitation",
         "duration": "4–8 weeks",
-        "description": "Поэтапное восстановление после операций на позвоночнике и суставах под контролем врача."
+        "description": "Staged recovery after spine and joint surgery under medical supervision."
       },
       {
         "id": "prog-sport",
         "name": "Sports rehabilitation",
         "duration": "3–6 weeks",
-        "description": "Возвращение к тренировкам после травм с индивидуальным планом нагрузок."
+        "description": "Return to training after injuries with an individual loading plan."
       },
       {
         "id": "prog-posture",
         "name": "Posture correction",
         "duration": "4–12 weeks",
-        "description": "ЛФК, упражнения и контроль динамики при сколиозе и нарушениях осанки у взрослых и детей."
+        "description": "Exercise therapy, exercises and progress monitoring for scoliosis and posture disorders in adults and children."
       }
     ],
     "reviews": [
       {
         "id": "rev-1",
-        "text": "После курса мануальной терапии и ЛФК боль в пояснице ушла. Профессиональная команда и внимательное отношение.",
-        "author": "Мариам К.",
-        "role": "Лечение остеохондроза",
+        "text": "After a course of manual therapy and exercise therapy, my lower back pain went away. Professional team and attentive care.",
+        "author": "Mariam K.",
+        "role": "Osteochondrosis treatment",
         "initials": "MK"
       },
       {
         "id": "rev-2",
-        "text": "Помогли восстановиться после травмы колена. Чёткий план реабилитации и современное оборудование.",
-        "author": "Алексей С.",
-        "role": "Спортивная реабилитация",
+        "text": "They helped me recover after a knee injury. Clear rehabilitation plan and modern equipment.",
+        "author": "Alexey S.",
+        "role": "Sports rehabilitation",
         "initials": "AS"
       },
       {
         "id": "rev-3",
-        "text": "Консультация ортопеда и физиотерапия без лишних назначений. Рекомендую центр всем, кто болеет спиной.",
-        "author": "Виктор П.",
-        "role": "Лечение грыжи",
+        "text": "Orthopedic consultation and physiotherapy without unnecessary prescriptions. I recommend the center to anyone with back pain.",
+        "author": "Victor P.",
+        "role": "Hernia treatment",
         "initials": "VP"
       }
     ],
@@ -834,16 +856,16 @@
       "Our commitment to quality is reflected in years of experience and <strong>98% positive patient feedback</strong>."
     ],
     "approachParagraphs": [
-      "Наши специалисты стремятся помочь пациентам избежать ненужных вмешательств. Мы применяем новейшие нехирургические методы лечения ортопедических и неврологических состояний.",
-      "В команде — эксперты разных специальностей: ортопедия, неврология, физиотерапия, мануальная терапия, ЛФК и реабилитация — все с узкой специализацией в лечении заболеваний спины и шеи.",
-      "От диагностики до реабилитации — каждый член команды имеет большой опыт лечения именно вашего состояния. Мы предлагаем разнообразные терапии для снятия боли, предотвращения дальнейших повреждений и восстановления подвижности — часто без необходимости в операции."
+      "Our specialists help patients avoid unnecessary procedures. We use modern nonsurgical methods to treat orthopedic and neurological conditions.",
+      "Our team includes experts in orthopedics, neurology, physiotherapy, manual therapy, therapeutic exercise and rehabilitation — all focused on spine and neck care.",
+      "From diagnosis to recovery, every team member has extensive experience treating your condition. We offer a range of therapies to relieve pain, prevent further damage and restore mobility — often without surgery."
     ],
     "expertsParagraphs": [
-      "Наши специалисты — врачи с многолетним опытом в области позвоночника и суставов. Они применяют минимально инвазивные и консервативные методы, обеспечивающие меньшую боль, более быстрое восстановление и меньше осложнений.",
-      "Для удобного доступа к помощи наши специалисты принимают пациентов в центре «Առողջ ողնաշար» — вы можете записаться онлайн или по телефону."
+      "Our specialists are physicians with years of experience in spine and joint care. They use minimally invasive and conservative methods for less pain, faster recovery and fewer complications.",
+      "For convenient access, our specialists see patients at Healthy Spine — you can book online or by phone."
     ],
     "imagingParagraphs": [
-      "Первый шаг — получить чёткую картину проблемы. Наши специалисты используют современное оборудование и проверенные методы диагностики для точного определения причины боли."
+      "The first step is a clear picture of the problem. Our specialists use modern equipment and proven diagnostic methods to accurately determine the cause of pain."
     ],
     "feature": {
       "title": "Innovation in spine rehabilitation",
@@ -853,93 +875,89 @@
     "news": [
       {
         "id": "n1",
-        "title": "Центр «Առողջ ողնաշար» представил новые программы реабилитации",
-        "date": "2025-11-12"
+        "title": "Healthy Spine center unveils new rehabilitation programs",
+        "date": "2025-11-12",
+        "image": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80",
+        "category": "Center news"
       },
       {
         "id": "n2",
-        "title": "Открытие обновлённого кабинета физиотерапии",
-        "date": "2025-09-03"
+        "title": "Renovated physiotherapy room opens",
+        "date": "2025-09-03",
+        "image": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600&q=80",
+        "category": "Equipment"
       },
       {
         "id": "n3",
-        "title": "Семинар для врачей: консервативное лечение грыжи позвоночника",
-        "date": "2025-06-18"
-      },
-      {
-        "id": "n4",
-        "title": "Новое оборудование для ударно-волновой терапии",
-        "date": "2025-03-22"
-      },
-      {
-        "id": "n5",
-        "title": "Программа коррекции осанки для детей и подростков",
-        "date": "2024-12-01"
+        "title": "Physician seminar: conservative treatment of disc herniation",
+        "date": "2025-06-18",
+        "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&q=80",
+        "category": "Education"
       }
     ],
     "storyVideos": [
       {
         "id": "sv1",
-        "title": "Как я вернулся к активной жизни: история лечения остеохондроза",
+        "title": "How I returned to an active life: osteochondrosis treatment story",
         "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80"
       },
       {
         "id": "sv2",
-        "title": "Восстановление после травмы спины: история пациента",
+        "title": "Recovery after a back injury: a patient story",
         "image": "https://images.unsplash.com/photo-1582750433449-648ed127fbfe?w=500&q=80"
       },
       {
         "id": "sv3",
-        "title": "Лечение сколиоза без операции: история успеха",
+        "title": "Scoliosis treatment without surgery: a success story",
         "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&q=80"
       },
       {
         "id": "sv4",
-        "title": "Как я избавился от боли в шее: история реабилитации",
+        "title": "How I got rid of neck pain: a rehabilitation story",
         "image": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=500&q=80"
       }
     ],
     "patientStories": [
       {
         "id": "ps1",
-        "name": "Мариам К.",
-        "location": "Ереван",
-        "treatment": "Лечение остеохондроза",
+        "name": "Mariam K.",
+        "location": "Yerevan",
+        "treatment": "Osteochondrosis treatment",
         "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80"
       },
       {
         "id": "ps2",
-        "name": "Алексей С.",
-        "location": "Гюмри",
-        "treatment": "Спортивная реабилитация",
+        "name": "Alexey S.",
+        "location": "Gyumri",
+        "treatment": "Sports rehabilitation",
         "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80"
       },
       {
         "id": "ps3",
-        "name": "Анна М.",
-        "location": "Ереван",
-        "treatment": "Коррекция сколиоза",
+        "name": "Anna M.",
+        "location": "Yerevan",
+        "treatment": "Scoliosis correction",
         "image": "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&q=80"
       },
       {
         "id": "ps4",
-        "name": "Виктор П.",
-        "location": "Ванадзор",
-        "treatment": "Лечение грыжи",
+        "name": "Victor P.",
+        "location": "Vanadzor",
+        "treatment": "Hernia treatment",
         "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80"
       },
       {
         "id": "ps5",
-        "name": "Нора Б.",
-        "location": "Ереван",
-        "treatment": "Мануальная терапия",
+        "name": "Nora B.",
+        "location": "Yerevan",
+        "treatment": "Manual therapy",
         "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80"
       },
       {
         "id": "ps6",
-        "name": "Гарик Т.",
-        "location": "Абовян",
-        "treatment": "Реабилитация после травмы",
+        "name": "Garik T.",
+        "location": "Abovyan",
+        "treatment": "Post-injury rehabilitation",
         "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
       }
     ],
@@ -949,26 +967,26 @@
         "image": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=900&q=80",
         "category": "Health",
         "title": "What to know and do before and after knee replacement surgery",
-        "excerpt": "Knowing what to expect helps you achieve better outcomes and recover faster."
+        "excerpt": "Knowing what to expect before and after surgery helps you achieve better outcomes and return to active life faster."
       },
       "sidebar": [
         {
           "id": "sb1",
           "image": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80",
-          "category": "Здоровье",
-          "title": "Боль в копчике: причины её возникновения и методы лечения"
+          "category": "Health",
+          "title": "Tailbone pain: causes and treatment methods"
         },
         {
           "id": "sb2",
           "image": "https://images.unsplash.com/photo-1517649763961-0c62306601b7?w=600&q=80",
-          "category": "Здоровье",
-          "title": "Болит поясница? Возможно, дело в бедре"
+          "category": "Health",
+          "title": "Lower back pain? It may be your hip"
         },
         {
           "id": "sb3",
           "image": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80",
-          "category": "Здоровье",
-          "title": "Почему женщины подвержены более высокому риску развития артрита"
+          "category": "Health",
+          "title": "Why women face a higher risk of arthritis"
         }
       ],
       "topicSections": [
@@ -978,26 +996,26 @@
             {
               "id": "hip1",
               "image": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=600&q=80",
-              "category": "Здоровье",
-              "title": "Что нужно знать и делать до и после операции по замене тазобедренного сустава",
-              "excerpt": "Знание того, чего ожидать, помогает добиться лучших результатов.",
-              "author": "Врач-реабилитолог, «Առողջ ողնաշար»"
+              "category": "Health",
+              "title": "What to know and do before and after hip replacement surgery",
+              "excerpt": "Knowing what to expect helps you achieve better outcomes.",
+              "author": "Rehabilitologist, Healthy Spine"
             },
             {
               "id": "hip2",
               "image": "https://images.unsplash.com/photo-1517649763961-0c62306601b7?w=600&q=80",
-              "category": "Здоровье",
-              "title": "Занятия спортом после эндопротезирования: чего ожидать",
-              "excerpt": "Большинство людей могут вернуться к спорту, но важен план до операции.",
-              "author": "Ортопед, «Առողջ ողնաշար»"
+              "category": "Health",
+              "title": "Sports after joint replacement: what to expect",
+              "excerpt": "Most people can return to sports, but planning before surgery matters.",
+              "author": "Orthopedist, Healthy Spine"
             },
             {
               "id": "hip3",
               "image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80",
-              "category": "Здоровье",
-              "title": "Что такое ягодичная тендинопатия и почему она часто встречается у женщин?",
-              "excerpt": "Специалист объясняет, почему боль в бедре часто возникает в период менопаузы.",
-              "author": "Физиотерапевт, «Առողջ ողնաշար»"
+              "category": "Health",
+              "title": "What is gluteal tendinopathy and why is it common in women?",
+              "excerpt": "A specialist explains why hip pain often appears during menopause.",
+              "author": "Physiotherapist, Healthy Spine"
             }
           ]
         },
@@ -1007,26 +1025,26 @@
             {
               "id": "st1",
               "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80",
-              "category": "Фитнес",
-              "title": "Упражнения для укрепления и растяжки мышц спины",
-              "excerpt": "Простые упражнения от специалистов центра для ежедневной практики.",
-              "author": "Физиотерапевт, «Առողջ ողնաշար»"
+              "category": "Fitness",
+              "title": "Exercises to strengthen and stretch back muscles",
+              "excerpt": "Simple exercises from our specialists for daily practice.",
+              "author": "Physiotherapist, Healthy Spine"
             },
             {
               "id": "st2",
               "image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80",
-              "category": "Разум и тело",
-              "title": "5 упражнений для растяжки поясницы",
-              "excerpt": "Особенно полезно тем, кто много сидит за работой.",
-              "author": "Реабилитация «Առողջ ողնաշար»"
+              "category": "Mind & body",
+              "title": "5 exercises to stretch the lower back",
+              "excerpt": "Especially helpful for those who sit at work for long hours.",
+              "author": "Rehabilitation, Healthy Spine"
             },
             {
               "id": "st3",
               "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80",
-              "category": "Фитнес",
-              "title": "Растяжка икроножных мышц стоя",
-              "excerpt": "Базовое упражнение для профилактики боли в спине и ногах.",
-              "author": "Реабилитация «Առողջ ողնաշար»"
+              "category": "Fitness",
+              "title": "Standing calf muscle stretch",
+              "excerpt": "A basic exercise to prevent back and leg pain.",
+              "author": "Rehabilitation, Healthy Spine"
             }
           ]
         },
@@ -1036,26 +1054,26 @@
             {
               "id": "bp1",
               "image": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80",
-              "category": "Фитнес",
-              "title": "Болит поясница после тренировки? Вот как это предотвратить",
-              "excerpt": "Несколько методов, которые помогут защитить поясницу во время нагрузок.",
-              "author": "Врач ЛФК, «Առողջ ողնաշար»"
+              "category": "Fitness",
+              "title": "Lower back pain after a workout? How to prevent it",
+              "excerpt": "Several methods to protect your lower back during exercise.",
+              "author": "Exercise therapy physician, Healthy Spine"
             },
             {
               "id": "bp2",
               "image": "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=80",
-              "category": "Здоровье",
-              "title": "Лучшие виды упражнений при болях в спине",
-              "excerpt": "Физические упражнения могут помочь — если они правильно подобраны.",
-              "author": "Физиотерапевт, «Առողջ ողնաշար»"
+              "category": "Health",
+              "title": "Best types of exercise for back pain",
+              "excerpt": "Physical exercise can help when properly selected.",
+              "author": "Physiotherapist, Healthy Spine"
             },
             {
               "id": "bp3",
               "image": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=600&q=80",
-              "category": "Здоровье",
-              "title": "К какому врачу обратиться при болях в спине?",
-              "excerpt": "С чего начать поиск облегчения и какой специалист вам нужен в первую очередь.",
-              "author": "Ортопед, «Առողջ ողնաշար»"
+              "category": "Health",
+              "title": "Which doctor to see for back pain?",
+              "excerpt": "Where to start finding relief and which specialist you need first.",
+              "author": "Orthopedist, Healthy Spine"
             }
           ]
         }
@@ -1063,97 +1081,140 @@
       "programsBanner": {
         "badge": "Education and community outreach programs",
         "title": "Movement and education for you",
-        "text": "New programs! Improve your health with classes, webinars, and videos. Many are free or low-cost.",
+        "text": "New programs! Improve your health with classes, webinars and videos from Healthy Spine. Many are free or low-cost.",
         "cta": "Explore programs now",
         "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80"
       },
       "textArticles": [
         {
           "id": "ta1",
-          "title": "Руководство по мышцам спины: анатомия и упражнения",
-          "excerpt": "Понимание анатомии помогает эффективнее тренироваться и избегать травм.",
-          "author": "Физиотерапевт, «Առողջ ողնաշար»"
+          "title": "Back muscle guide: anatomy and exercises",
+          "excerpt": "Understanding anatomy helps you train more effectively and avoid injury.",
+          "author": "Physiotherapist, Healthy Spine"
         },
         {
           "id": "ta2",
-          "title": "Анатомия мышц руки: познакомьтесь с основными группами",
-          "excerpt": "Краткий обзор для тех, кто восстанавливается после травм верхних конечностей.",
-          "author": "Реабилитолог, «Առողջ ողնաշար»"
+          "title": "Arm muscle anatomy: meet the main groups",
+          "excerpt": "A brief overview for those recovering from upper limb injuries.",
+          "author": "Rehabilitologist, Healthy Spine"
         },
         {
           "id": "ta3",
-          "title": "Руководство по работе с мышцами кора",
-          "excerpt": "Сильный кор — основа здоровой осанки и стабильности позвоночника.",
-          "author": "Инструктор ЛФК, «Առողջ ողնաշար»"
+          "title": "Guide to working your core muscles",
+          "excerpt": "A strong core is the foundation of healthy posture and spinal stability.",
+          "author": "Exercise instructor, Healthy Spine"
         }
       ],
       "videos": [
         {
           "id": "v1",
           "image": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
-          "title": "Регенеративная медицина для здоровья мышц, костей и суставов",
+          "title": "Regenerative medicine for muscle, bone and joint health",
           "overlay": ""
         },
         {
           "id": "v2",
           "image": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80",
-          "title": "Изменение поведения ради здоровья: с чего начать",
+          "title": "Changing behavior for health: where to start",
           "overlay": "Beyond Resolutions"
         },
         {
           "id": "v3",
           "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80",
-          "title": "Питание для энергии: советы для активных женщин",
+          "title": "Nutrition for energy: tips for active women",
           "overlay": "Food to Fuel"
         }
       ],
       "pressNews": [
         {
           "id": "pn1",
-          "source": "ЗДОРОВЬЕ+",
-          "title": "Такая поза во время сидения может принести пользу для здоровья в пожилом возрасте",
-          "author": "Врач-реабилитолог, «Առողջ ողնաշար»"
+          "source": "HEALTH+",
+          "title": "This sitting posture may benefit health in older age",
+          "author": "Rehabilitologist, Healthy Spine"
         },
         {
           "id": "pn2",
-          "source": "Пресс-центр",
-          "title": "Центр представил новые программы реабилитации без операции",
-          "author": "«Առողջ ողնաշար»"
+          "source": "Press center",
+          "title": "Center unveils new nonsurgical rehabilitation programs",
+          "author": "Healthy Spine"
         },
         {
           "id": "pn3",
-          "source": "МЕДИА",
-          "title": "Консервативное лечение спины: когда оно работает лучше операции",
-          "author": "Ортопед, «Առողջ ողնաշար»"
+          "source": "MEDIA",
+          "title": "Conservative back treatment: when it works better than surgery",
+          "author": "Orthopedist, Healthy Spine"
         }
       ],
       "categories": [
         {
           "id": "fitness",
           "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&q=80",
-          "label": "Фитнес"
+          "label": "Fitness"
         },
         {
           "id": "injury",
           "image": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=80",
-          "label": "Профилактика травм"
+          "label": "Injury prevention"
         },
         {
           "id": "kids",
           "image": "https://images.unsplash.com/photo-1503454537845-2319abb1ba87?w=500&q=80",
-          "label": "Дети и спорт"
+          "label": "Kids & sports"
         },
         {
           "id": "health",
           "image": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=500&q=80",
-          "label": "Здоровье"
+          "label": "Health"
         },
         {
           "id": "mind",
           "image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&q=80",
-          "label": "Разум и тело"
+          "label": "Mind & body"
         }
       ]
+    },
+    "awards": [
+      {
+        "id": "a1",
+        "label": "30+ services",
+        "desc": "Full spectrum of conservative spine and joint care"
+      },
+      {
+        "id": "a2",
+        "label": "15+ specialists",
+        "desc": "Multidisciplinary team with 10+ years of experience"
+      },
+      {
+        "id": "a3",
+        "label": "98% satisfied patients",
+        "desc": "Individual approach and evidence-based rehabilitation"
+      }
+    ],
+    "patientHero": {
+      "quote": "Aram, fearing back pain would limit his life forever, returned to activity thanks to a rehabilitation program at Healthy Spine.",
+      "ctaText": "Read his story",
+      "image": "https://images.unsplash.com/photo-1476480862128-209bfaa8dfc8?w=1400&q=85"
+    },
+    "backInGame": {
+      "title": "Get back in the game",
+      "text": "Our patients' stories are the best proof that conservative treatment and rehabilitation work. Hundreds of people have returned to work, sports and daily activity.",
+      "linkText": "Read inspiring patient stories",
+      "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=900&q=80"
+    },
+    "expertiseOverlay": {
+      "title": "Expertise you can trust",
+      "text": "Our specialists — orthopedists, neurologists, physiotherapists and rehabilitologists — work together to offer you the best treatment plan without unnecessary interventions.",
+      "links": [
+        {
+          "text": "Learn why to choose our center",
+          "href": "about.html"
+        },
+        {
+          "text": "See our achievements",
+          "href": "about.html#awards"
+        }
+      ],
+      "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=85"
     }
   },
   "share": {

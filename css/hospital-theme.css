@@ -3,22 +3,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@400;600;700&display=swap');
 
 :root {
-  --navy: #050B2B;
+  /* CHIC logo teal palette */
+  --navy: #1A4F4F;
   --white: #ffffff;
   --bg: #ffffff;
-  --bg-alt: #F5F8FC;
-  --accent-light: #E8F1FB;
-  --text: #050B2B;
-  --text-muted: #4A5D75;
-  --blue: #0E4B8A;
-  --blue-dark: #05112B;
-  --blue-bright: #1D74C9;
-  --teal: #1D74C9;
-  --teal-dark: #0E4B8A;
-  --teal-light: #E8F1FB;
-  --border: #D8E3F0;
-  --shadow-sm: 0 2px 16px rgba(5, 17, 43, 0.08);
-  --shadow-md: 0 8px 32px rgba(5, 17, 43, 0.12);
+  --bg-alt: #F0FAFA;
+  --accent-light: #E5F7F7;
+  --text: #1A3333;
+  --text-muted: #4A6565;
+  --blue: #289B9B;
+  --blue-dark: #1F7575;
+  --blue-bright: #49D5D5;
+  --teal: #49D5D5;
+  --teal-dark: #289B9B;
+  --teal-light: #E5F7F7;
+  --border: #B8E6E6;
+  --text-on-dark: #F4FBFB;
+  --text-on-dark-muted: rgba(244, 251, 251, 0.78);
+  --text-on-dark-subtle: rgba(244, 251, 251, 0.55);
+  --text-on-bright: #1A4F4F;
+  --shadow-sm: 0 2px 16px rgba(26, 79, 79, 0.08);
+  --shadow-md: 0 8px 32px rgba(26, 79, 79, 0.12);
   --radius: 8px;
   --radius-sm: 6px;
   --radius-btn: 6px;
@@ -37,12 +42,12 @@
   right: 0;
   z-index: 2000;
   padding: 0.85rem 1.25rem;
-  background: #05112B;
+  background: #1A4F4F;
   color: #fff;
   font-size: 0.9375rem;
   line-height: 1.5;
   text-align: center;
-  border-bottom: 2px solid #1D74C9;
+  border-bottom: 2px solid #49D5D5;
 }
 
 .preview-notice a {
@@ -61,7 +66,7 @@ body:has(.preview-notice) .header-wrap {
 }
 
 body:has(.preview-notice).hss-page {
-  padding-top: calc(118px + 56px);
+  padding-top: calc(var(--hss-header-h, 130px) + 56px);
 }
 
 html { scroll-behavior: smooth; }
@@ -80,6 +85,11 @@ img { max-width: 100%; height: auto; display: block; }
 
 a { color: var(--blue); text-decoration: none; transition: color 0.25s var(--ease); }
 a:hover { color: var(--blue-bright); }
+
+.hss-footer a { color: var(--text-on-dark, #F4FBFB); }
+.hss-footer a:hover { color: var(--text-on-dark, #F4FBFB); }
+.hss-footer__cta a,
+.hss-footer__cta a:hover { color: var(--text-on-bright, #1A4F4F); }
 
 .container {
   width: var(--container);
@@ -106,13 +116,15 @@ a:hover { color: var(--blue-bright); }
   gap: 2rem;
   padding: 0.45rem 4%;
   font-size: 0.8125rem;
-  color: var(--white);
+  color: var(--text-on-dark, #F4FBFB);
   background: var(--navy);
   max-width: none;
   margin: 0;
 }
-.header-top a { color: rgba(255,255,255,0.85); }
-.header-top a:hover { color: #fff; }
+.header-top a,
+.header-top a:hover {
+  color: var(--text-on-dark, #F4FBFB);
+}
 
 .navbar { padding: 0 4%; }
 
@@ -169,7 +181,7 @@ a:hover { color: var(--blue-bright); }
 .lang-btn.active {
   background: var(--blue);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(26, 95, 158, 0.35);
+  box-shadow: 0 2px 8px rgba(40, 155, 155, 0.35);
 }
 
 .logo {
@@ -266,7 +278,7 @@ a:hover { color: var(--blue-bright); }
   color: #fff !important;
   border-radius: var(--radius-btn);
   font-weight: 600 !important;
-  box-shadow: 0 4px 16px rgba(26, 95, 158, 0.25);
+  box-shadow: 0 4px 16px rgba(40, 155, 155, 0.25);
   transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s !important;
 }
 
@@ -354,7 +366,7 @@ body.admin-body { padding-top: 118px; }
 .btn-primary {
   background: var(--blue);
   color: #fff;
-  box-shadow: 0 4px 20px rgba(26, 95, 158, 0.3);
+  box-shadow: 0 4px 20px rgba(40, 155, 155, 0.3);
 }
 
 .btn-primary:hover {
@@ -397,7 +409,7 @@ body.admin-body { padding-top: 118px; }
   border-radius: var(--radius-btn);
   font-weight: 600;
   border: none;
-  box-shadow: 0 4px 20px rgba(26, 95, 158, 0.25);
+  box-shadow: 0 4px 20px rgba(40, 155, 155, 0.25);
 }
 
 .cta-button.cta-primary:hover {
@@ -501,7 +513,7 @@ body.admin-body { padding-top: 118px; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 50%, rgba(26, 95, 158, 0.15) 100%);
+  background: linear-gradient(180deg, transparent 50%, rgba(40, 155, 155, 0.15) 100%);
 }
 
 .hero-stats-float {
@@ -860,7 +872,7 @@ body.admin-body { padding-top: 118px; }
 
 /* —— Booking CTA —— */
 .booking-cta {
-  background: linear-gradient(135deg, var(--blue) 0%, #1e7a9e 50%, var(--teal) 100%);
+  background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 50%, var(--blue-bright) 100%);
   border-radius: var(--radius);
   padding: clamp(3rem, 6vw, 5rem);
   text-align: center;
@@ -1176,7 +1188,7 @@ body.admin-body { padding-top: 118px; }
 .site-footer,
 .footer {
   background: var(--navy);
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-on-dark, #F4FBFB);
   padding: 0;
 }
 
@@ -1190,15 +1202,15 @@ body.admin-body { padding-top: 118px; }
 }
 
 .footer-brand .logo {
-  color: #fff !important;
+  color: var(--text-on-dark, #F4FBFB) !important;
   margin-bottom: 1rem;
 }
 
 .footer-brand p {
   font-size: 0.9375rem;
-  opacity: 0.75;
   max-width: 280px;
   line-height: 1.6;
+  color: var(--text-on-dark, #F4FBFB);
 }
 
 .footer-col h4 {
@@ -1206,18 +1218,18 @@ body.admin-body { padding-top: 118px; }
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 1.25rem;
-  color: var(--blue-bright);
+  color: var(--text-on-dark, #F4FBFB);
   font-weight: 700;
 }
 
 .footer-col a {
   display: block;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-on-dark, #F4FBFB);
   padding: 0.35rem 0;
   font-size: 0.9375rem;
 }
 
-.footer-col a:hover { color: #fff; }
+.footer-col a:hover { color: var(--text-on-dark, #F4FBFB); text-decoration: underline; }
 
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -1230,10 +1242,13 @@ body.admin-body { padding-top: 118px; }
   max-width: 1400px;
   margin: 0 auto;
   font-size: 0.8125rem;
-  opacity: 0.65;
+  color: var(--text-on-dark, #F4FBFB);
 }
 
-.footer-bottom a { color: rgba(255, 255, 255, 0.7); }
+.footer-bottom a,
+.footer-bottom a:hover {
+  color: var(--text-on-dark, #F4FBFB);
+}
 
 .footer-content { display: none; } /* legacy hidden if old markup */
 
@@ -1313,8 +1328,7 @@ body.admin-body { padding-top: 118px; }
 .quick-cards { display: none; }
 
 /* —— HSS-style spine hero —— */
-body { padding-top: 0; }
-body:not(.admin-body) { padding-top: 0; }
+body:not(.hss-page):not(.admin-body) { padding-top: 0; }
 
 .spine-hero {
   position: relative;
@@ -2024,7 +2038,11 @@ body:not(.admin-body) { padding-top: 0; }
    HSS SPINE PAGE LAYOUT (https://www.hss.edu/departments/spine)
    ============================================================ */
 
-.hss-page { padding-top: 118px; }
+.hss-page { padding-top: var(--hss-header-h, 130px); }
+
+body.hss-page {
+  padding-top: var(--hss-header-h, 130px);
+}
 
 .hss-header .header-top {
   justify-content: flex-start;
@@ -2104,7 +2122,7 @@ body:not(.admin-body) { padding-top: 0; }
   letter-spacing: -0.02em;
   color: var(--navy);
   margin-bottom: 1rem;
-  line-height: 1.1;
+  line-height: 1.25;
 }
 
 .hss-hero__tagline {

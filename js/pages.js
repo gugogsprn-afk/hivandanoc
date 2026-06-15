@@ -20,21 +20,50 @@ function renderPageContent(page) {
   const t = (k) => I18n.t(k);
 
   if (page === 'about') {
-    document.getElementById('about-text').textContent = h.about;
-    document.getElementById('mission-text').textContent = h.mission;
-    const statsEl = document.getElementById('about-stats');
-    if (statsEl) {
-      statsEl.innerHTML = h.stats
-        .map(
-          (s) => `
-        <div class="stat fade-in">
-          <span class="stat-number counter" data-count="${s.value}" data-suffix="${s.suffix || ''}">0</span>
-          <span class="stat-label">${s.label}</span>
-        </div>`
-        )
-        .join('');
-      HospitalApp.initAnimations();
+    const missionEl = document.getElementById('mission-text');
+    if (missionEl) missionEl.textContent = h.mission || '';
+
+    const heroImg = document.getElementById('about-hero-img');
+    if (heroImg && h.heroImage) heroImg.src = h.heroImage;
+
+    const signImg = document.getElementById('about-sign-img');
+    if (signImg) {
+      signImg.src = h.aboutImage || 'images/about/center-sign.png';
+      signImg.alt = I18n.t('pages.about.signCaption');
     }
+
+    initAboutArticle();
+
+    const leadershipEl = document.getElementById('about-leadership');
+    if (leadershipEl && data.doctors?.length) {
+      const chairs = data.doctors.slice(0, 2);
+      const members = data.doctors.slice(2, 6);
+      leadershipEl.innerHTML = `
+        <div class="hss-about-council__col">
+          <h3>${t('pages.about.leadershipCoChairs')}</h3>
+          <ul>${chairs.map((d) => `<li>${d.name}<span>${d.role}</span></li>`).join('')}</ul>
+        </div>
+        <div class="hss-about-council__col">
+          <h3>${t('pages.about.leadershipMembers')}</h3>
+          <ul>${members.map((d) => `<li>${d.name}<span>${d.role}</span></li>`).join('')}</ul>
+        </div>`;
+    }
+
+    const awardsEl = document.getElementById('about-awards');
+    if (awardsEl && data.awards?.length) {
+      awardsEl.innerHTML = data.awards
+        .map((a) => `<div class="hss-about-award"><strong>${a.label}</strong><span>${a.desc}</span></div>`)
+        .join('');
+    }
+
+    const valuesEl = document.getElementById('about-values');
+    if (valuesEl) {
+      valuesEl.innerHTML = [1, 2, 3, 4]
+        .map((n) => `<li>${t(`pages.about.value${n}`)}</li>`)
+        .join('');
+    }
+
+    initAboutSubnav();
   }
 
   if (page === 'doctors') {
@@ -63,15 +92,15 @@ function renderPageContent(page) {
   if (page === 'contacts') {
     const phoneEl = document.getElementById('contact-phone');
     if (phoneEl) {
-      const tel = (h.phone || '').replace(/[^\d+]/g, '');
+      const tel = HospitalApp.phoneTelUri(h.phone);
       phoneEl.innerHTML = tel
-        ? `<a href="tel:${tel}" class="hss-link">${h.phone}</a>`
+        ? `<a href="tel:${tel}" class="hss-link hss-link--tel">${h.phone}</a>`
         : h.phone;
     }
     document.getElementById('contact-email').textContent = h.email;
     document.getElementById('contact-address').textContent = h.address;
     document.getElementById('contact-hours').textContent = h.hours;
-    document.getElementById('contact-emergency').textContent = h.emergency;
+    HospitalApp.updatePhoneLinks(h);
     const map = document.getElementById('map-placeholder');
     if (map) map.textContent = h.address;
   }
@@ -92,7 +121,7 @@ function renderDoctors(data, surgeonOnly) {
   if (!grid) return;
   const t = (k) => I18n.t(k);
   const h = data.hospital || {};
-  const tel = (h.phone || '').replace(/[^\d+]/g, '');
+  const tel = HospitalApp.phoneTelUri(h.phone);
 
   const list = surgeonOnly ? data.doctors.filter(isSurgeonDoc) : data.doctors;
 
@@ -222,4 +251,31 @@ function renderDepartments(data, filterCategory) {
       </section>`;
     })
     .join('');
+}
+
+function initAboutSubnav() {
+  const subnav = document.getElementById('about-subnav');
+  if (!subnav) return;
+
+  const links = subnav.querySelectorAll('a[data-section]');
+  const sections = [...links].map((a) => document.getElementById(a.dataset.section)).filter(Boolean);
+
+  const setActive = (id) => {
+    links.forEach((a) => a.classList.toggle('is-active', a.dataset.section === id));
+  };
+
+  const syncFromScroll = () => {
+    const offset = 200;
+    let current = 'overview';
+    sections.forEach((sec) => {
+      if (sec.getBoundingClientRect().top <= offset) current = sec.id;
+    });
+    setActive(current);
+  };
+
+  const hash = (window.location.hash || '#overview').slice(1);
+  if (hash) setActive(hash);
+
+  window.addEventListener('scroll', syncFromScroll, { passive: true });
+  syncFromScroll();
 }

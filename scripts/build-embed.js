@@ -22,6 +22,7 @@ function writeEmbed(srcRelative, destRelative, globalName, nestedKey) {
 }
 
 writeEmbed('data/hospital.json', 'data/hospital.embed.js', '__HOSPITAL_BASE__');
+writeEmbed('data/about-article.json', 'data/about-article.embed.js', '__ABOUT_ARTICLE__');
 ['hy', 'ru', 'en'].forEach((code) => {
   writeEmbed(`lang/${code}.json`, `lang/${code}.embed.js`, '__I18N__', code);
 });

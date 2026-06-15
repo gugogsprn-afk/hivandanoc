@@ -224,11 +224,10 @@ function renderHomePage() {
       .join('');
   }
 
-  const tel = (h.phone || '').replace(/[^\d+]/g, '');
+  const tel = HospitalApp.phoneTelUri(h.phone);
   const mobilePhone = document.getElementById('mobile-bar-phone');
   if (mobilePhone && tel) {
     mobilePhone.href = `tel:${tel}`;
-    mobilePhone.textContent = h.phone;
   }
 
   HospitalApp.initAnimations();

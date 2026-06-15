@@ -11,16 +11,16 @@
     "address": "г. Ереван, ул. Примерная, д. 1",
     "hours": "Пн–Пт: 8:00–20:00, Сб: 9:00–15:00, Вс: выходной",
     "social": {
-      "facebook": "#",
-      "twitter": "#",
-      "youtube": "#",
-      "instagram": "#",
-      "linkedin": "#"
+      "facebook": "https://www.facebook.com/HealthySpineCHIC",
+      "twitter": "https://x.com/HealthySpineCHIC",
+      "youtube": "https://www.youtube.com/@HealthySpineCHIC",
+      "instagram": "https://www.instagram.com/healthyspinechic",
+      "linkedin": "https://www.linkedin.com/company/healthy-spine-chic"
     },
     "about": "Реабилитационный центр «Առողջ ողնաշար» — специализированная помощь при заболеваниях позвоночника, суставов и опорно-двигательного аппарата. Консервативное лечение, физиотерапия и индивидуальные программы восстановления.",
     "mission": "Восстанавливать подвижность и качество жизни пациентов с помощью доказательных методов реабилитации и мультидисциплинарного подхода.",
-    "heroImage": "images/about-image-01.jpg",
-    "aboutImage": "images/about-image-01.jpg",
+    "heroImage": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&q=85",
+    "aboutImage": "images/about/center-sign.png",
     "stats": [
       {
         "value": 30,
@@ -141,7 +141,7 @@
   "feature": {
     "title": "Инновации в реабилитации позвоночника",
     "description": "Современные методы физиотерапии, мануальной терапии и ЛФК обеспечивают точное, персонализированное восстановление и более быстрый возврат к активной жизни — без операции.",
-    "image": "images/about-image-01.jpg"
+    "image": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80"
   },
   "approachParagraphs": [
     "Наши специалисты стремятся помочь пациентам избежать ненужных вмешательств. Мы применяем новейшие нехирургические методы лечения ортопедических и неврологических состояний.",
@@ -160,14 +160,14 @@
       "id": "n1",
       "title": "Центр «Առողջ ողնաշար» представил новые программы реабилитации",
       "date": "2025-11-12",
-      "image": "images/about-image-01.jpg",
+      "image": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80",
       "category": "Новости центра"
     },
     {
       "id": "n2",
       "title": "Открытие обновлённого кабинета физиотерапии",
       "date": "2025-09-03",
-      "image": "images/team-member-02.jpg",
+      "image": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600&q=80",
       "category": "Оборудование"
     },
     {
@@ -181,13 +181,13 @@
   "patientHero": {
     "quote": "Арам, опасаясь, что боль в спине навсегда ограничит его жизнь, вернулся к активности благодаря программе реабилитации в «Առողջ ողնաշար».",
     "ctaText": "Ознакомьтесь с его историей",
-    "image": "images/about-image-01.jpg"
+    "image": "https://images.unsplash.com/photo-1476480862128-209bfaa8dfc8?w=1400&q=85"
   },
   "backInGame": {
     "title": "Вернись к активной жизни",
     "text": "Истории наших пациентов — лучшее доказательство того, что консервативное лечение и реабилитация работают. Сотни людей уже вернулись к работе, спорту и повседневной активности.",
     "linkText": "Прочитайте вдохновляющие истории пациентов",
-    "image": "images/team-member-01.jpg"
+    "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=900&q=80"
   },
   "expertiseOverlay": {
     "title": "Экспертиза, которой можно доверять",
@@ -202,7 +202,7 @@
         "href": "about.html#awards"
       }
     ],
-    "image": "images/team-member-02.jpg"
+    "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=85"
   },
   "awards": [
     {
@@ -225,12 +225,12 @@
     {
       "id": "sv1",
       "title": "Как я вернулся к активной жизни: история лечения остеохондроза",
-      "image": "images/team-member-01.jpg"
+      "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80"
     },
     {
       "id": "sv2",
       "title": "Восстановление после травмы спины: история пациента",
-      "image": "images/team-member-02.jpg"
+      "image": "https://images.unsplash.com/photo-1582750433449-648ed127fbfe?w=500&q=80"
     },
     {
       "id": "sv3",

@@ -75,38 +75,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
-    const phone = String(fd.get('phone') || '').trim();
-    if (phone.length < 6) {
-      alert(I18n.t('pages.appointment.phone') || 'Enter a valid phone');
-      return;
-    }
-    try {
-      HospitalStorage.addAppointment({
-        patientName: fd.get('patientName'),
-        phone,
-        email: fd.get('email') || '',
-        departmentId: fd.get('departmentId'),
-        doctorId: fd.get('doctorId') || '',
-        date: fd.get('date'),
-        time: fd.get('time'),
-        comment: fd.get('comment') || ''
-      });
-    } catch (err) {
-      if (err.message === 'rate_limit') {
-        alert(I18n.t('pages.appointment.rateLimit') || 'Please wait before submitting again.');
-        return;
-      }
-      throw err;
-    }
+    const record = {
+      patientName: fd.get('patientName'),
+      phone: fd.get('phone'),
+      email: fd.get('email') || '',
+      departmentId: fd.get('departmentId'),
+      doctorId: fd.get('doctorId') || '',
+      date: fd.get('date'),
+      time: fd.get('time'),
+      comment: fd.get('comment') || ''
+    };
+
+    HospitalStorage.addAppointment(record);
+
+    const api = typeof FormApi !== 'undefined' ? await FormApi.submitAppointment(record) : { offline: true };
 
     const msg = document.getElementById('appointment-success');
-    msg.hidden = false;
-    form.reset();
-    fillAppointmentForm();
-    window.scrollTo({ top: msg.offsetTop - 100, behavior: 'smooth' });
+    if (api.ok) {
+      msg.hidden = false;
+      form.reset();
+      fillAppointmentForm();
+      window.scrollTo({ top: msg.offsetTop - 100, behavior: 'smooth' });
+    } else if (api.offline || api.status === 503) {
+      msg.hidden = false;
+      form.reset();
+      fillAppointmentForm();
+      window.scrollTo({ top: msg.offsetTop - 100, behavior: 'smooth' });
+    } else {
+      alert(api.error || 'Не удалось отправить уведомление. Заявка сохранена локально.');
+    }
   });
 
   window.addEventListener('hospital:refresh', () => {

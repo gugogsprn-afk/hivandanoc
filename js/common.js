@@ -92,6 +92,58 @@ const HospitalApp = (function () {
     });
   }
 
+  function phoneTelUri(phone) {
+    if (!phone) return '';
+    let digits = String(phone).replace(/[^\d+]/g, '');
+    if (digits.startsWith('00')) digits = `+${digits.slice(2)}`;
+    return digits;
+  }
+
+  function updatePhoneLinks(h) {
+    if (!h) return;
+    const tel = phoneTelUri(h.phone);
+    const telHref = tel ? `tel:${tel}` : '#';
+
+    const headerPhone = document.getElementById('header-phone');
+    if (headerPhone) {
+      headerPhone.href = telHref;
+      const span = headerPhone.querySelector('span');
+      if (span) span.textContent = h.phone || span.textContent;
+    }
+
+    const mobilePhone = document.getElementById('mobile-bar-phone');
+    if (mobilePhone && tel) {
+      mobilePhone.href = telHref;
+      if (!mobilePhone.hasAttribute('data-i18n')) {
+        mobilePhone.textContent = h.phone;
+      }
+    }
+
+    const footerPhone = document.getElementById('footer-phone');
+    if (footerPhone) {
+      footerPhone.href = telHref;
+      footerPhone.textContent = h.phone || footerPhone.textContent;
+    }
+
+    document.querySelectorAll('[data-phone-call]').forEach((el) => {
+      if (!tel) return;
+      el.href = telHref;
+      if (el.dataset.phoneDisplay !== 'false') {
+        const label = el.querySelector('[data-phone-label]');
+        if (label) label.textContent = h.phone;
+        else if (!el.hasAttribute('data-i18n')) el.textContent = h.phone;
+      }
+    });
+
+    const emergency = h.emergency || '103';
+    const emergencyTel = phoneTelUri(emergency);
+    ['contact-emergency', 'appointment-emergency'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el || !emergencyTel) return;
+      el.innerHTML = `<a href="tel:${emergencyTel}" class="hss-link hss-link--tel">${emergency}</a>`;
+    });
+  }
+
   function renderNav() {
     const mount = document.getElementById('site-nav');
     if (!mount) return;
@@ -100,7 +152,7 @@ const HospitalApp = (function () {
     const page = document.body.dataset.page || '';
 
     const h = getData()?.hospital || {};
-    const tel = (h.phone || '').replace(/[^\d+]/g, '') || '+74951234567';
+    const tel = phoneTelUri(h.phone) || '+74951234567';
 
     const links = NAV_ITEMS.map((item) => {
       const cls = page === item.id ? 'active' : '';
@@ -120,19 +172,19 @@ const HospitalApp = (function () {
             <a href="${prefix}index.html" class="logo logo--brand" aria-label="CHIC">
               ${logoMarkup(prefix, 'header')}
             </a>
-            <ul class="nav-links nav-links--hss" id="primary-nav">${links}</ul>
+            <ul class="nav-links nav-links--hss">${links}</ul>
             <div class="nav-actions">
               <button type="button" class="nav-search" aria-label="${I18n.t('nav.search')}" id="nav-search-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
               <div class="lang-switcher" role="group" aria-label="${I18n.t('nav.langAria')}"></div>
-              <a href="tel:${tel}" class="nav-phone" id="header-phone">
+              <a href="tel:${tel}" class="nav-phone" id="header-phone" aria-label="${I18n.t('common.callUs')}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 <span>${h.phone || '+7 (495) 123-45-67'}</span>
               </a>
               <a href="${prefix}appointment.html" class="nav-cta hss-btn hss-btn--primary">${I18n.t('common.bookAppointment')}</a>
             </div>
-            <div class="mobile-menu" role="button" tabindex="0" aria-expanded="false" aria-controls="primary-nav">
+            <div class="mobile-menu" aria-label="${I18n.t('nav.menuAria')}">
               <span></span><span></span><span></span>
             </div>
           </div>
@@ -141,9 +193,8 @@ const HospitalApp = (function () {
 
     I18n.renderSwitcher(mount.querySelector('.lang-switcher'));
     initMobileMenu();
+    syncHeaderOffset();
     initHeaderScroll();
-    initNavSearch();
-    injectSkipLink();
   }
 
   function socialIconSvg(name) {
@@ -228,14 +279,7 @@ const HospitalApp = (function () {
   function shareModalNetworks() {
     return [
       { id: 'facebook', labelKey: 'share.facebook', cls: 'fb' },
-      { id: 'twitter', labelKey: 'share.twitter', cls: 'tw' },
       { id: 'linkedin', labelKey: 'share.linkedin', cls: 'in' },
-      { id: 'pinterest', labelKey: 'share.pinterest', cls: 'pi' },
-      { id: 'tumblr', labelKey: 'share.tumblr', cls: 'tu' },
-      { id: 'xing', labelKey: 'share.xing', cls: 'xi' },
-      { id: 'reddit', labelKey: 'share.reddit', cls: 're' },
-      { id: 'vk', labelKey: 'share.vk', cls: 'vk' },
-      { id: 'print', labelKey: 'share.print', cls: 'print' },
       { id: 'email', labelKey: 'share.email', cls: 'mail' }
     ];
   }
@@ -316,8 +360,8 @@ const HospitalApp = (function () {
   }
 
   function bindShareBar(bar) {
-    if (!bar || bar.dataset.shareBound) return;
-    bar.dataset.shareBound = '1';
+    if (!bar) return;
+    delete bar.dataset.shareBound;
     bar.querySelectorAll('[data-share]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -338,12 +382,15 @@ const HospitalApp = (function () {
     const name = h.shortName || h.name || '—';
     const t = (k) => I18n.t(k);
 
-    const socialRow = ['facebook', 'twitter', 'youtube', 'instagram', 'linkedin']
+    const socialRow = ['facebook', 'instagram', 'linkedin']
       .map(
         (net) =>
           `<a href="${social[net] || '#'}" class="hss-footer__social" target="_blank" rel="noopener noreferrer" aria-label="${net}">${socialIconSvg(net)}</a>`
       )
-      .join('');
+      .join('') +
+      (h.email
+        ? `<a href="mailto:${h.email}" class="hss-footer__social" aria-label="Email">${socialIconSvg('mail')}</a>`
+        : '');
 
     mount.innerHTML = `
       <footer class="site-footer hss-footer">
@@ -364,7 +411,6 @@ const HospitalApp = (function () {
                 <a href="${prefix}submit-story.html" data-i18n="footer.linkStory">${t('footer.linkStory')}</a>
                 <a href="${prefix}move-better.html" data-i18n="footer.linkArticles">${t('footer.linkArticles')}</a>
                 <a href="${prefix}contacts.html" data-i18n="footer.linkNewsletter">${t('footer.linkNewsletter')}</a>
-                <a href="${prefix}about.html" data-i18n="footer.linkSupport">${t('footer.linkSupport')}</a>
               </nav>
             </div>
             <div class="hss-footer__col">
@@ -400,11 +446,20 @@ const HospitalApp = (function () {
       </footer>`;
   }
 
+  function syncHeaderOffset() {
+    const header = document.getElementById('site-header');
+    if (!header) return;
+    const h = Math.ceil(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--hss-header-h', `${h}px`);
+  }
+
   function initHeaderScroll() {
     const header = document.getElementById('site-header');
     if (!header) return;
+    syncHeaderOffset();
     const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', syncHeaderOffset, { passive: true });
     onScroll();
   }
 
@@ -414,19 +469,20 @@ const HospitalApp = (function () {
     const navActions = document.querySelector('.nav-actions');
     if (!mobileMenu || !navLinks) return;
 
-    const setExpanded = (open) => {
-      mobileMenu.setAttribute('aria-expanded', String(open));
-      mobileMenu.setAttribute('aria-label', I18n.t('nav.menuAria'));
-    };
+    mobileMenu.replaceWith(mobileMenu.cloneNode(true));
+    const menu = document.querySelector('.mobile-menu');
+    const links = document.querySelector('.nav-links');
 
     const toggle = () => {
-      const open = !navLinks.classList.contains('active');
-      navLinks.classList.toggle('active');
+      links.classList.toggle('active');
       navActions?.classList.toggle('active');
-      setExpanded(open);
-      const spans = mobileMenu.querySelectorAll('span');
+    };
+
+    menu.addEventListener('click', () => {
+      toggle();
+      const spans = menu.querySelectorAll('span');
       spans.forEach((span, index) => {
-        span.style.transform = open
+        span.style.transform = links.classList.contains('active')
           ? index === 0
             ? 'rotate(45deg) translate(5px, 5px)'
             : index === 1
@@ -434,83 +490,14 @@ const HospitalApp = (function () {
               : 'rotate(-45deg) translate(7px, -6px)'
           : 'none';
       });
-    };
-
-    mobileMenu.addEventListener('click', toggle);
-    mobileMenu.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggle();
-      }
     });
 
-    navLinks.querySelectorAll('a').forEach((a) => {
+    links.querySelectorAll('a').forEach((a) => {
       a.addEventListener('click', () => {
-        navLinks.classList.remove('active');
+        links.classList.remove('active');
         navActions?.classList.remove('active');
-        setExpanded(false);
       });
     });
-
-    setExpanded(false);
-  }
-
-  function initNavSearch() {
-    const btn = document.getElementById('nav-search-btn');
-    if (!btn || btn.dataset.bound) return;
-    btn.dataset.bound = '1';
-    btn.addEventListener('click', () => {
-      const prefix = pathPrefix();
-      const q = window.prompt(I18n.t('pages.home.searchPlaceholder') || 'Search');
-      if (q === null) return;
-      const params = new URLSearchParams();
-      if (q.trim()) params.set('q', q.trim());
-      window.location.href = `${prefix}doctors.html${params.toString() ? `?${params}` : ''}`;
-    });
-  }
-
-  function ensureMainLandmark() {
-    if (document.getElementById('main-content')) return;
-    const main =
-      document.querySelector('main') ||
-      document.querySelector('.hss-booking') ||
-      document.querySelector('.hss-section') ||
-      document.querySelector('.hss-hero--inner');
-    if (main) main.id = 'main-content';
-  }
-
-  function injectSkipLink() {
-    ensureMainLandmark();
-    if (document.getElementById('skip-link')) return;
-    const prefix = pathPrefix();
-    const link = document.createElement('a');
-    link.id = 'skip-link';
-    link.className = 'skip-link';
-    link.href = `${prefix}#main-content`;
-    link.textContent = I18n.t('common.skipToContent') || 'Skip to content';
-    document.body.prepend(link);
-  }
-
-  function injectTrustStrip() {
-    if (document.getElementById('trust-strip')) return;
-    const h = getData()?.hospital || {};
-    const prefix = pathPrefix();
-    const tel = (h.phone || '').replace(/[^\d+]/g, '');
-    const strip = document.createElement('div');
-    strip.id = 'trust-strip';
-    strip.className = 'hss-trust-strip';
-    strip.innerHTML = `
-      <div class="hss-trust-strip__inner">
-        <span class="hss-trust-strip__item">✓ ${I18n.t('footer.infoPatients')}</span>
-        <span class="hss-trust-strip__item">✓ ${I18n.t('pages.home.expertsTitle')}</span>
-        <span class="hss-trust-strip__emergency">
-          ${I18n.t('pages.appointment.emergencyHint') || 'Emergency'}: <a href="tel:103">103</a>
-          · <a href="tel:${tel}">${h.phone || ''}</a>
-        </span>
-        <a href="${prefix}appointment.html" class="hss-btn hss-btn--primary hss-btn--sm">${I18n.t('common.bookAppointment')}</a>
-      </div>`;
-    const nav = document.getElementById('site-nav');
-    if (nav) nav.after(strip);
   }
 
   async function loadData() {
@@ -634,10 +621,9 @@ const HospitalApp = (function () {
       }
     };
 
-    setHref('header-phone', `tel:${h.phone?.replace(/\s/g, '')}`, h.phone);
-    setHref('footer-phone', `tel:${h.phone?.replace(/\s/g, '')}`, h.phone);
     setHref('header-email', `mailto:${h.email}`, h.email);
     setHref('footer-email', `mailto:${h.email}`, h.email);
+    updatePhoneLinks(h);
 
     const addr = document.getElementById('footer-address');
     if (addr) addr.textContent = h.address;
@@ -715,26 +701,31 @@ const HospitalApp = (function () {
     return dept ? dept.name : id;
   }
 
+  function utilityBarHtml(social, email) {
+    const s = social || {};
+    const ext = 'target="_blank" rel="noopener noreferrer"';
+    const mail = email || '';
+    return `
+        <a href="${s.facebook || '#'}" class="hss-utilities__btn hss-utilities__btn--fb" ${ext} aria-label="Facebook">${socialIconSvg('facebook')}</a>
+        <a href="${s.instagram || '#'}" class="hss-utilities__btn hss-utilities__btn--ig" ${ext} aria-label="Instagram">${socialIconSvg('instagram')}</a>
+        <a href="${s.linkedin || '#'}" class="hss-utilities__btn hss-utilities__btn--in" ${ext} aria-label="LinkedIn">${socialIconSvg('linkedin')}</a>
+        <a href="${mail ? `mailto:${mail}` : '#'}" class="hss-utilities__btn hss-utilities__btn--mail" aria-label="Email">${socialIconSvg('mail')}</a>`;
+  }
+
   function initPageUtilities() {
     if (!document.body.classList.contains('hss-page')) return;
 
+    const social = getData()?.hospital?.social || {};
+    const email = getData()?.hospital?.email || '';
     let bar = document.getElementById('hss-utilities');
     if (!bar) {
       bar = document.createElement('aside');
       bar.id = 'hss-utilities';
       bar.className = 'hss-utilities';
       bar.setAttribute('aria-label', I18n.t('share.barAria'));
-      bar.innerHTML = `
-        <button type="button" class="hss-utilities__btn hss-utilities__btn--fb" data-share="facebook" aria-label="Facebook">${socialIconSvg('facebook')}</button>
-        <button type="button" class="hss-utilities__btn hss-utilities__btn--tw" data-share="twitter" aria-label="X">${socialIconSvg('twitter')}</button>
-        <button type="button" class="hss-utilities__btn hss-utilities__btn--in" data-share="linkedin" aria-label="LinkedIn">${socialIconSvg('linkedin')}</button>
-        <button type="button" class="hss-utilities__btn hss-utilities__btn--print" data-share="print" aria-label="${I18n.t('share.print')}">${socialIconSvg('print')}</button>
-        <button type="button" class="hss-utilities__btn hss-utilities__btn--mail" data-share="email" aria-label="${I18n.t('share.email')}">${socialIconSvg('mail')}</button>
-        <button type="button" class="hss-utilities__btn hss-utilities__btn--more" data-share="more" aria-label="${I18n.t('share.more')}">⋯</button>`;
       document.body.appendChild(bar);
     }
-    bindShareBar(bar);
-    ensureShareModal();
+    bar.innerHTML = utilityBarHtml(social, email);
 
     let topBtn = document.getElementById('hss-back-top');
     if (!topBtn) {
@@ -759,8 +750,7 @@ const HospitalApp = (function () {
     renderNav();
     renderFooter();
     applyBranding();
-    if (typeof SiteSEO !== 'undefined') SiteSEO.refresh(getData());
-    injectTrustStrip();
+    initPageUtilities();
     I18n.applyDOM();
     document.querySelectorAll('[data-anim-observed]').forEach((el) => {
       delete el.dataset.animObserved;
@@ -789,14 +779,14 @@ const HospitalApp = (function () {
       try {
         await loadData();
         applyBranding();
-        if (typeof SiteSEO !== 'undefined') SiteSEO.refresh(getData());
-        injectTrustStrip();
+        renderNav();
+        renderFooter();
       } catch (err) {
-        if (!window.__HOSPITAL_BASE__) {
-          showPreviewNotice(
-            '<strong>Запустите локальный сервер</strong> для загрузки данных.'
-          );
-        }
+        showPreviewNotice(
+          '<strong>Запустите файл <code>СМОТРЕТЬ.bat</code></strong> в папке проекта. ' +
+            'Ссылка: <a href="http://127.0.0.1:8765/index.html">http://127.0.0.1:8765/index.html</a>'
+        );
+        console.error(err);
       }
 
       I18n.applyDOM();
@@ -820,7 +810,9 @@ const HospitalApp = (function () {
     departmentName,
     pathPrefix,
     initAnimations,
-    resetAnimations
+    resetAnimations,
+    phoneTelUri,
+    updatePhoneLinks
   };
 })();
 
