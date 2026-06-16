@@ -104,6 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       form.reset();
       fillAppointmentForm();
       window.scrollTo({ top: msg.offsetTop - 100, behavior: 'smooth' });
+    } else if (api.viaFormSubmit) {
+      alert(
+        api.error ||
+          api.message ||
+          'Проверьте почту gugogsprn@gmail.com — возможно, нужно подтвердить FormSubmit (см. КАК-РАБОТАЮТ-ЗАЯВКИ.txt).'
+      );
     } else {
       alert(api.error || 'Не удалось отправить уведомление. Заявка сохранена локально.');
     }
