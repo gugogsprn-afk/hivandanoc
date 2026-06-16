@@ -994,6 +994,18 @@ body.hss-page {
   color: var(--navy);
 }
 
+.hss-contact-card .hss-link,
+.hss-contact-card .hss-link--tel {
+  color: var(--navy);
+  font-weight: inherit;
+  font-size: 1.0625rem;
+}
+
+.hss-contact-card .hss-link:hover,
+.hss-contact-card .hss-link--tel:hover {
+  color: var(--blue);
+}
+
 .hss-map {
   min-height: 200px;
   background: var(--bg-alt, #F0FAFA);
@@ -1277,15 +1289,15 @@ body.hss-page {
   align-items: center;
   justify-content: center;
   padding: 0 2rem;
-  background: var(--blue-bright, #49D5D5);
+  background: var(--blue, #289B9B);
   color: #fff;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .hss-search-band__form .hss-btn--bright:hover {
-  background: #fff;
-  color: var(--blue);
+  background: var(--blue-dark, #1F7575);
+  color: #fff;
 }
 
 /* —— Quick services row —— */
