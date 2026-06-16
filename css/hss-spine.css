@@ -2492,13 +2492,46 @@ body.hss-share-open {
 }
 
 @media (max-width: 768px) {
+  /* iOS Safari: fixed header can detach while scrolling — use sticky in document flow */
+  #site-nav {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 1000;
+  }
+
+  .header-wrap {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100%;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  body.hss-page {
+    padding-top: 0 !important;
+  }
+
   .hss-page {
-    padding-top: var(--hss-header-h, 72px);
+    padding-top: 0 !important;
     padding-bottom: 72px;
   }
 
   .hss-mobile-bar {
     display: flex;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    html {
+      overscroll-behavior-y: none;
+    }
+
+    body {
+      overflow-x: clip;
+    }
   }
 
   .hss-doctor-item {

@@ -460,6 +460,10 @@ const HospitalApp = (function () {
     const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', syncHeaderOffset, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncHeaderOffset, { passive: true });
+      window.visualViewport.addEventListener('scroll', syncHeaderOffset, { passive: true });
+    }
     onScroll();
   }
 

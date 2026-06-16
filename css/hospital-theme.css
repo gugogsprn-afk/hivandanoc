@@ -1942,9 +1942,10 @@ body:not(.hss-page):not(.admin-body) { padding-top: 0; }
 
 @media (max-width: 768px) {
   body { padding-top: 0; }
+  body.hss-page { padding-top: 0 !important; }
   body.admin-body { padding-top: 72px; }
-  .spine-hero { margin-top: 72px; min-height: 75vh; }
-  .page-hero { margin-top: 72px; }
+  .spine-hero { margin-top: 0; min-height: 75vh; }
+  .page-hero { margin-top: 0; }
   .header-top { display: none; }
   .doctor-row {
     grid-template-columns: 64px 1fr;
@@ -1962,7 +1963,7 @@ body:not(.hss-page):not(.admin-body) { padding-top: 0; }
 
   .nav-links {
     position: fixed;
-    top: 72px;
+    top: var(--hss-header-h, 72px);
     left: 0;
     right: 0;
     background: var(--white);
@@ -2011,7 +2012,7 @@ body:not(.hss-page):not(.admin-body) { padding-top: 0; }
   .hss-stories-row { grid-template-columns: 1fr 1fr; }
   .nav-actions {
     position: fixed;
-    top: 72px;
+    top: var(--hss-header-h, 72px);
     left: 0;
     right: 0;
     background: var(--white);
