@@ -28,7 +28,7 @@ function renderPageContent(page) {
 
     const signImg = document.getElementById('about-sign-img');
     if (signImg) {
-      signImg.src = h.aboutImage || 'images/about/center-sign.png';
+      signImg.src = h.aboutImage || 'images/about/center-building.png';
       signImg.alt = I18n.t('pages.about.signCaption');
     }
 
