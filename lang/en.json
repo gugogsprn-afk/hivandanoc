@@ -239,6 +239,13 @@
       "feedbackThanks": "Thank you! Message received (demo mode).",
       "feedbackDesc": "Have questions? Send us a message — we respond within 1–2 business days."
     },
+    "patientStory": {
+      "title": "Patient Story — Healthy Spine",
+      "titleShort": "Patient Story",
+      "backLink": "« Back to patient stories",
+      "bookCta": "Book an appointment",
+      "notFound": "Story not found."
+    },
     "submitStory": {
       "title": "Share Your Story — Healthy Spine",
       "backLink": "« Back to patient stories overview",

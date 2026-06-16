@@ -1,0 +1,134 @@
+{
+  "hy": {
+    "ps1": {
+      "paragraphs": [
+        "Տարեր շարունակ ես տառապում գոտկատեղի ցավից։ Ամեն առավոտ սկսվում էր կարծրությունից, և ես վախենում էի, որ ցավը կմնա միշտ։",
+        "«Առողջ ողնաշար» կենտրոնում ինձ համար կազմեցին անհատական ծրագիր՝ մանուալ թերապիա, վարժաբուժություն և ֆիզիոթերապիա։ Արդեն մեկ ամիսից ցավը նվազեց։",
+        "Այ՛սօր կարող եմ աշխատել համակարգչի դիմաց և զբաղվել երեխաների հետ առանց վախի, որ մեջքը կձախողվի։"
+      ]
+    },
+    "ps2": {
+      "paragraphs": [
+        "Ֆուտբոլ խաղալիս ծնկի վնասվածք ստացա և երկար ժամանակ չէի կարող վերադառնալ մարզումներին.",
+        "Սպորտային վերականգնման ծրագիրը կենտրոնում օգնեց վերականգնել շարժունակությունը և ամրացնել հոդը.",
+        "Այ՛սօր նորից մարզվում եմ և զգում, որ վերադարձել եմ նախկին կյանքին։"
+      ]
+    },
+    "ps3": {
+      "paragraphs": [
+        "Սկոլիոզի պատճառով երկար ժամանակ ամոթանում էի ուղղվածության խնդիրից և ցավից.",
+        "Մասնագետները առաջարկեցին կոնսերվատիվ բուժում՝ ուղղող վարժություններ և ֆիզիոթերապիա, առանց վիրահատության։",
+        "Հիմա ավելի ուղիղ կանգնում եմ, ցավը նվազել է, և ինձ ավելի վստահ եմ զգում։"
+      ]
+    },
+    "ps4": {
+      "paragraphs": [
+        "После диагноза грыжи думал, что единственный выход — операция.",
+        "В центре прошёл комплексное лечение, которое помогло обойтись без хирургического вмешательства.",
+        "Боль ушла, я снова могу работать и проводить время с семьёй."
+      ]
+    },
+    "ps5": {
+      "paragraphs": [
+        "Годами страдала от хронической боли в шее и плечах из-за сидячей работы.",
+        "Курс мануальной терапии и упражнений дал заметный результат уже через несколько недель.",
+        "Сейчас могу свободно двигать шеей и работать без постоянного напряжения."
+      ]
+    },
+    "ps6": {
+      "paragraphs": [
+        "После автомобильной аварии долго восстанавливался и боялся, что не смогу вернуться к обычной жизни.",
+        "Реабилитационная программа помогла постепенно вернуть силу и уверенность в движениях.",
+        "Сегодня я снова самостоятелен и благодарен команде центра за поддержку."
+      ]
+    }
+  },
+  "ru": {
+    "ps1": {
+      "paragraphs": [
+        "Годами мучилась от боли в пояснице. Каждое утро начиналось с ощущения скованности.",
+        "В «Здоровом позвоночнике» составили программу: мануальная терапия, ЛФК и физиотерапия. Уже через месяц боль стала реже.",
+        "Сейчас я снова могу работать за компьютером и заниматься с детьми без страха, что спина «откажет»."
+      ]
+    },
+    "ps2": {
+      "paragraphs": [
+        "Получил травму колена во время футбола и долго не мог вернуться к тренировкам.",
+        "Программа спортивной реабилитации в центре помогла восстановить подвижность и укрепить сустав.",
+        "Сегодня я снова занимаюсь спортом и чувствую, что вернулся к прежней жизни."
+      ]
+    },
+    "ps3": {
+      "paragraphs": [
+        "Из-за сколиоза долго стеснялась проблем с осанкой и испытывала боль.",
+        "Специалисты предложили консервативное лечение — корригирующие упражнения и физиотерапию без операции.",
+        "Теперь я стою ровнее, боль уменьшилась, и я чувствую себя увереннее."
+      ]
+    },
+    "ps4": {
+      "paragraphs": [
+        "После диагноза грыжи думал, что единственный выход — операция.",
+        "В центре прошёл комплексное лечение, которое помогло обойтись без хирургического вмешательства.",
+        "Боль ушла, я снова могу работать и проводить время с семьёй."
+      ]
+    },
+    "ps5": {
+      "paragraphs": [
+        "Годами страдала от хронической боли в шее и плечах из-за сидячей работы.",
+        "Курс мануальной терапии и упражнений дал заметный результат уже через несколько недель.",
+        "Сейчас могу свободно двигать шеей и работать без постоянного напряжения."
+      ]
+    },
+    "ps6": {
+      "paragraphs": [
+        "После автомобильной аварии долго восстанавливался и боялся, что не смогу вернуться к обычной жизни.",
+        "Реабилитационная программа помогла постепенно вернуть силу и уверенность в движениях.",
+        "Сегодня я снова самостоятелен и благодарен команде центра за поддержку."
+      ]
+    }
+  },
+  "en": {
+    "ps1": {
+      "paragraphs": [
+        "For years I suffered from lower back pain. Every morning started with stiffness.",
+        "At Healthy Spine, I received a personalized program: manual therapy, exercise therapy, and physiotherapy. Within a month, the pain became less frequent.",
+        "Today I can work at my desk and play with my children without fear that my back will give out."
+      ]
+    },
+    "ps2": {
+      "paragraphs": [
+        "I injured my knee playing football and could not return to training for a long time.",
+        "The sports rehabilitation program at the center helped restore mobility and strengthen the joint.",
+        "Today I am training again and feel that I have returned to my previous life."
+      ]
+    },
+    "ps3": {
+      "paragraphs": [
+        "Because of scoliosis, I was self-conscious about my posture and lived with pain for years.",
+        "Specialists recommended conservative treatment — corrective exercises and physiotherapy without surgery.",
+        "Now I stand straighter, the pain has decreased, and I feel more confident."
+      ]
+    },
+    "ps4": {
+      "paragraphs": [
+        "After a herniated disc diagnosis, I thought surgery was the only option.",
+        "At the center, I completed comprehensive treatment that helped me avoid an operation.",
+        "The pain is gone, and I can work and spend time with my family again."
+      ]
+    },
+    "ps5": {
+      "paragraphs": [
+        "For years I suffered from chronic neck and shoulder pain due to desk work.",
+        "A course of manual therapy and exercises brought noticeable improvement within weeks.",
+        "Now I can move my neck freely and work without constant tension."
+      ]
+    },
+    "ps6": {
+      "paragraphs": [
+        "After a car accident, recovery took a long time and I feared I would not return to normal life.",
+        "The rehabilitation program helped me gradually regain strength and confidence in movement.",
+        "Today I am independent again and grateful to the center's team for their support."
+      ]
+    }
+  }
+}
