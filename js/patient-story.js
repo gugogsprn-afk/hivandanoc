@@ -25,8 +25,11 @@ async function loadStoryDetails() {
 }
 
 function getStoryParagraphs(details, lang, id) {
-  const localized = details?.[lang]?.[id]?.paragraphs;
-  if (localized?.length) return localized;
+  let paragraphs = details?.[lang]?.[id]?.paragraphs;
+  if (paragraphs?.length && lang === 'hy' && /[а-яА-ЯёЁ]/.test(paragraphs.join(' '))) {
+    paragraphs = details?.en?.[id]?.paragraphs;
+  }
+  if (paragraphs?.length) return paragraphs;
   return details?.ru?.[id]?.paragraphs || [];
 }
 
