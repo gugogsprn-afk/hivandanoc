@@ -2,52 +2,77 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0E4B8A">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>About</title>
-    <link rel="icon" href="images/brand/logo-chic.png" type="image/png">
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260616">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260616">
-    <link rel="stylesheet" href="css/audit-fixes.css?v=20260616">
-    <script src="js/seo.js" defer></script>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260619">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260619">
 </head>
 <body class="hss-page" data-page="about" data-i18n-title="pages.about.title">
     <div id="site-nav"></div>
-    <header class="hss-hero hss-hero--inner">
+
+    <div class="hss-about-hero">
+        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=85" alt="" id="about-hero-img" loading="eager">
+    </div>
+
+    <nav class="hss-subnav" aria-label="About sections">
         <div class="hss-wrap">
-            <h1 data-i18n="pages.about.heroTitle">—</h1>
-            <p class="hss-hero__tagline" data-i18n="pages.about.heroDesc">—</p>
+            <ul class="hss-subnav__list" id="about-subnav">
+                <li><a href="about.html#overview" data-section="overview" data-i18n="pages.about.subnavOverview">—</a></li>
+                <li><a href="about.html#leadership" data-section="leadership" data-i18n="pages.about.subnavLeadership">—</a></li>
+                <li><a href="about.html#awards" data-section="awards" data-i18n="pages.about.subnavAwards">—</a></li>
+                <li><a href="about.html#mission" data-section="mission" data-i18n="pages.about.subnavMission">—</a></li>
+                <li><a href="about.html#history" data-section="history" data-i18n="pages.about.subnavHistory">—</a></li>
+                <li><a href="contacts.html" data-i18n="pages.about.subnavContact">—</a></li>
+            </ul>
         </div>
-    </header>
-    <section class="about-section">
-        <div class="about">
-            <div class="about-content reveal">
-                <span class="section-label" data-i18n="pages.about.missionLabel">—</span>
-                <h2 data-i18n="pages.about.missionTitle">—</h2>
-                <p id="about-text"></p>
-                <div class="mission-block"><p id="mission-text"></p></div>
-                <div class="about-features">
-                    <div class="feature-item"><div class="feature-icon">🏥</div><div class="feature-text" data-i18n="pages.about.feature1">—</div></div>
-                    <div class="feature-item"><div class="feature-icon">🔬</div><div class="feature-text" data-i18n="pages.about.feature2">—</div></div>
-                    <div class="feature-item"><div class="feature-icon">👨‍⚕️</div><div class="feature-text" data-i18n="pages.about.feature3">—</div></div>
-                    <div class="feature-item"><div class="feature-icon">💚</div><div class="feature-text" data-i18n="pages.about.feature4">—</div></div>
-                </div>
-            </div>
-            <div class="about-visual reveal">
-                <div class="about-image"><img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=900&q=85" alt=""></div>
-                <div class="stats" id="about-stats"></div>
-            </div>
+    </nav>
+
+    <main class="hss-about-main" id="main-content">
+        <div class="hss-wrap">
+
+            <section class="hss-about-section" id="overview">
+                <h1 class="hss-about-section__title" id="about-article-title">—</h1>
+                <p class="hss-about-section__lead" id="about-text"></p>
+                <figure class="hss-about-figure">
+                    <img src="images/about/center-building.png" alt="" id="about-sign-img" loading="lazy">
+                    <figcaption data-i18n="pages.about.signCaption">—</figcaption>
+                </figure>
+                <div class="hss-about-article" id="about-article"></div>
+            </section>
+
+            <section class="hss-about-section" id="leadership">
+                <h2 class="hss-about-section__title" data-i18n="pages.about.leadershipTitle">—</h2>
+                <p class="hss-about-section__lead" data-i18n="pages.about.leadershipLead">—</p>
+                <div class="hss-about-council" id="about-leadership"></div>
+            </section>
+
+            <section class="hss-about-section" id="awards">
+                <h2 class="hss-about-section__title" data-i18n="pages.about.awardsTitle">—</h2>
+                <p class="hss-about-section__lead" data-i18n="pages.about.awardsLead">—</p>
+                <div class="hss-about-awards" id="about-awards"></div>
+            </section>
+
+            <section class="hss-about-section" id="mission">
+                <h2 class="hss-about-section__title" data-i18n="pages.about.missionTitle">—</h2>
+                <p class="hss-about-section__body" id="mission-text"></p>
+                <ul class="hss-about-values" id="about-values"></ul>
+            </section>
+
+            <section class="hss-about-section" id="history">
+                <h2 class="hss-about-section__title" data-i18n="pages.about.historyTitle">—</h2>
+                <p class="hss-about-section__body" data-i18n="pages.about.historyBody">—</p>
+            </section>
+
         </div>
-    </section>
-    <section class="booking-cta reveal">
-        <h2 data-i18n="pages.about.ctaTitle">—</h2>
-        <p data-i18n="pages.about.ctaDesc">—</p>
-        <a href="appointment.html" class="hss-btn hss-btn--primary" data-i18n="common.book">—</a>
-    </section>
+    </main>
+
     <div id="site-footer"></div>
-    <script src="js/storage.js" defer></script>
-    <script src="js/i18n.js" defer></script>
-    <script src="js/common.js" defer></script>
-    <script src="js/pages.js" defer></script>
+    <script src="data/hospital.embed.js"></script>
+    <script src="data/about-article.embed.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/about-article.js"></script>
+    <script src="js/pages.js"></script>
 </body>
 </html>

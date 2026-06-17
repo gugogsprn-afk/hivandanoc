@@ -512,3 +512,4 @@ python scripts/build-embed.py
 ---
 
 *Документ сгенерирован: 2026-05-30. Путь проекта: `c:\Users\PC\Downloads\2149_strategic_consulting\2149_strategic_consulting\`*
+git --version

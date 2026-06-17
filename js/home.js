@@ -212,23 +212,22 @@ function renderHomePage() {
     patientStories.innerHTML = (data.patientStories || [])
       .map(
         (s) => `
-      <article class="hss-patient">
+      <a href="patient-story.html?id=${s.id}" class="hss-patient hss-patient--link" aria-label="${s.name}">
         <div class="hss-patient__photo">
           <img src="${s.image || 'images/team-member-03.jpg'}" alt="${s.name}" loading="lazy" decoding="async" width="320" height="320" />
         </div>
         <h3>${s.name}</h3>
         <p class="hss-patient__loc">${s.location}</p>
         <p class="hss-patient__tx">${s.treatment}</p>
-      </article>`
+      </a>`
       )
       .join('');
   }
 
-  const tel = (h.phone || '').replace(/[^\d+]/g, '');
+  const tel = HospitalApp.phoneTelUri(h.phone);
   const mobilePhone = document.getElementById('mobile-bar-phone');
   if (mobilePhone && tel) {
     mobilePhone.href = `tel:${tel}`;
-    mobilePhone.textContent = h.phone;
   }
 
   HospitalApp.initAnimations();

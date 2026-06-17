@@ -105,9 +105,18 @@ const patches = {
         'Healthy Spine rehabilitation center is a recognized leader in conservative spine and joint care. More than <strong>5,000 patients</strong> consult us each year. Our approach is built on exceptional patient care, evidence-based methods and modern rehabilitation technology.',
         'Our commitment to quality is reflected in years of experience and <strong>98% positive patient feedback</strong>.'
       ],
-      approachParagraphs: hospital.approachParagraphs,
-      expertsParagraphs: hospital.expertsParagraphs,
-      imagingParagraphs: hospital.imagingParagraphs,
+      approachParagraphs: [
+        'Our specialists help patients avoid unnecessary procedures. We use modern nonsurgical methods to treat orthopedic and neurological conditions.',
+        'Our team includes experts in orthopedics, neurology, physiotherapy, manual therapy, therapeutic exercise and rehabilitation — all focused on spine and neck care.',
+        'From diagnosis to recovery, every team member has extensive experience treating your condition. We offer a range of therapies to relieve pain, prevent further damage and restore mobility — often without surgery.'
+      ],
+      expertsParagraphs: [
+        'Our specialists are physicians with years of experience in spine and joint care. They use minimally invasive and conservative methods for less pain, faster recovery and fewer complications.',
+        'For convenient access, our specialists see patients at Healthy Spine — you can book online or by phone.'
+      ],
+      imagingParagraphs: [
+        'The first step is a clear picture of the problem. Our specialists use modern equipment and proven diagnostic methods to accurately determine the cause of pain.'
+      ],
       feature: {
         title: 'Innovation in spine rehabilitation',
         description: 'Modern physiotherapy, manual therapy and therapeutic exercise deliver personalized recovery — often without surgery.'
@@ -130,9 +139,11 @@ const patches = {
   data.content.expertsParagraphs = c.expertsParagraphs;
   data.content.imagingParagraphs = c.imagingParagraphs;
   data.content.feature = { ...hospital.feature, ...c.feature };
-  data.content.news = hospital.news;
-  data.content.storyVideos = hospital.storyVideos;
-  data.content.patientStories = hospital.patientStories;
+  if (lang === 'ru') {
+    data.content.news = hospital.news;
+    data.content.storyVideos = hospital.storyVideos;
+    data.content.patientStories = hospital.patientStories;
+  }
 
   fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', 'utf8');
   console.log('OK', lang);

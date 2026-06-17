@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════
+  ПОЧЕМУ НА GITHUB PAGES НЕ ПРИХОДЯТ ЗАЯВКИ
+═══════════════════════════════════════════════════════════
+
+GitHub Pages — это только статические файлы (HTML, CSS, JS).
+Сервер почты и Telegram (Node.js) там НЕ работает.
+
+Поэтому на gugogsprn-afk.github.io форма пишет:
+  «Не удалось отправить уведомление. Заявка сохранена локально.»
+
+Заявка сохраняется в браузере, но письмо и Telegram не уходят.
+
+
+─── ВАРИАНТ А: Локально на компьютере (уже настроено) ───
+
+  Запускайте:  СМОТРЕТЬ-С-УВЕДОМЛЕНИЯМИ.bat
+  Сайт:        http://127.0.0.1:8765
+  Почта и Telegram работают (файл .env уже заполнен).
+
+
+─── ВАРИАНТ Б: Заявки с GitHub Pages (нужен бесплатный API) ───
+
+  ШАГ 1. Выложите API на Render.com
+
+    1) Зайдите на https://render.com (регистрация через GitHub)
+    2) New → Blueprint
+    3) Подключите репозиторий: gugogsprn-afk/hivandanoc
+    4) Render найдёт файл render.yaml и создаст сервис hivandanoc-api
+    5) В настройках сервиса → Environment добавьте переменные
+       (скопируйте из вашего .env):
+
+         NOTIFY_EMAIL=gugogsprn@gmail.com
+         SMTP_USER=gugogsprn@gmail.com
+         SMTP_PASS=пароль-приложения-gmail
+         MAIL_FROM=CHIC Healthy Spine <gugogsprn@gmail.com>
+         TELEGRAM_BOT_TOKEN=...
+         TELEGRAM_CHAT_ID=7657305054
+
+    6) Дождитесь Deploy (зелёный статус Live)
+    7) Скопируйте URL сервиса, например:
+         https://hivandanoc-api.onrender.com
+
+
+  ШАГ 2. Укажите URL в сайте
+
+    Откройте файл:  js/api-config.js
+
+    Замените строку:
+      const PRODUCTION_API = '';
+
+    на:
+      const PRODUCTION_API = 'https://hivandanoc-api.onrender.com';
+
+    (подставьте свой URL с Render)
+
+
+  ШАГ 3. Обновите GitHub Pages
+
+    git add js/api-config.js
+    git commit -m "Connect form API for GitHub Pages"
+    git push
+
+    Подождите 1–2 минуты и проверьте форму на сайте.
+
+
+─── Проверка API ───
+
+  Откройте в браузере:
+    https://ВАШ-URL.onrender.com/api/health
+
+  Должно быть:
+    {"ok":true,"email":true,"telegram":true}
+
+
+─── Важно про бесплатный Render ───
+
+  • Сервер «засыпает» после 15 мин без запросов
+  • Первый запрос после сна может идти 30–60 секунд
+  • Для клиники этого обычно достаточно
+
+═══════════════════════════════════════════════════════════

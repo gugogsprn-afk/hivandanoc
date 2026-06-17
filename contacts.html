@@ -2,14 +2,10 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0E4B8A">
-    <title>Page</title>
-    <link rel="icon" href="images/brand/logo-chic.png" type="image/png">
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260616">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260616">
-    <link rel="stylesheet" href="css/audit-fixes.css?v=20260616">
-    <script src="js/seo.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Contacts</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260619">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260619">
 </head>
 <body class="hss-page" data-page="contacts" data-i18n-title="pages.contacts.title">
     <div id="site-nav"></div>
@@ -70,15 +66,28 @@
         </div>
     </section>
     <div id="site-footer"></div>
-    <script src="js/storage.js" defer></script>
-    <script src="js/i18n.js" defer></script>
-    <script src="js/common.js" defer></script>
-    <script src="js/pages.js" defer></script>
+    <script src="js/storage.js"></script>
+    <script src="js/api-config.js?v=20260618"></script>
+    <script src="js/api-submit.js?v=20260618"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/pages.js"></script>
     <script>
-      document.getElementById('feedback-form')?.addEventListener('submit', (e) => {
+      document.getElementById('feedback-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        alert(I18n.t('pages.contacts.feedbackThanks'));
-        e.target.reset();
+        const fd = new FormData(e.target);
+        const record = {
+          name: fd.get('name'),
+          email: fd.get('email'),
+          message: fd.get('message')
+        };
+        const api = typeof FormApi !== 'undefined' ? await FormApi.submitContact(record) : { offline: true };
+        if (api.ok || api.offline || api.status === 503) {
+          alert(I18n.t('pages.contacts.feedbackThanks'));
+          e.target.reset();
+        } else {
+          alert(api.error || 'Ошибка отправки. Попробуйте позже.');
+        }
       });
     </script>
 </body>

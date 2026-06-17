@@ -2,14 +2,10 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0E4B8A">
-    <title>Page</title>
-    <link rel="icon" href="images/brand/logo-chic.png" type="image/png">
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260616">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260616">
-    <link rel="stylesheet" href="css/audit-fixes.css?v=20260616">
-    <script src="js/seo.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Appointment</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260619">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260619">
 </head>
 <body class="hss-page" data-page="appointment" data-i18n-title="pages.appointment.title">
     <div id="site-nav"></div>
@@ -80,14 +76,16 @@
                 <button type="submit" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="pages.appointment.submit">—</button>
             </form>
             <p class="hss-booking__emergency">
-                <span data-i18n="pages.appointment.emergencyHint">—</span> <strong>103</strong>
+                <span data-i18n="pages.appointment.emergencyHint">—</span> <strong id="appointment-emergency">103</strong>
             </p>
         </div>
     </section>
     <div id="site-footer"></div>
-    <script src="js/storage.js" defer></script>
-    <script src="js/i18n.js" defer></script>
-    <script src="js/common.js" defer></script>
-    <script src="js/appointment.js" defer></script>
+    <script src="js/storage.js"></script>
+    <script src="js/api-config.js?v=20260618"></script>
+    <script src="js/api-submit.js?v=20260618"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/appointment.js"></script>
 </body>
 </html>
