@@ -241,6 +241,18 @@ function renderHomePage() {
   }
 
   HospitalApp.initAnimations();
+
+  if (HospitalApp.applyCmsVisuals) {
+    HospitalApp.applyCmsVisuals({
+      pageImages: data.pageImages,
+      inlineText: data.inlineText,
+      elementStyles: data.elementStyles
+    });
+  }
+  if (typeof I18n !== 'undefined' && data._cms?.i18nOverrides) {
+    I18n.setOverrides(data._cms.i18nOverrides);
+    I18n.applyDOM();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

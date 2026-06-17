@@ -277,10 +277,38 @@ body.cms-edit-mode img[data-cms-editable]:hover::before {
 
 body.cms-edit-mode a:not([data-cms-editable]),
 body.cms-edit-mode button:not([data-cms-editable]):not(.cms-doctor-add):not(.cms-edit-tab):not(.cms-save):not(.cms-cancel),
-body.cms-edit-mode input,
+body.cms-edit-mode input:not(.cms-edit-popover input):not(.cms-edit-file),
 body.cms-edit-mode select,
 body.cms-edit-mode textarea:not(.cms-edit-popover textarea) {
   pointer-events: none;
+}
+
+.cms-edit-popover,
+.cms-edit-popover * {
+  pointer-events: auto !important;
+}
+
+.cms-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: #ecfdf5;
+  border: 2px dashed #14b8a6;
+  border-radius: 10px;
+  cursor: pointer;
+  font: 600 13px system-ui, sans-serif;
+  color: #064e3b;
+  margin-bottom: 0.5rem;
+}
+
+.cms-upload-btn input[type="file"] {
+  display: none;
+}
+
+.cms-upload-btn:hover {
+  background: #d1fae5;
 }
 
 body.cms-edit-mode .hss-mobile-bar {

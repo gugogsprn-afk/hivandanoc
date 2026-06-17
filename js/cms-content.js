@@ -68,7 +68,11 @@ const CmsContent = (function () {
       if (cms[key]) merged[key] = cms[key];
     }
 
-    merged._cms = { homeSections: cms.homeSections || {}, seo: cms.seo || {} };
+    merged._cms = {
+      homeSections: cms.homeSections || {},
+      seo: cms.seo || {},
+      i18nOverrides: cms.i18nOverrides || {}
+    };
     applyCmsPresentation(cms);
     return merged;
   }

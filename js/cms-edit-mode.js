@@ -29,19 +29,6 @@
     return json;
   }
 
-  async function uploadFile(file) {
-    const fd = new FormData();
-    fd.append('file', file);
-    const res = await fetch(`${apiBase()}/admin/media/upload`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token()}` },
-      body: fd
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || 'Upload failed');
-    return json.media?.url || json.url;
-  }
-
   function toast(msg) {
     let el = document.getElementById('cms-edit-toast');
     if (!el) {
@@ -106,30 +93,55 @@
   }
 
   async function saveContentExtra(merge) {
-    await api('/admin/settings/content-extra', 'PUT', { merge });
-    contentExtra = { ...contentExtra, ...merge };
-    if (merge.elementStyles) elementStyles = contentExtra.elementStyles;
+    const res = await api('/admin/settings/content-extra', 'PUT', { merge });
+    if (res.content_extra) contentExtra = res.content_extra;
+    else contentExtra = deepMergeLocal(contentExtra, merge);
+    elementStyles = contentExtra.elementStyles || {};
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
+    return res;
   }
 
   async function saveI18n(key, val) {
-    await api('/admin/settings/i18n-overrides', 'PUT', { merge: { [lang]: { [key]: val } } });
-    i18nOverrides[lang] = i18nOverrides[lang] || {};
-    i18nOverrides[lang][key] = val;
+    const res = await api('/admin/settings/i18n-overrides', 'PUT', { merge: { [lang]: { [key]: val } } });
+    if (res.i18n_overrides) i18nOverrides = res.i18n_overrides;
+    else {
+      i18nOverrides[lang] = i18nOverrides[lang] || {};
+      i18nOverrides[lang][key] = val;
+    }
+    if (typeof I18n !== 'undefined' && I18n.setOverrides) {
+      I18n.setOverrides(i18nOverrides);
+    }
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
+    return res;
+  }
+
+  function deepMergeLocal(a, b) {
+    const out = { ...a };
+    for (const k of Object.keys(b || {})) {
+      if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') {
+        out[k] = deepMergeLocal(a[k], b[k]);
+      } else {
+        out[k] = b[k];
+      }
+    }
+    return out;
+  }
+
+  async function saveHeroContent(content) {
+    const res = await api('/admin/homepage/hero', 'PUT', {
+      page_key: 'home',
+      enabled: true,
+      sort_order: 0,
+      content
+    });
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
+    return res;
   }
 
   async function loadHeroSection() {
     const data = await api('/admin/homepage?page=home', 'GET');
     const hero = (data.sections || []).find((s) => s.section_key === 'hero');
     return hero?.content || {};
-  }
-
-  async function saveHeroContent(content) {
-    await api('/admin/homepage/hero', 'PUT', {
-      page_key: 'home',
-      enabled: true,
-      sort_order: 0,
-      content
-    });
   }
 
   const HOME_FIELDS = [
@@ -233,22 +245,49 @@
   }
 
   function notifySaved() {
-    toast('Saved — live site updates within ~1 min');
+    toast('Saved successfully');
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
     if (window.parent !== window) window.parent.postMessage({ type: 'cms-saved' }, '*');
   }
 
+  function notifyError(err) {
+    const msg = err?.message || String(err) || 'Save failed';
+    toast(msg);
+    console.error('[cms-edit]', msg);
+  }
+
+  async function uploadFile(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', 'cms-editor');
+    const res = await fetch(`${apiBase()}/admin/media/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token()}` },
+      body: fd
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
+    const url = json.media?.url || json.url;
+    if (!url) throw new Error('Upload succeeded but no URL returned');
+    return url;
+  }
+
   function buildImagePopover(field, el, rect) {
+    const isVideo = el.tagName === 'VIDEO' || field.mediaType === 'video';
     popover = document.createElement('div');
     popover.className = 'cms-edit-popover cms-edit-popover--image';
     popover.innerHTML = `
       <h4>${field.label}</h4>
       <div class="cms-edit-tabs">
-        <button type="button" class="cms-edit-tab active" data-tab="upload">Upload photo</button>
-        <button type="button" class="cms-edit-tab" data-tab="url">Image link</button>
+        <button type="button" class="cms-edit-tab active" data-tab="upload">Upload file</button>
+        <button type="button" class="cms-edit-tab" data-tab="url">Paste link</button>
       </div>
       <div class="cms-edit-panel" data-panel="upload">
-        <input type="file" accept="image/*" class="cms-edit-file">
-        <p class="cms-edit-hint">Choose a file from your computer</p>
+        <label class="cms-upload-btn">
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" class="cms-edit-file">
+          <span>Choose photo or video from computer</span>
+        </label>
+        <p class="cms-edit-hint" id="cms-upload-status">Max 10 MB · JPG, PNG, WebP, MP4, WebM</p>
       </div>
       <div class="cms-edit-panel" data-panel="url" hidden>
         <input type="url" class="cms-edit-url" placeholder="https://… or /api/v1/media/files/…">
@@ -262,10 +301,12 @@
 
     const fileInput = popover.querySelector('.cms-edit-file');
     const urlInput = popover.querySelector('.cms-edit-url');
+    const statusEl = popover.querySelector('#cms-upload-status');
     let pendingUrl = '';
 
     popover.querySelectorAll('.cms-edit-tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
         popover.querySelectorAll('.cms-edit-tab').forEach((t) => t.classList.toggle('active', t === tab));
         popover.querySelectorAll('.cms-edit-panel').forEach((p) => {
           p.hidden = p.dataset.panel !== tab.dataset.tab;
@@ -281,12 +322,15 @@
       const btn = popover.querySelector('.cms-save');
       btn.disabled = true;
       btn.textContent = 'Uploading…';
+      if (statusEl) statusEl.textContent = `Uploading ${file.name}…`;
       try {
         pendingUrl = await uploadFile(file);
         urlInput.value = pendingUrl;
-        toast('Image uploaded');
+        if (statusEl) statusEl.textContent = 'Upload complete — click Save';
+        toast('File uploaded');
       } catch (err) {
-        toast(err.message);
+        notifyError(err);
+        if (statusEl) statusEl.textContent = err.message;
       }
       btn.disabled = false;
       btn.textContent = 'Save';
@@ -296,7 +340,10 @@
     popover.querySelector('.cms-save').onclick = async () => {
       const btn = popover.querySelector('.cms-save');
       const val = (urlInput.value || pendingUrl).trim();
-      if (!val) return;
+      if (!val) {
+        notifyError(new Error('Upload a file or paste a link first'));
+        return;
+      }
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
@@ -305,7 +352,7 @@
         notifySaved();
         closePopover();
       } catch (err) {
-        toast(err.message);
+        notifyError(err);
         btn.disabled = false;
         btn.textContent = 'Save';
       }
@@ -339,7 +386,7 @@
         notifySaved();
         closePopover();
       } catch (err) {
-        toast(err.message);
+        notifyError(err);
         btn.disabled = false;
         btn.textContent = 'Save';
       }
@@ -395,7 +442,7 @@
         return pageImages[key] || el.src || '';
       },
       async save(val) {
-        await saveContentExtra({ pageImages: { ...pageImages, [key]: val } });
+        await saveContentExtra({ pageImages: { [key]: val } });
       }
     };
   }
@@ -609,7 +656,7 @@
     if (document.querySelector('link[href*="cms-edit-mode.css"]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'js/cms-edit-mode.css?v=20260625';
+    link.href = 'js/cms-edit-mode.css?v=20260626';
     document.head.appendChild(link);
   }
 
