@@ -3,7 +3,6 @@ const path = require('path');
 const express = require('express');
 const { notifyForm, isEmailConfigured, isTelegramConfigured } = require('./notify');
 const { createCmsApp, isAllowedOrigin } = require('./cms');
-const { publishAll } = require('./services/content-publish');
 
 const root = path.join(__dirname, '..');
 const app = createCmsApp();
