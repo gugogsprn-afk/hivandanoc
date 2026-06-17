@@ -34,4 +34,4 @@ ssh "$SERVER" "cp $REMOTE_DIR/deploy/nginx-production.conf /etc/nginx/sites-avai
 echo "==> Deploy complete"
 echo "    Site:  http://173.212.240.38/"
 echo "    API:   http://173.212.240.38/api/health"
-echo "    HTTPS: ./deploy/ssl.sh (after DNS for healthyspine.am)"
+echo "    HTTPS: ./deploy/ssl.sh (after DNS for healthyspinedoc.com)"

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 
-Sitemap: http://173.212.240.38/sitemap.xml
+Sitemap: https://healthyspinedoc.com/sitemap.xml

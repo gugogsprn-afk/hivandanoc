@@ -15,7 +15,7 @@ function isAllowedOrigin(origin) {
     if (protocol !== 'http:' && protocol !== 'https:') return false;
     if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
     if (hostname === '173.212.240.38') return true;
-    if (hostname === 'healthyspine.am' || hostname === 'www.healthyspine.am') return true;
+    if (hostname === 'healthyspinedoc.com' || hostname === 'www.healthyspinedoc.com') return true;
     if (hostname.endsWith('.github.io')) return true;
     return false;
   } catch {

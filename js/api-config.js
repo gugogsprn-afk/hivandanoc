@@ -8,8 +8,8 @@
   const isLocal = host === 'localhost' || host === '127.0.0.1';
   const isProduction =
     host === '173.212.240.38' ||
-    host === 'healthyspine.am' ||
-    host === 'www.healthyspine.am';
+    host === 'healthyspinedoc.com' ||
+    host === 'www.healthyspinedoc.com';
 
   // Полный API (Render / Contabo). Пусто = same-origin /api через nginx.
   const PRODUCTION_API = '';

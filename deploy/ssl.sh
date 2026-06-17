@@ -3,8 +3,8 @@
 set -euo pipefail
 
 SERVER="${DEPLOY_SERVER:-root@173.212.240.38}"
-DOMAIN="${DEPLOY_DOMAIN:-healthyspine.am}"
-EMAIL="${DEPLOY_EMAIL:-info@healthyspine.am}"
+DOMAIN="${DEPLOY_DOMAIN:-healthyspinedoc.com}"
+EMAIL="${DEPLOY_EMAIL:-info@healthyspinedoc.com}"
 
 echo "==> Checking DNS for $DOMAIN"
 IP=$(dig +short "$DOMAIN" A | head -1)
