@@ -16,6 +16,7 @@ const leadsRoutes = require('./routes/admin/leads');
 const contactsRoutes = require('./routes/admin/contacts');
 const homepageRoutes = require('./routes/admin/homepage');
 const pagesRoutes = require('./routes/admin/pages');
+const publishRoutes = require('./routes/admin/publish');
 const settingsRoutes = require('./routes/admin/settings');
 
 function isAllowedOrigin(origin) {
@@ -86,6 +87,7 @@ function createCmsApp() {
   app.use('/api/v1/admin/contacts', contactsRoutes);
   app.use('/api/v1/admin/homepage', homepageRoutes);
   app.use('/api/v1/admin/pages', pagesRoutes);
+  app.use('/api/v1/admin/publish', publishRoutes);
   app.use('/api/v1/admin/settings', settingsRoutes);
   app.use('/api/v1/media/files', mediaRoutes.mediaFilesRouter());
 
@@ -93,6 +95,11 @@ function createCmsApp() {
   if (fs.existsSync(adminCmsPath)) {
     app.use('/admin-cms', express.static(adminCmsPath, { index: 'index.html' }));
   }
+
+  const { publishAll } = require('./services/content-publish');
+  setTimeout(() => {
+    publishAll().catch((err) => console.warn('[cms:publish] initial:', err.message));
+  }, 1500);
 
   return app;
 }

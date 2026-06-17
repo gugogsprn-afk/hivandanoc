@@ -1,18 +1,45 @@
 const express = require('express');
 const { buildPublicContent } = require('../db/helpers');
 const { getDb } = require('../db');
+const { getPublishStatus, readPublishedContent } = require('../services/content-publish');
 const { publicFormLimiter } = require('../middleware/rateLimit');
 const { validateLead, sanitizeString, sanitizeEmail } = require('../middleware/validate');
 const { notifyForm } = require('../notify');
 
 const router = express.Router();
 
+router.get('/version', (_req, res) => {
+  const status = getPublishStatus();
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.json({
+    ok: true,
+    version: status.version || 0,
+    published_at: status.published_at,
+    pending: !!status.pending
+  });
+});
+
 router.get('/content', (req, res) => {
   const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const status = getPublishStatus();
   const content = buildPublicContent(lang);
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
-  res.json({ ok: true, lang, ...content });
+  res.setHeader('X-CMS-Version', String(status.version || 0));
+  res.json({ ok: true, lang, version: status.version || 0, published_at: status.published_at, ...content });
+});
+
+router.get('/content-snapshot', (req, res) => {
+  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const snapshot = readPublishedContent(lang);
+  if (!snapshot) {
+    const content = buildPublicContent(lang);
+    const status = getPublishStatus();
+    return res.json({ ok: true, lang, version: status.version || 0, ...content });
+  }
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('X-CMS-Version', String(snapshot.version || 0));
+  res.json(snapshot);
 });
 
 router.get('/doctors', (req, res) => {

@@ -1,11 +1,12 @@
 const express = require('express');
 const { authRequired, requireRole } = require('../../middleware/auth');
 const {
-  getPageFieldsMap,
   getPageFieldsForPage,
   upsertPageFields,
   logActivity
 } = require('../../db/helpers');
+const { syncPageFieldsToStores } = require('../../db/page-sync');
+const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
 
 const router = express.Router();
 
@@ -38,25 +39,31 @@ router.patch('/:pageKey/fields', authRequired, requireRole('super_admin', 'manag
     return res.status(400).json({ ok: false, error: 'fields array or field_key required' });
   }
 
-  const normalized = items.map((f) => ({
-    field_key: String(f.field_key || '').trim(),
-    lang: ['hy', 'ru', 'en'].includes(f.lang) ? f.lang : 'hy',
-    value: f.value != null ? String(f.value) : '',
-    value_type: f.value_type === 'image' || f.value_type === 'video' ? f.value_type : 'text'
-  })).filter((f) => f.field_key);
+  const normalized = items
+    .map((f) => ({
+      field_key: String(f.field_key || '').trim(),
+      lang: ['hy', 'ru', 'en'].includes(f.lang) ? f.lang : 'hy',
+      value: f.value != null ? String(f.value) : '',
+      value_type: f.value_type === 'image' || f.value_type === 'video' ? f.value_type : 'text'
+    }))
+    .filter((f) => f.field_key);
 
   if (!normalized.length) {
     return res.status(400).json({ ok: false, error: 'No valid fields to save' });
   }
 
   upsertPageFields(pageKey, normalized);
+  syncPageFieldsToStores(pageKey, normalized);
   logActivity(req.user.sub, 'update', 'page_fields', pageKey, { count: normalized.length }, req.ip);
+
+  const publish = schedulePublish(2500);
 
   res.json({
     ok: true,
     page_key: pageKey,
     fields: getPageFieldsForPage(pageKey),
-    saved: normalized.length
+    saved: normalized.length,
+    publish: { ...getPublishStatus(), ...publish }
   });
 });
 

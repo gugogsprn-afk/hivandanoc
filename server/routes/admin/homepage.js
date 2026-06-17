@@ -2,6 +2,7 @@ const express = require('express');
 const { getDb } = require('../../db');
 const { authRequired, requireRole } = require('../../middleware/auth');
 const { logActivity } = require('../../db/helpers');
+const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
 
 const router = express.Router();
 
@@ -52,7 +53,8 @@ router.put('/:sectionKey', authRequired, requireRole('super_admin', 'manager'), 
     .run(pageKey, sectionKey, enabled, sortOrder, JSON.stringify(content));
 
   logActivity(req.user.sub, 'update', 'page_section', `${pageKey}/${sectionKey}`, null, req.ip);
-  res.json({ ok: true });
+  const publish = schedulePublish(2500);
+  res.json({ ok: true, publish: { ...getPublishStatus(), ...publish } });
 });
 
 module.exports = router;

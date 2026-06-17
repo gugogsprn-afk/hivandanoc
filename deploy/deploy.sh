@@ -18,6 +18,7 @@ rsync -avz --delete \
   --exclude 'data/cms/cms.db-wal' \
   --exclude 'data/cms/cms.db-shm' \
   --exclude 'data/cms/uploads/' \
+  --exclude 'data/cms/published/' \
   "$ROOT/" "$SERVER:$REMOTE_DIR/"
 
 echo "==> Installing API dependencies and restarting PM2"

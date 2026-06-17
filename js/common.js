@@ -951,6 +951,10 @@ const HospitalApp = (function () {
         I18n.onChange(() => refreshLanguage());
       }
 
+      if (typeof CmsContent !== 'undefined' && CmsContent.startVersionWatch) {
+        CmsContent.startVersionWatch(30000);
+      }
+
       return getData();
     })();
     return initPromise;

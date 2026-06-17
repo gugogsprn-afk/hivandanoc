@@ -8,7 +8,7 @@
   const VIEW_SUBTITLES = {
     dashboard: 'Overview of clinic activity and recent leads',
     leads: 'Manage appointment requests and contact form submissions',
-    pages: 'Edit page text and images — every save goes to the server and appears on the public website.',
+    pages: 'Visual editor — click text or images to edit. Saves go to the server and publish to the public site automatically.',
     doctors: 'Add and manage doctors shown on the public website',
     services: 'Manage service categories and treatment offerings',
     media: 'Upload and manage images for doctors, clinic, and blog',
@@ -225,13 +225,13 @@
 
   async function renderPages() {
     const root = $('#view-pages');
-    root.innerHTML = AdminUI.loadingHTML('Loading page editor…');
+    root.innerHTML = AdminUI.loadingHTML('Loading visual editor…');
     if (!AdminApi.token()) {
       root.innerHTML = AdminUI.errorHTML('Please sign in first.');
       return;
     }
     try {
-      PagesForms.mount(root);
+      PageEditor.mount(root);
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(err.message, 'retry-pages');
       $('#retry-pages', root)?.addEventListener('click', renderPages);

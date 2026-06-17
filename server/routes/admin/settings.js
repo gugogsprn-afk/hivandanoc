@@ -1,8 +1,14 @@
 const express = require('express');
 const { authRequired, requireRole } = require('../../middleware/auth');
 const { getSetting, setSetting, logActivity } = require('../../db/helpers');
+const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
 
 const router = express.Router();
+
+function publishAfterSave(req, res, payload) {
+  const publish = schedulePublish(2500);
+  res.json({ ...payload, publish: { ...getPublishStatus(), ...publish } });
+}
 
 router.get('/', authRequired, (_req, res) => {
   res.json({
@@ -53,7 +59,7 @@ router.put('/i18n-overrides', authRequired, requireRole('super_admin', 'manager'
   const next = req.body.merge ? deepMerge(current, merge) : merge;
   setSetting('i18n_overrides', next);
   logActivity(req.user.sub, 'update', 'settings', 'i18n_overrides', null, req.ip);
-  res.json({ ok: true, i18n_overrides: next });
+  publishAfterSave(req, res, { ok: true, i18n_overrides: next });
 });
 
 router.get('/content-extra', authRequired, (_req, res) => {
@@ -77,7 +83,7 @@ router.put('/content-extra', authRequired, requireRole('super_admin', 'manager')
   const next = req.body.merge ? deepMerge(current, merge) : merge;
   setSetting('content_extra', next);
   logActivity(req.user.sub, 'update', 'settings', 'content_extra', null, req.ip);
-  res.json({ ok: true, content_extra: next });
+  publishAfterSave(req, res, { ok: true, content_extra: next });
 });
 
 router.put('/footer', authRequired, requireRole('super_admin', 'manager'), (req, res) => {

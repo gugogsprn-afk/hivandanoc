@@ -84,5 +84,36 @@ const CmsContent = (function () {
     cacheTime = 0;
   }
 
-  return { fetchContent, mergeIntoHospital, invalidate };
+  let watchedVersion = 0;
+  let watchTimer = null;
+
+  function startVersionWatch(intervalMs = 30000) {
+    if (watchTimer || typeof window === 'undefined') return;
+    const base = CmsConfig.apiBase();
+
+    async function tick() {
+      try {
+        const res = await fetch(`${base}/public/version?_=${Date.now()}`, {
+          headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const v = Number(data.version) || 0;
+        if (watchedVersion && v > watchedVersion) {
+          invalidate();
+          if (typeof HospitalApp !== 'undefined' && HospitalApp.reloadFromCms) {
+            await HospitalApp.reloadFromCms();
+          }
+        }
+        watchedVersion = v;
+      } catch {
+        /* ignore */
+      }
+    }
+
+    tick();
+    watchTimer = setInterval(tick, intervalMs);
+  }
+
+  return { fetchContent, mergeIntoHospital, invalidate, startVersionWatch };
 })();

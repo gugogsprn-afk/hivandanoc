@@ -56,6 +56,8 @@ router.post(
         );
 
       logActivity(req.user.sub, 'upload', 'media', String(result.lastInsertRowid), { url }, req.ip);
+      const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
+      const publish = schedulePublish(2500);
       res.status(201).json({
         ok: true,
         media: {
@@ -65,7 +67,8 @@ router.post(
           mime_type: req.file.mimetype,
           size: req.file.size,
           folder
-        }
+        },
+        publish: { ...getPublishStatus(), ...publish }
       });
     });
   }

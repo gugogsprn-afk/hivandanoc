@@ -17,7 +17,7 @@ const PageEditor = (function () {
 
   function previewUrl(page = currentPage) {
     const base = AdminConfig.publicSite().replace(/\/$/, '');
-    const build = window.CMS_BUILD || '20260628';
+    const build = window.CMS_BUILD || '20260630';
     return `${base}/${page.path}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
   }
 
@@ -125,7 +125,11 @@ const PageEditor = (function () {
 
   function onMessage(ev) {
     if (ev.data?.type === 'cms-saved') {
-      AdminUI.toast('Page updated', 'success');
+      const pub = ev.data.publish;
+      const msg = pub?.pending
+        ? 'Saved — publishing to public site (live in ~30 sec)'
+        : 'Saved & published to public site';
+      AdminUI.toast(msg, 'success');
     }
     if (ev.data?.type === 'cms-open-doctors') {
       if (typeof window.__cmsShowView === 'function') {

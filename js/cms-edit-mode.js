@@ -125,19 +125,6 @@
 
     if (opts.i18nKey) await saveI18n(opts.i18nKey, value);
 
-    if (cmsPageKey() === 'home' && field_key === 'hero-title') {
-      const c = await loadHeroSection();
-      c.title = c.title || {};
-      c.title[lang] = value;
-      await saveHeroContent(c);
-    }
-    if (cmsPageKey() === 'home' && field_key === 'hero-subtitle') {
-      const c = await loadHeroSection();
-      c.subtitle = c.subtitle || {};
-      c.subtitle[lang] = value;
-      await saveHeroContent(c);
-    }
-
     await reloadPreviewFromServer();
     return res;
   }
@@ -302,10 +289,13 @@
     document.querySelectorAll('.cms-editing').forEach((el) => el.classList.remove('cms-editing'));
   }
 
-  function notifySaved() {
-    toast('Saved successfully');
+  function notifySaved(res) {
+    const pending = res?.publish?.pending;
+    toast(pending ? 'Saved — publishing to public site…' : 'Saved & published to public site');
     if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
-    if (window.parent !== window) window.parent.postMessage({ type: 'cms-saved' }, '*');
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'cms-saved', publish: res?.publish }, '*');
+    }
   }
 
   function notifyError(err) {
@@ -411,9 +401,9 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        await field.save(val, el);
+        const saved = await field.save(val, el);
         setText(el, val, field);
-        notifySaved();
+        notifySaved(saved);
         closePopover();
       } catch (err) {
         notifyError(err);
@@ -445,9 +435,9 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        await field.save(input.value.trim(), el);
+        const saved = await field.save(input.value.trim(), el);
         setText(el, input.value.trim(), field);
-        notifySaved();
+        notifySaved(saved);
         closePopover();
       } catch (err) {
         notifyError(err);
