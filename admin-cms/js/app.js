@@ -8,7 +8,7 @@
   const VIEW_SUBTITLES = {
     dashboard: 'Overview of clinic activity and recent leads',
     leads: 'Manage appointment requests and contact form submissions',
-    pages: 'Visual editor — click text or images to edit. Buttons and links are disabled in preview.',
+    pages: 'Edit page text and images — every save goes to the server and appears on the public website.',
     doctors: 'Add and manage doctors shown on the public website',
     services: 'Manage service categories and treatment offerings',
     media: 'Upload and manage images for doctors, clinic, and blog',
@@ -225,13 +225,13 @@
 
   async function renderPages() {
     const root = $('#view-pages');
-    root.innerHTML = AdminUI.loadingHTML('Loading visual editor…');
+    root.innerHTML = AdminUI.loadingHTML('Loading page editor…');
     if (!AdminApi.token()) {
       root.innerHTML = AdminUI.errorHTML('Please sign in first.');
       return;
     }
     try {
-      PageEditor.mount(root);
+      PagesForms.mount(root);
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(err.message, 'retry-pages');
       $('#retry-pages', root)?.addEventListener('click', renderPages);
@@ -465,7 +465,7 @@
           <div class="cms-upload-zone">
             <p>Images (JPG, PNG, WebP, GIF, SVG) and videos (MP4, WebM) up to 10 MB</p>
             <form id="upload-form" class="cms-form">
-              <div class="cms-field"><label>Choose file<input type="file" name="file" accept="image/*,video/mp4,video/webm" required></label></div>
+              <div class="cms-field"><label>Choose file<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required></label></div>
               <div class="cms-field"><label>Folder<select name="folder">
                 <option value="general">General</option>
                 <option value="doctors">Doctors</option>

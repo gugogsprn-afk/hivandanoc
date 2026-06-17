@@ -25,7 +25,11 @@ router.post(
   (req, res) => {
     upload.single('file')(req, res, (err) => {
       if (err) {
-        return res.status(400).json({ ok: false, error: err.message || 'Upload failed' });
+        const msg =
+          err.code === 'LIMIT_FILE_SIZE'
+            ? 'File too large (max 10 MB)'
+            : err.message || 'Upload failed';
+        return res.status(400).json({ ok: false, error: msg });
       }
       if (!req.file) {
         return res.status(400).json({ ok: false, error: 'No file uploaded' });

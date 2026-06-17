@@ -29,27 +29,27 @@ function renderPatientHero(ph, pf = {}) {
   if (cta) cta.textContent = pf['patient-hero-cta'] || ph?.ctaText || I18n.t('pages.home.patientHeroCta');
 }
 
-function renderBackInGame(big) {
-  if (!big) return;
+function renderBackInGame(big, pf = {}) {
+  if (!big && !pf['back-in-game-image']) return;
   const img = document.getElementById('back-in-game-image');
   const title = document.getElementById('back-in-game-title');
   const text = document.getElementById('back-in-game-text');
   const link = document.getElementById('back-in-game-link');
-  if (img) img.src = big.image || '';
-  if (title) title.textContent = big.title || '';
-  if (text) text.innerHTML = `<p>${big.text || ''}</p>`;
-  if (link) link.textContent = big.linkText || '';
+  if (img) img.src = pf['back-in-game-image'] || big?.image || '';
+  if (title) title.textContent = pf['back-in-game-title'] || big?.title || '';
+  if (text) text.innerHTML = `<p>${pf['back-in-game-text'] || big?.text || ''}</p>`;
+  if (link) link.textContent = pf['back-in-game-link'] || big?.linkText || '';
 }
 
-function renderExpertise(ex) {
-  if (!ex) return;
+function renderExpertise(ex, pf = {}) {
+  if (!ex && !pf['expertise-image']) return;
   const img = document.getElementById('expertise-image');
   const title = document.getElementById('expertise-title');
   const text = document.getElementById('expertise-text');
   const links = document.getElementById('expertise-links');
-  if (img) img.src = ex.image || '';
-  if (title) title.textContent = ex.title || '';
-  if (text) text.textContent = ex.text || '';
+  if (img) img.src = pf['expertise-image'] || ex?.image || '';
+  if (title) title.textContent = pf['expertise-title'] || ex?.title || '';
+  if (text) text.textContent = pf['expertise-text'] || ex?.text || '';
   if (links) {
     links.innerHTML = (ex.links || [])
       .map((l) => `<li><a href="${l.href || '#'}">${l.text}</a></li>`)
@@ -128,7 +128,12 @@ function renderHomePage() {
   initDoctorSearch(data);
 
   const introProse = document.getElementById('home-intro-prose');
-  if (introProse) introProse.innerHTML = proseHtml(data.introParagraphs);
+  if (introProse) {
+    const intro = pf['home-intro-prose'];
+    introProse.innerHTML = intro
+      ? intro.split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('')
+      : proseHtml(data.introParagraphs);
+  }
 
   const conditionsEl = document.getElementById('home-conditions');
   if (conditionsEl) {
@@ -137,14 +142,14 @@ function renderHomePage() {
   }
 
   renderPatientHero(data.patientHero, pf);
-  renderBackInGame(data.backInGame);
-  renderExpertise(data.expertiseOverlay);
+  renderBackInGame(data.backInGame, pf);
+  renderExpertise(data.expertiseOverlay, pf);
   renderAwards(data.awards);
 
   const feature = data.feature || {};
   const featImg = document.getElementById('home-feature-image');
   if (featImg) {
-    featImg.src = feature.image || h.heroImage || 'images/about-image-01.jpg';
+    featImg.src = pf['home-feature-image'] || feature.image || h.heroImage || 'images/about-image-01.jpg';
     featImg.alt = feature.title || h.name || '';
     featImg.loading = 'lazy';
     featImg.decoding = 'async';
@@ -152,13 +157,13 @@ function renderHomePage() {
     featImg.height = 500;
   }
   const featTitle = document.getElementById('home-feature-title');
-  if (featTitle) featTitle.textContent = feature.title || '';
+  if (featTitle) featTitle.textContent = pf['home-feature-title'] || feature.title || '';
   const featDesc = document.getElementById('home-feature-desc');
-  if (featDesc) featDesc.textContent = feature.description || '';
+  if (featDesc) featDesc.textContent = pf['home-feature-desc'] || feature.description || '';
 
   const approachImg = document.getElementById('home-approach-image');
   if (approachImg) {
-    approachImg.src = data.approachImage || SPLIT_IMAGES.approach;
+    approachImg.src = pf['home-approach-image'] || data.approachImage || SPLIT_IMAGES.approach;
     approachImg.alt = t('pages.home.approachTitle');
     approachImg.loading = 'lazy';
     approachImg.decoding = 'async';
@@ -166,11 +171,16 @@ function renderHomePage() {
     approachImg.height = 533;
   }
   const approachText = document.getElementById('home-approach-text');
-  if (approachText) approachText.innerHTML = proseHtml(data.approachParagraphs);
+  if (approachText) {
+    const ap = pf['home-approach-text'];
+    approachText.innerHTML = ap
+      ? ap.split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('')
+      : proseHtml(data.approachParagraphs);
+  }
 
   const expertsImg = document.getElementById('home-experts-image');
   if (expertsImg) {
-    expertsImg.src = data.expertsImage || SPLIT_IMAGES.experts;
+    expertsImg.src = pf['home-experts-image'] || data.expertsImage || SPLIT_IMAGES.experts;
     expertsImg.alt = t('pages.home.expertsTitle');
     expertsImg.loading = 'lazy';
     expertsImg.decoding = 'async';
@@ -178,11 +188,16 @@ function renderHomePage() {
     expertsImg.height = 533;
   }
   const expertsText = document.getElementById('home-experts-text');
-  if (expertsText) expertsText.innerHTML = proseHtml(data.expertsParagraphs);
+  if (expertsText) {
+    const ep = pf['home-experts-text'];
+    expertsText.innerHTML = ep
+      ? ep.split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('')
+      : proseHtml(data.expertsParagraphs);
+  }
 
   const imagingImg = document.getElementById('home-imaging-image');
   if (imagingImg) {
-    imagingImg.src = data.imagingImage || data.equipment?.[0]?.image || SPLIT_IMAGES.imaging;
+    imagingImg.src = pf['home-imaging-image'] || data.imagingImage || data.equipment?.[0]?.image || SPLIT_IMAGES.imaging;
     imagingImg.alt = t('pages.home.equipmentTitle');
     imagingImg.loading = 'lazy';
     imagingImg.decoding = 'async';
@@ -190,7 +205,12 @@ function renderHomePage() {
     imagingImg.height = 533;
   }
   const imagingText = document.getElementById('home-imaging-text');
-  if (imagingText) imagingText.innerHTML = proseHtml(data.imagingParagraphs);
+  if (imagingText) {
+    const ip = pf['home-imaging-text'];
+    imagingText.innerHTML = ip
+      ? ip.split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('')
+      : proseHtml(data.imagingParagraphs);
+  }
 
   const imagingList = document.getElementById('home-imaging-list');
   if (imagingList) {

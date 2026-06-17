@@ -5,7 +5,7 @@ const CmsContent = (function () {
   let cache = null;
   let cacheLang = null;
   let cacheTime = 0;
-  const TTL = 60000;
+  const TTL = 0;
 
   async function fetchContent(lang) {
     const code = lang || (typeof I18n !== 'undefined' ? I18n.getLang() : 'hy');

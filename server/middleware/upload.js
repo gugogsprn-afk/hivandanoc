@@ -28,10 +28,11 @@ const storage = multer.diskStorage({
 });
 
 function fileFilter(_req, file, cb) {
-  if (!ALLOWED_MIME.has(file.mimetype)) {
-    return cb(new Error('File type not allowed'));
-  }
-  cb(null, true);
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowedExt = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.mp4', '.webm']);
+  if (ALLOWED_MIME.has(file.mimetype)) return cb(null, true);
+  if (allowedExt.has(ext)) return cb(null, true);
+  return cb(new Error('File type not allowed. Use JPG, PNG, WebP, GIF, MP4, or WebM.'));
 }
 
 const upload = multer({
