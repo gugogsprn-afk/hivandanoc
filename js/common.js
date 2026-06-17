@@ -559,7 +559,8 @@ const HospitalApp = (function () {
     };
 
     const override = HospitalStorage.getContentOverride();
-    if (override) {
+    const cmsWillLoad = typeof CmsContent !== 'undefined';
+    if (override && !cmsWillLoad) {
       data = {
         ...data,
         ...override,
@@ -839,6 +840,38 @@ const HospitalApp = (function () {
     return list[parseInt(idxStr, 10)] || null;
   }
 
+  function applyPageFields(fields) {
+    if (!fields || typeof fields !== 'object') return;
+    Object.entries(fields).forEach(([key, val]) => {
+      if (key.endsWith('__type') || val == null || val === '') return;
+      if (key.startsWith('i18n_')) {
+        const i18nKey = key.slice(5);
+        document.querySelectorAll(`[data-i18n="${i18nKey}"]`).forEach((el) => {
+          const attr = el.getAttribute('data-i18n-attr');
+          if (attr) el.setAttribute(attr, val);
+          else el.textContent = val;
+        });
+        return;
+      }
+      const el = document.getElementById(key);
+      if (!el) return;
+      if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
+        el.src = val;
+        return;
+      }
+      if (el.id === 'hero-subtitle') {
+        el.innerHTML = `<strong>${val}</strong>`;
+        return;
+      }
+      if (el.classList.contains('hss-prose') || el.id === 'back-in-game-text') {
+        el.innerHTML = String(val).split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('');
+        return;
+      }
+      if (el.hasAttribute('data-i18n')) return;
+      el.textContent = val;
+    });
+  }
+
   function applyCmsVisuals(cms) {
     if (!cms) return;
     Object.entries(cms.pageImages || {}).forEach(([key, url]) => {
@@ -860,6 +893,25 @@ const HospitalApp = (function () {
       if (style.height) el.style.height = style.height;
       if (style.fontSize) el.style.fontSize = style.fontSize;
     });
+  }
+
+  async function reloadFromCms() {
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
+    await loadData();
+    I18n.applyDOM();
+    const data = getData();
+    const page = document.body.dataset.page || 'home';
+    const pageKeyMap = {
+      home: 'home',
+      doctors: 'doctors',
+      contacts: 'contacts',
+      departments: 'departments',
+      about: 'about'
+    };
+    const pk = pageKeyMap[page] || page;
+    applyPageFields(data.pageFields?.[pk]);
+    applyCmsVisuals(data);
+    window.dispatchEvent(new Event('hospital:refresh'));
   }
 
   async function init() {
@@ -913,6 +965,8 @@ const HospitalApp = (function () {
     initAnimations,
     resetAnimations,
     applyCmsVisuals,
+    applyPageFields,
+    reloadFromCms,
     phoneTelUri,
     updatePhoneLinks
   };
@@ -923,7 +977,7 @@ const HospitalApp = (function () {
   if (!/[?&]cms-edit=1/.test(location.search)) return;
   const base = (document.querySelector('script[src*="common.js"]')?.src || '').replace(/\/js\/common\.js.*$/, '/');
   const s = document.createElement('script');
-  const build = new URLSearchParams(location.search).get('cms_build') || '20260627';
+  const build = new URLSearchParams(location.search).get('cms_build') || window.CMS_BUILD || '20260628';
   s.src = `${base}js/cms-edit-mode.js?v=${build}`;
   document.body.appendChild(s);
 })();

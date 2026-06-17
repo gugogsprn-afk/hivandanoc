@@ -12,21 +12,21 @@ function initDoctorSearch(data) {
   initDoctorSearchBand(data);
 }
 
-function renderPatientHero(ph) {
-  if (!ph) return;
+function renderPatientHero(ph, pf = {}) {
+  if (!ph && !pf['patient-hero-image']) return;
   const img = document.getElementById('patient-hero-image');
   const quote = document.getElementById('patient-hero-quote');
   const cta = document.getElementById('patient-hero-cta');
   if (img) {
-    img.src = ph.image || 'images/about-image-01.jpg';
+    img.src = pf['patient-hero-image'] || ph?.image || 'images/about-image-01.jpg';
     img.alt = ph.quote ? ph.quote.slice(0, 120) : I18n.t('pages.home.reviewsTitle');
     img.loading = 'lazy';
     img.decoding = 'async';
     img.width = 1200;
     img.height = 675;
   }
-  if (quote) quote.textContent = ph.quote || '';
-  if (cta) cta.textContent = ph.ctaText || I18n.t('pages.home.patientHeroCta');
+  if (quote) quote.textContent = pf['patient-hero-quote'] || ph?.quote || '';
+  if (cta) cta.textContent = pf['patient-hero-cta'] || ph?.ctaText || I18n.t('pages.home.patientHeroCta');
 }
 
 function renderBackInGame(big) {
@@ -103,18 +103,20 @@ function renderHomePage() {
   if (!data) return;
   const h = data.hospital;
   const t = (k) => I18n.t(k);
+  const pf = data.pageFields?.home || {};
 
   const heroTitle = document.getElementById('hero-title');
   if (heroTitle) {
     const cmsHero = data._cms?.homeSections?.hero;
     const cmsTitle = cmsHero?.title?.[I18n.getLang()] || cmsHero?.title?.hy;
-    heroTitle.textContent = cmsTitle || h.name || h.shortName;
+    heroTitle.textContent = pf['hero-title'] || cmsTitle || h.name || h.shortName;
   }
 
   const heroSubtitle = document.getElementById('hero-subtitle');
   if (heroSubtitle) {
     const cmsHero = data._cms?.homeSections?.hero;
     const cmsSub =
+      pf['hero-subtitle'] ||
       cmsHero?.subtitle?.[I18n.getLang()] ||
       cmsHero?.subtitle?.hy ||
       h.heroTagline ||
@@ -134,7 +136,7 @@ function renderHomePage() {
     conditionsEl.innerHTML = items.map((c) => `<li>${c}</li>`).join('');
   }
 
-  renderPatientHero(data.patientHero);
+  renderPatientHero(data.patientHero, pf);
   renderBackInGame(data.backInGame);
   renderExpertise(data.expertiseOverlay);
   renderAwards(data.awards);
@@ -249,9 +251,8 @@ function renderHomePage() {
       elementStyles: data.elementStyles
     });
   }
-  if (typeof I18n !== 'undefined' && data._cms?.i18nOverrides) {
-    I18n.setOverrides(data._cms.i18nOverrides);
-    I18n.applyDOM();
+  if (HospitalApp.applyPageFields) {
+    HospitalApp.applyPageFields(pf);
   }
 }
 

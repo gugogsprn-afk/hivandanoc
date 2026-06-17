@@ -288,27 +288,25 @@ body.cms-edit-mode textarea:not(.cms-edit-popover textarea) {
   pointer-events: auto !important;
 }
 
-.cms-upload-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.cms-upload-trigger {
+  display: block;
+  width: 100%;
   padding: 0.85rem 1rem;
-  background: #ecfdf5;
-  border: 2px dashed #14b8a6;
+  background: #0d9488;
+  color: #fff;
+  border: 0;
   border-radius: 10px;
   cursor: pointer;
   font: 600 13px system-ui, sans-serif;
-  color: #064e3b;
   margin-bottom: 0.5rem;
 }
 
-.cms-upload-btn input[type="file"] {
-  display: none;
+.cms-upload-trigger:hover {
+  background: #0f766e;
 }
 
-.cms-upload-btn:hover {
-  background: #d1fae5;
+.cms-edit-file {
+  display: none !important;
 }
 
 body.cms-edit-mode .hss-mobile-bar {

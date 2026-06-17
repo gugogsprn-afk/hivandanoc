@@ -15,6 +15,7 @@ const mediaRoutes = require('./routes/admin/media');
 const leadsRoutes = require('./routes/admin/leads');
 const contactsRoutes = require('./routes/admin/contacts');
 const homepageRoutes = require('./routes/admin/homepage');
+const pagesRoutes = require('./routes/admin/pages');
 const settingsRoutes = require('./routes/admin/settings');
 
 function isAllowedOrigin(origin) {
@@ -84,6 +85,7 @@ function createCmsApp() {
   app.use('/api/v1/admin/leads', leadsRoutes);
   app.use('/api/v1/admin/contacts', contactsRoutes);
   app.use('/api/v1/admin/homepage', homepageRoutes);
+  app.use('/api/v1/admin/pages', pagesRoutes);
   app.use('/api/v1/admin/settings', settingsRoutes);
   app.use('/api/v1/media/files', mediaRoutes.mediaFilesRouter());
 

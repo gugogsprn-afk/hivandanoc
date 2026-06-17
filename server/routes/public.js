@@ -10,7 +10,8 @@ const router = express.Router();
 router.get('/content', (req, res) => {
   const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
   const content = buildPublicContent(lang);
-  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
   res.json({ ok: true, lang, ...content });
 });
 

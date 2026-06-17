@@ -8,6 +8,16 @@
   const lang = new URLSearchParams(location.search).get('lang') || localStorage.getItem('gkb_lang') || 'hy';
   const pagePath = location.pathname.split('/').pop() || 'index.html';
 
+  const PAGE_PATH_TO_KEY = {
+    'index.html': 'home',
+    'doctors.html': 'doctors',
+    'contacts.html': 'contacts',
+    'departments.html': 'departments',
+    'about.html': 'about'
+  };
+
+  let pageFieldsCache = {};
+
   const apiBase = () => `${location.protocol}//${location.host}/api/v1`;
 
   function token() {
@@ -78,18 +88,74 @@
     el.textContent = val;
   }
 
+  function cmsPageKey() {
+    return PAGE_PATH_TO_KEY[pagePath] || pagePath.replace('.html', '');
+  }
+
+  function fieldKeyFor(el) {
+    if (el.id) return el.id;
+    return cmsKey(el).replace(/[|#]/g, '_');
+  }
+
+  function getCachedField(field_key) {
+    return pageFieldsCache[field_key]?.[lang];
+  }
+
+  async function reloadPreviewFromServer() {
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
+    if (typeof HospitalApp !== 'undefined' && HospitalApp.reloadFromCms) {
+      await HospitalApp.reloadFromCms();
+    }
+    try {
+      const data = await api(`/admin/pages/${cmsPageKey()}`, 'GET');
+      pageFieldsCache = data.fields || {};
+    } catch {
+      /* ignore */
+    }
+    setTimeout(attachAll, 250);
+  }
+
+  async function persistField(el, value, opts = {}) {
+    const field_key = opts.fieldKey || fieldKeyFor(el);
+    const value_type = opts.valueType || (el.tagName === 'IMG' || el.tagName === 'VIDEO' ? 'image' : 'text');
+    const res = await api(`/admin/pages/${cmsPageKey()}/fields`, 'PATCH', {
+      fields: [{ field_key, lang, value, value_type }]
+    });
+    if (res.fields) pageFieldsCache = res.fields;
+
+    if (opts.i18nKey) await saveI18n(opts.i18nKey, value);
+
+    if (cmsPageKey() === 'home' && field_key === 'hero-title') {
+      const c = await loadHeroSection();
+      c.title = c.title || {};
+      c.title[lang] = value;
+      await saveHeroContent(c);
+    }
+    if (cmsPageKey() === 'home' && field_key === 'hero-subtitle') {
+      const c = await loadHeroSection();
+      c.subtitle = c.subtitle || {};
+      c.subtitle[lang] = value;
+      await saveHeroContent(c);
+    }
+
+    await reloadPreviewFromServer();
+    return res;
+  }
+
   let contentExtra = {};
   let i18nOverrides = {};
   let elementStyles = {};
 
   async function loadStores() {
-    const [extra, i18n] = await Promise.all([
+    const [extra, i18n, pages] = await Promise.all([
       api('/admin/settings/content-extra', 'GET'),
-      api('/admin/settings/i18n-overrides', 'GET')
+      api('/admin/settings/i18n-overrides', 'GET'),
+      api(`/admin/pages/${cmsPageKey()}`, 'GET')
     ]);
     contentExtra = extra.content_extra || {};
     i18nOverrides = i18n.i18n_overrides || {};
     elementStyles = contentExtra.elementStyles || {};
+    pageFieldsCache = pages.fields || {};
   }
 
   async function saveContentExtra(merge) {
@@ -146,91 +212,83 @@
 
   const HOME_FIELDS = [
     { sel: '#hero-title', label: 'Hero title', type: 'text',
-      async get() { const c = await loadHeroSection(); return c.title?.[lang] || getText(document.querySelector('#hero-title')); },
-      async save(val) { const c = await loadHeroSection(); c.title = c.title || {}; c.title[lang] = val; await saveHeroContent(c); } },
+      async get() { return getCachedField('hero-title') || (await loadHeroSection()).title?.[lang] || getText(document.querySelector('#hero-title')); },
+      async save(val, el) { await persistField(el || document.querySelector('#hero-title'), val); } },
     { sel: '#hero-subtitle', label: 'Hero subtitle', type: 'text',
-      async get() { const c = await loadHeroSection(); return c.subtitle?.[lang] || getText(document.querySelector('#hero-subtitle')); },
-      async save(val) { const c = await loadHeroSection(); c.subtitle = c.subtitle || {}; c.subtitle[lang] = val; await saveHeroContent(c); } },
+      async get() { return getCachedField('hero-subtitle') || (await loadHeroSection()).subtitle?.[lang] || getText(document.querySelector('#hero-subtitle')); },
+      async save(val, el) { await persistField(el || document.querySelector('#hero-subtitle'), val); } },
     { sel: '#patient-hero-image', label: 'Patient story image', type: 'image',
-      async get() { return contentExtra.patientHero?.image || document.querySelector('#patient-hero-image')?.src || ''; },
-      async save(val) { await saveContentExtra({ patientHero: { ...contentExtra.patientHero, image: val } }); } },
+      async get() { return getCachedField('patient-hero-image') || contentExtra.patientHero?.image || document.querySelector('#patient-hero-image')?.src || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#patient-hero-image'), val, { valueType: 'image' }); } },
     { sel: '#patient-hero-quote', label: 'Patient quote', type: 'textarea',
-      async get() { return contentExtra.patientHero?.quote || getText(document.querySelector('#patient-hero-quote')); },
-      async save(val) { await saveContentExtra({ patientHero: { ...contentExtra.patientHero, quote: val } }); } },
+      async get() { return getCachedField('patient-hero-quote') || contentExtra.patientHero?.quote || getText(document.querySelector('#patient-hero-quote')); },
+      async save(val, el) { await persistField(el || document.querySelector('#patient-hero-quote'), val); } },
     { sel: '#patient-hero-cta', label: 'Patient story button', type: 'text',
-      async get() { return contentExtra.patientHero?.ctaText || getText(document.querySelector('#patient-hero-cta')); },
-      async save(val) { await saveContentExtra({ patientHero: { ...contentExtra.patientHero, ctaText: val } }); } },
+      async get() { return getCachedField('patient-hero-cta') || contentExtra.patientHero?.ctaText || getText(document.querySelector('#patient-hero-cta')); },
+      async save(val, el) { await persistField(el || document.querySelector('#patient-hero-cta'), val); } },
     { sel: '#home-feature-image', label: 'Feature image', type: 'image',
-      async get() { return contentExtra.feature?.image || ''; },
-      async save(val) { await saveContentExtra({ feature: { ...contentExtra.feature, image: val } }); } },
+      async get() { return getCachedField('home-feature-image') || contentExtra.feature?.image || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#home-feature-image'), val, { valueType: 'image' }); } },
     { sel: '#home-feature-title', label: 'Feature title', type: 'text',
-      async get() { return contentExtra.feature?.title || getText(document.querySelector('#home-feature-title')); },
-      async save(val) { await saveContentExtra({ feature: { ...contentExtra.feature, title: val } }); } },
+      async get() { return getCachedField('home-feature-title') || contentExtra.feature?.title || getText(document.querySelector('#home-feature-title')); },
+      async save(val, el) { await persistField(el || document.querySelector('#home-feature-title'), val); } },
     { sel: '#home-feature-desc', label: 'Feature description', type: 'textarea',
-      async get() { return contentExtra.feature?.description || getText(document.querySelector('#home-feature-desc')); },
-      async save(val) { await saveContentExtra({ feature: { ...contentExtra.feature, description: val } }); } },
+      async get() { return getCachedField('home-feature-desc') || contentExtra.feature?.description || getText(document.querySelector('#home-feature-desc')); },
+      async save(val, el) { await persistField(el || document.querySelector('#home-feature-desc'), val); } },
     { sel: '#back-in-game-image', label: 'Brand story image', type: 'image',
-      async get() { return contentExtra.backInGame?.image || ''; },
-      async save(val) { await saveContentExtra({ backInGame: { ...contentExtra.backInGame, image: val } }); } },
+      async get() { return getCachedField('back-in-game-image') || contentExtra.backInGame?.image || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#back-in-game-image'), val, { valueType: 'image' }); } },
     { sel: '#back-in-game-title', label: 'Brand story title', type: 'text',
-      async get() { return contentExtra.backInGame?.title || getText(document.querySelector('#back-in-game-title')); },
-      async save(val) { await saveContentExtra({ backInGame: { ...contentExtra.backInGame, title: val } }); } },
+      async get() { return getCachedField('back-in-game-title') || contentExtra.backInGame?.title || getText(document.querySelector('#back-in-game-title')); },
+      async save(val, el) { await persistField(el || document.querySelector('#back-in-game-title'), val); } },
     { sel: '#back-in-game-text', label: 'Brand story text', type: 'textarea',
-      async get() { return contentExtra.backInGame?.text || getText(document.querySelector('#back-in-game-text')); },
-      async save(val) { await saveContentExtra({ backInGame: { ...contentExtra.backInGame, text: val } }); } },
+      async get() { return getCachedField('back-in-game-text') || contentExtra.backInGame?.text || getText(document.querySelector('#back-in-game-text')); },
+      async save(val, el) { await persistField(el || document.querySelector('#back-in-game-text'), val); } },
     { sel: '#back-in-game-link', label: 'Brand story link', type: 'text',
-      async get() { return contentExtra.backInGame?.linkText || getText(document.querySelector('#back-in-game-link')); },
-      async save(val) { await saveContentExtra({ backInGame: { ...contentExtra.backInGame, linkText: val } }); } },
+      async get() { return getCachedField('back-in-game-link') || contentExtra.backInGame?.linkText || getText(document.querySelector('#back-in-game-link')); },
+      async save(val, el) { await persistField(el || document.querySelector('#back-in-game-link'), val); } },
     { sel: '#expertise-image', label: 'Expertise background', type: 'image',
-      async get() { return contentExtra.expertiseOverlay?.image || ''; },
-      async save(val) { await saveContentExtra({ expertiseOverlay: { ...contentExtra.expertiseOverlay, image: val } }); } },
+      async get() { return getCachedField('expertise-image') || contentExtra.expertiseOverlay?.image || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#expertise-image'), val, { valueType: 'image' }); } },
     { sel: '#expertise-title', label: 'Expertise title', type: 'text',
-      async get() { return contentExtra.expertiseOverlay?.title || getText(document.querySelector('#expertise-title')); },
-      async save(val) { await saveContentExtra({ expertiseOverlay: { ...contentExtra.expertiseOverlay, title: val } }); } },
+      async get() { return getCachedField('expertise-title') || contentExtra.expertiseOverlay?.title || getText(document.querySelector('#expertise-title')); },
+      async save(val, el) { await persistField(el || document.querySelector('#expertise-title'), val); } },
     { sel: '#expertise-text', label: 'Expertise text', type: 'textarea',
-      async get() { return contentExtra.expertiseOverlay?.text || getText(document.querySelector('#expertise-text')); },
-      async save(val) { await saveContentExtra({ expertiseOverlay: { ...contentExtra.expertiseOverlay, text: val } }); } },
+      async get() { return getCachedField('expertise-text') || contentExtra.expertiseOverlay?.text || getText(document.querySelector('#expertise-text')); },
+      async save(val, el) { await persistField(el || document.querySelector('#expertise-text'), val); } },
     { sel: '#home-approach-image', label: 'Approach image', type: 'image',
-      async get() { return contentExtra.approachImage || ''; },
-      async save(val) { await saveContentExtra({ approachImage: val }); } },
+      async get() { return getCachedField('home-approach-image') || contentExtra.approachImage || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#home-approach-image'), val, { valueType: 'image' }); } },
     { sel: '#home-approach-text', label: 'Approach text', type: 'textarea',
       async get() {
-        const paras = contentExtra.approachParagraphs || [];
-        if (paras.length) return paras.join('\n');
-        const el = document.querySelector('#home-approach-text');
-        return el ? [...el.querySelectorAll('p')].map((p) => p.textContent).join('\n') : '';
+        return getCachedField('home-approach-text') || (contentExtra.approachParagraphs || []).join('\n') ||
+          [...(document.querySelector('#home-approach-text')?.querySelectorAll('p') || [])].map((p) => p.textContent).join('\n');
       },
-      async save(val) { await saveContentExtra({ approachParagraphs: val.split('\n').map((s) => s.trim()).filter(Boolean) }); } },
+      async save(val, el) { await persistField(el || document.querySelector('#home-approach-text'), val); } },
     { sel: '#home-experts-image', label: 'Experts image', type: 'image',
-      async get() { return contentExtra.expertsImage || ''; },
-      async save(val) { await saveContentExtra({ expertsImage: val }); } },
+      async get() { return getCachedField('home-experts-image') || contentExtra.expertsImage || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#home-experts-image'), val, { valueType: 'image' }); } },
     { sel: '#home-experts-text', label: 'Experts text', type: 'textarea',
       async get() {
-        const paras = contentExtra.expertsParagraphs || [];
-        if (paras.length) return paras.join('\n');
-        const el = document.querySelector('#home-experts-text');
-        return el ? [...el.querySelectorAll('p')].map((p) => p.textContent).join('\n') : '';
+        return getCachedField('home-experts-text') || (contentExtra.expertsParagraphs || []).join('\n') ||
+          [...(document.querySelector('#home-experts-text')?.querySelectorAll('p') || [])].map((p) => p.textContent).join('\n');
       },
-      async save(val) { await saveContentExtra({ expertsParagraphs: val.split('\n').map((s) => s.trim()).filter(Boolean) }); } },
+      async save(val, el) { await persistField(el || document.querySelector('#home-experts-text'), val); } },
     { sel: '#home-imaging-image', label: 'Equipment image', type: 'image',
-      async get() { return contentExtra.imagingImage || ''; },
-      async save(val) { await saveContentExtra({ imagingImage: val }); } },
+      async get() { return getCachedField('home-imaging-image') || contentExtra.imagingImage || ''; },
+      async save(val, el) { await persistField(el || document.querySelector('#home-imaging-image'), val, { valueType: 'image' }); } },
     { sel: '#home-imaging-text', label: 'Equipment text', type: 'textarea',
       async get() {
-        const paras = contentExtra.imagingParagraphs || [];
-        if (paras.length) return paras.join('\n');
-        const el = document.querySelector('#home-imaging-text');
-        return el ? [...el.querySelectorAll('p')].map((p) => p.textContent).join('\n') : '';
+        return getCachedField('home-imaging-text') || (contentExtra.imagingParagraphs || []).join('\n') ||
+          [...(document.querySelector('#home-imaging-text')?.querySelectorAll('p') || [])].map((p) => p.textContent).join('\n');
       },
-      async save(val) { await saveContentExtra({ imagingParagraphs: val.split('\n').map((s) => s.trim()).filter(Boolean) }); } },
+      async save(val, el) { await persistField(el || document.querySelector('#home-imaging-text'), val); } },
     { sel: '#home-intro-prose', label: 'Intro text', type: 'textarea',
       async get() {
-        const paras = contentExtra.introParagraphs || [];
-        if (paras.length) return paras.join('\n');
-        const el = document.querySelector('#home-intro-prose');
-        return el ? [...el.querySelectorAll('p')].map((p) => p.textContent).join('\n') : '';
+        return getCachedField('home-intro-prose') || (contentExtra.introParagraphs || []).join('\n') ||
+          [...(document.querySelector('#home-intro-prose')?.querySelectorAll('p') || [])].map((p) => p.textContent).join('\n');
       },
-      async save(val) { await saveContentExtra({ introParagraphs: val.split('\n').map((s) => s.trim()).filter(Boolean) }); } }
+      async save(val, el) { await persistField(el || document.querySelector('#home-intro-prose'), val); } }
   ];
 
   let popover = null;
@@ -283,10 +341,8 @@
         <button type="button" class="cms-edit-tab" data-tab="url">Paste link</button>
       </div>
       <div class="cms-edit-panel" data-panel="upload">
-        <label class="cms-upload-btn">
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" class="cms-edit-file">
-          <span>Choose photo or video from computer</span>
-        </label>
+        <button type="button" class="cms-upload-trigger">Choose photo or video from computer</button>
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" class="cms-edit-file">
         <p class="cms-edit-hint" id="cms-upload-status">Max 10 MB · JPG, PNG, WebP, MP4, WebM</p>
       </div>
       <div class="cms-edit-panel" data-panel="url" hidden>
@@ -300,9 +356,17 @@
     positionPopover(rect);
 
     const fileInput = popover.querySelector('.cms-edit-file');
+    const uploadBtn = popover.querySelector('.cms-upload-trigger');
     const urlInput = popover.querySelector('.cms-edit-url');
     const statusEl = popover.querySelector('#cms-upload-status');
     let pendingUrl = '';
+
+    fileInput.style.display = 'none';
+    uploadBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fileInput.click();
+    });
 
     popover.querySelectorAll('.cms-edit-tab').forEach((tab) => {
       tab.addEventListener('click', (e) => {
@@ -347,7 +411,7 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        await field.save(val);
+        await field.save(val, el);
         setText(el, val, field);
         notifySaved();
         closePopover();
@@ -381,7 +445,7 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        await field.save(input.value.trim());
+        await field.save(input.value.trim(), el);
         setText(el, input.value.trim(), field);
         notifySaved();
         closePopover();
@@ -424,41 +488,38 @@
       type: isPlaceholder ? 'text' : el.tagName === 'P' || el.classList.contains('hss-prose') ? 'textarea' : 'text',
       fieldType: isPlaceholder ? 'placeholder' : 'i18n',
       async get() {
-        return i18nOverrides[lang]?.[key] || (typeof I18n !== 'undefined' ? I18n.t(key) : getText(el));
+        return getCachedField(`i18n_${key}`) || i18nOverrides[lang]?.[key] || (typeof I18n !== 'undefined' ? I18n.t(key) : getText(el));
       },
       async save(val) {
-        await saveI18n(key, val);
+        await persistField(el, val, { fieldKey: `i18n_${key}`, i18nKey: key });
       }
     };
   }
 
   function fieldFromImage(el) {
-    const key = cmsKey(el);
-    const pageImages = contentExtra.pageImages || {};
+    const fk = fieldKeyFor(el);
     return {
-      label: 'Image',
+      label: 'Image / video',
       type: 'image',
       async get() {
-        return pageImages[key] || el.src || '';
+        return getCachedField(fk) || contentExtra.pageImages?.[cmsKey(el)] || el.src || '';
       },
       async save(val) {
-        await saveContentExtra({ pageImages: { [key]: val } });
+        await persistField(el, val, { fieldKey: fk, valueType: 'image' });
       }
     };
   }
 
   function fieldFromInline(el) {
-    const key = cmsKey(el);
-    const inline = contentExtra.inlineText || {};
+    const fk = fieldKeyFor(el);
     return {
       label: 'Text',
       type: el.tagName === 'P' ? 'textarea' : 'text',
       async get() {
-        return inline[key]?.[lang] || getText(el);
+        return getCachedField(fk) || contentExtra.inlineText?.[cmsKey(el)]?.[lang] || getText(el);
       },
       async save(val) {
-        const next = { ...(inline[key] || {}), [lang]: val };
-        await saveContentExtra({ inlineText: { ...inline, [key]: next } });
+        await persistField(el, val, { fieldKey: fk });
       }
     };
   }
@@ -635,8 +696,9 @@
 
   function blockInteractions() {
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.cms-edit-popover, .cms-resize-handle, .cms-doctor-toolbar, .cms-doctor-actions, [data-cms-editable]')) return;
-      if (e.target.closest('a, button, input, select, textarea, form, label')) {
+      if (e.target.closest('.cms-edit-popover')) return;
+      if (e.target.closest('.cms-resize-handle, .cms-doctor-toolbar, .cms-doctor-actions, [data-cms-editable]')) return;
+      if (e.target.closest('a, button, input, select, textarea, form')) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -656,7 +718,7 @@
     if (document.querySelector('link[href*="cms-edit-mode.css"]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `js/cms-edit-mode.css?v=${new URLSearchParams(location.search).get('cms_build') || '20260627'}`;
+    link.href = `js/cms-edit-mode.css?v=${new URLSearchParams(location.search).get('cms_build') || window.CMS_BUILD || '20260628'}`;
     document.head.appendChild(link);
   }
 

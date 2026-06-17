@@ -46,6 +46,49 @@ function setSetting(key, value) {
     .run(key, JSON.stringify(value));
 }
 
+function upsertPageFields(pageKey, items) {
+  const stmt = getDb().prepare(
+    `INSERT INTO page_fields (page_key, field_key, lang, value, value_type, updated_at)
+     VALUES (?, ?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(page_key, field_key, lang) DO UPDATE SET
+       value = excluded.value,
+       value_type = excluded.value_type,
+       updated_at = datetime('now')`
+  );
+  const run = getDb().transaction((list) => {
+    for (const f of list) {
+      stmt.run(pageKey, f.field_key, f.lang, f.value, f.value_type || 'text');
+    }
+  });
+  run(items);
+}
+
+function getPageFieldsForPage(pageKey) {
+  const rows = getDb()
+    .prepare('SELECT field_key, lang, value, value_type FROM page_fields WHERE page_key = ?')
+    .all(pageKey);
+  const out = {};
+  for (const r of rows) {
+    if (!out[r.field_key]) out[r.field_key] = { _type: r.value_type };
+    out[r.field_key][r.lang] = r.value;
+    out[r.field_key]._type = r.value_type;
+  }
+  return out;
+}
+
+function getPageFieldsMap(lang = 'hy') {
+  const rows = getDb()
+    .prepare('SELECT page_key, field_key, value, value_type FROM page_fields WHERE lang = ?')
+    .all(lang);
+  const out = {};
+  for (const r of rows) {
+    if (!out[r.page_key]) out[r.page_key] = {};
+    out[r.page_key][r.field_key] = r.value;
+    if (r.value_type && r.value_type !== 'text') out[r.page_key][`${r.field_key}__type`] = r.value_type;
+  }
+  return out;
+}
+
 function buildPublicContent(lang = 'hy') {
   const db = getDb();
   const settings = getSetting('global', {});
@@ -124,6 +167,7 @@ function buildPublicContent(lang = 'hy') {
     }));
 
   const extra = getSetting('content_extra', {});
+  const pageFields = getPageFieldsMap(lang);
 
   return {
     hospital: {
@@ -153,6 +197,7 @@ function buildPublicContent(lang = 'hy') {
     nav: getSetting('nav', null),
     footer: getSetting('footer', null),
     i18nOverrides: getSetting('i18n_overrides', {}),
+    pageFields,
     ...extra
   };
 }
@@ -197,5 +242,8 @@ module.exports = {
   getSetting,
   setSetting,
   buildPublicContent,
-  dashboardStats
+  dashboardStats,
+  getPageFieldsForPage,
+  getPageFieldsMap,
+  upsertPageFields
 };

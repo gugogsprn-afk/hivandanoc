@@ -16,8 +16,8 @@ const CmsContent = (function () {
 
     const base = CmsConfig.apiBase();
     try {
-      const res = await fetch(`${base}/public/content?lang=${code}`, {
-        headers: { Accept: 'application/json' }
+      const res = await fetch(`${base}/public/content?lang=${code}&_=${Date.now()}`, {
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }
       });
       if (!res.ok) throw new Error(`CMS ${res.status}`);
       const data = await res.json();
@@ -62,11 +62,12 @@ const CmsContent = (function () {
       'imagingParagraphs', 'approachImage', 'expertsImage', 'imagingImage',
       'news', 'storyVideos', 'patientStories', 'patientHero',
       'backInGame', 'expertiseOverlay', 'awards', 'reviews', 'moveBetter', 'timeSlots',
-      'pageImages', 'inlineText', 'elementStyles'
+      'pageImages', 'inlineText', 'elementStyles', 'pageFields'
     ];
     for (const key of extraKeys) {
       if (cms[key]) merged[key] = cms[key];
     }
+    if (cms.pageFields) merged.pageFields = cms.pageFields;
 
     merged._cms = {
       homeSections: cms.homeSections || {},

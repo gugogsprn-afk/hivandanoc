@@ -231,6 +231,19 @@ function initDb() {
     CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at);
     CREATE INDEX IF NOT EXISTS idx_services_category ON services(category_id);
     CREATE INDEX IF NOT EXISTS idx_page_sections_page ON page_sections(page_key);
+
+    CREATE TABLE IF NOT EXISTS page_fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      page_key TEXT NOT NULL,
+      field_key TEXT NOT NULL,
+      lang TEXT NOT NULL DEFAULT 'hy',
+      value TEXT NOT NULL DEFAULT '',
+      value_type TEXT NOT NULL DEFAULT 'text',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(page_key, field_key, lang)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_page_fields_page ON page_fields(page_key);
   `);
 
   return database;

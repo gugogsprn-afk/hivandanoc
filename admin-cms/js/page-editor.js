@@ -17,7 +17,7 @@ const PageEditor = (function () {
 
   function previewUrl(page = currentPage) {
     const base = AdminConfig.publicSite().replace(/\/$/, '');
-    const build = window.CMS_BUILD || '20260627';
+    const build = window.CMS_BUILD || '20260628';
     return `${base}/${page.path}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
   }
 
