@@ -29,8 +29,36 @@ const FormApi = (function () {
       .join('\n');
   }
 
+  function apiV1Root(base) {
+    if (!base) return '/api/v1';
+    return `${base.replace(/\/$/, '')}/api/v1`;
+  }
+
   async function submitToServer(base, endpoint, data) {
-    const url = `${base}/api/${endpoint}`;
+    const cmsEndpoints = {
+      appointment: 'leads/appointment',
+      contact: 'leads/contact'
+    };
+    const cmsPath = cmsEndpoints[endpoint];
+    if (cmsPath) {
+      const cmsUrl = `${apiV1Root(base)}/public/${cmsPath}`;
+      try {
+        const cmsRes = await fetch(cmsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const cmsJson = await cmsRes.json().catch(() => ({}));
+        if (cmsRes.ok && cmsJson.ok !== false) {
+          return { ok: true, status: cmsRes.status, cms: true, ...cmsJson };
+        }
+      } catch {
+        /* fall through to legacy */
+      }
+    }
+
+    const legacyBase = base || '';
+    const url = `${legacyBase}/api/${endpoint}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

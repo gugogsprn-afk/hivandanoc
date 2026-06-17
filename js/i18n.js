@@ -105,6 +105,16 @@ const I18n = (function () {
     return dictionary.content || {};
   }
 
+  function get(key) {
+    const parts = key.split('.');
+    let val = dictionary;
+    for (const p of parts) {
+      val = val?.[p];
+      if (val === undefined) return undefined;
+    }
+    return val;
+  }
+
   function applyDOM() {
     document.querySelectorAll('[data-i18n]').forEach((el) => {
       const key = el.getAttribute('data-i18n');
@@ -202,6 +212,7 @@ const I18n = (function () {
     t,
     getLang: () => currentLang,
     getContent,
+    get,
     onChange,
     renderSwitcher,
     applyDOM,

@@ -8,4 +8,8 @@
   <url><loc>https://healthyspinedoc.com/contacts.html</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://healthyspinedoc.com/submit-story.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://healthyspinedoc.com/move-better.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://healthyspinedoc.com/privacy-policy.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://healthyspinedoc.com/cookies-policy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://healthyspinedoc.com/terms.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://healthyspinedoc.com/patient-information.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
 </urlset>

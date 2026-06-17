@@ -1,0 +1,282 @@
+{
+  "en": {
+    "cookieBanner": {
+      "title": "We value your privacy",
+      "text": "We use essential cookies to remember your language and form preferences. Optional cookies help us improve the site. Read our",
+      "accept": "Accept all",
+      "essential": "Essential only",
+      "policyLink": "Cookie policy"
+    },
+    "formConsent": "I have read and agree to the <a href=\"privacy-policy.html\">Privacy Policy</a> and consent to the processing of my personal data for the purpose of this request.",
+    "pages": {
+      "privacy": {
+        "title": "Privacy Policy",
+        "updated": "Last updated: 17 June 2026 · healthyspinedoc.com",
+        "sections": [
+          {
+            "heading": "1. Who we are",
+            "body": "<p>This website is operated by <strong>CHIC NGO</strong> («Առողջ ողնաշար» / Healthy Spine Rehabilitation Center), Yerevan, Armenia. Contact: <a href=\"mailto:info@healthyspinedoc.com\">info@healthyspinedoc.com</a>.</p><p>We are committed to protecting your personal data and health-related information in line with applicable privacy laws.</p>"
+          },
+          {
+            "heading": "2. Data we collect",
+            "body": "<ul><li><strong>Appointment & contact forms:</strong> name, phone, email, preferred date/time, department, message.</li><li><strong>Patient story forms:</strong> information you voluntarily provide, including health-related details if you choose to share them.</li><li><strong>Technical data:</strong> IP address, browser type, and server logs for security (retained up to 30 days).</li><li><strong>Preferences:</strong> language choice and cookie consent stored in your browser.</li></ul>"
+          },
+          {
+            "heading": "3. How we use your data",
+            "body": "<p>We use your data only to:</p><ul><li>Schedule appointments and respond to enquiries</li><li>Send notifications to our staff (email/Telegram) when you submit a form</li><li>Improve website security and performance</li><li>Publish patient stories only with your explicit separate consent</li></ul><p>We do <strong>not</strong> sell your data or use it for third-party advertising.</p>"
+          },
+          {
+            "heading": "4. Legal basis",
+            "body": "<p>Processing is based on your consent (forms), performance of pre-contractual steps (appointments), and our legitimate interest in operating a secure medical information website.</p>"
+          },
+          {
+            "heading": "5. Retention",
+            "body": "<p>Form submissions are stored securely on our servers for up to <strong>24 months</strong>, unless a longer period is required by law or you request deletion sooner.</p>"
+          },
+          {
+            "heading": "6. Your rights",
+            "body": "<p>You may request access, correction, deletion, restriction, or portability of your data, and withdraw consent at any time by emailing <a href=\"mailto:info@healthyspinedoc.com\">info@healthyspinedoc.com</a>. You may lodge a complaint with your local data protection authority.</p>"
+          },
+          {
+            "heading": "7. International transfers",
+            "body": "<p>Data is processed on servers within the EU/EEA (Contabo, Germany). Email providers may process data according to their own policies.</p>"
+          },
+          {
+            "heading": "8. Children",
+            "body": "<p>Our services are not directed at children under 16 without parental consent. Parents or guardians may contact us to request deletion of a minor's data.</p>"
+          }
+        ]
+      },
+      "cookies": {
+        "title": "Cookie Policy",
+        "updated": "Last updated: 17 June 2026",
+        "sections": [
+          {
+            "heading": "What are cookies?",
+            "body": "<p>Cookies are small text files stored on your device. We also use similar technologies such as <code>localStorage</code> for preferences.</p>"
+          },
+          {
+            "heading": "Cookies we use",
+            "body": "<ul><li><strong>gkb_lang</strong> (essential) — remembers your language preference.</li><li><strong>gkb_cookie_consent</strong> (essential) — stores your cookie choice.</li><li><strong>gkb_admin_session</strong> (essential) — admin area login session only.</li><li><strong>gkb_appointments / gkb_content_override</strong> (functional) — local demo storage in your browser until a full backend is connected.</li></ul>"
+          },
+          {
+            "heading": "Optional cookies",
+            "body": "<p>We do not currently use analytics or marketing cookies. If we add them in the future, we will ask for your consent first.</p>"
+          },
+          {
+            "heading": "Managing cookies",
+            "body": "<p>You can clear cookies in your browser settings or click <strong>Essential only</strong> in our banner. Blocking essential cookies may affect language selection.</p>"
+          }
+        ]
+      },
+      "terms": {
+        "title": "Terms of Use",
+        "updated": "Last updated: 17 June 2026",
+        "sections": [
+          {
+            "heading": "1. Acceptance",
+            "body": "<p>By using healthyspinedoc.com you agree to these terms. If you do not agree, please do not use the site.</p>"
+          },
+          {
+            "heading": "2. Medical disclaimer",
+            "body": "<p>Content on this website is for <strong>general information only</strong> and does not replace professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified healthcare provider. In an emergency, call <strong>103</strong>.</p>"
+          },
+          {
+            "heading": "3. Appointments",
+            "body": "<p>Online booking requests are subject to confirmation by our staff. Submitting a form does not guarantee an appointment until we contact you.</p>"
+          },
+          {
+            "heading": "4. Intellectual property",
+            "body": "<p>Text, images, logos, and design are owned by CHIC NGO or used under licence. You may not copy or redistribute content without written permission.</p>"
+          },
+          {
+            "heading": "5. Limitation of liability",
+            "body": "<p>We strive to keep information accurate but do not warrant that the site is error-free or uninterrupted. CHIC NGO is not liable for damages arising from use of the website except where prohibited by law.</p>"
+          },
+          {
+            "heading": "6. Governing law",
+            "body": "<p>These terms are governed by the laws of the Republic of Armenia. Disputes shall be subject to the courts of Yerevan, Armenia.</p>"
+          }
+        ]
+      },
+      "patient": {
+        "title": "Patient Information",
+        "updated": "Last updated: 17 June 2026",
+        "sections": [
+          {
+            "heading": "Your care",
+            "body": "<p>At Healthy Spine we provide conservative rehabilitation for spine, joint, and musculoskeletal conditions using evidence-based, multidisciplinary care.</p>"
+          },
+          {
+            "heading": "Before your visit",
+            "body": "<ul><li>Bring ID and any relevant medical records or imaging results</li><li>Arrive 10 minutes early for registration</li><li>Inform us of allergies, medications, and pregnancy</li></ul>"
+          },
+          {
+            "heading": "Privacy of health information",
+            "body": "<p>Your medical information is confidential. We share it only with staff involved in your care or when required by law. See our <a href=\"privacy-policy.html\">Privacy Policy</a> for details.</p>"
+          },
+          {
+            "heading": "Patient rights",
+            "body": "<ul><li>Respectful, non-discriminatory care</li><li>Clear information about your treatment plan</li><li>Refuse or withdraw consent for optional procedures</li><li>Submit feedback via our <a href=\"contacts.html\">contact form</a></li></ul>"
+          },
+          {
+            "heading": "Emergency",
+            "body": "<p>For life-threatening emergencies call <strong>103</strong>. Our centre is not an emergency department.</p>"
+          }
+        ]
+      }
+    }
+  },
+  "hy": {
+    "cookieBanner": {
+      "title": "Մենք գնահատում ենք ձեր գաղտնիությունը",
+      "text": "Մենք օգտագործում ենք անհրաժեշտ cookie-ներ՝ ձեր լեզվի և նախընտրությունների համար։ Կարդացեք մեր",
+      "accept": "Ընդունել բոլորը",
+      "essential": "Միայն անհրաժեշտ",
+      "policyLink": "Cookie քաղաքականություն"
+    },
+    "formConsent": "Ես կարդացել եմ և համաձայն եմ <a href=\"privacy-policy.html\">Գաղտնիության քաղաքականության</a> հետ և տվյալների մշակմանը այս հարցման նպատակով։",
+    "pages": {
+      "privacy": {
+        "title": "Գաղտնիության քաղաքականություն",
+        "updated": "Վերջին թարմացում՝ 17 հունիս, 2026 · healthyspinedoc.com",
+        "sections": [
+          {
+            "heading": "1. Ով ենք մենք",
+            "body": "<p>Այս կայքը վարում է <strong>CHIC NGO</strong> («Առողջ ողնաշար» վերականգնողական կենտրոն), Երևան, Հայաստան։ Կապ՝ <a href=\"mailto:info@healthyspinedoc.com\">info@healthyspinedoc.com</a>։</p>"
+          },
+          {
+            "heading": "2. Տվյալներ, որ հավաքում ենք",
+            "body": "<ul><li><strong>Գրանցման և կապի ձևեր՝</strong> անուն, հեռախոս, էլ. փոստ, ամսաթիվ/ժամ, բաժին, հաղորդագրություն</li><li><strong>Տեխնիկական տվյալներ՝</strong> IP հասցե, դիտարկիչ, անվտանգության մատյաններ (մինչև 30 օր)</li><li><strong>Նախընտրություններ՝</strong> լեզու և cookie համաձայնություն</li></ul>"
+          },
+          {
+            "heading": "3. Ինչպես ենք օգտագործում",
+            "body": "<p>Տվյալները օգտագործվում են միայն գրանցումներ կազմակերպելու, հարցումներին պատասխանելու և կայքի անվտանգությունը ապահովելու համար։ Մենք <strong>չենք վաճառում</strong> ձեր տվյալները։</p>"
+          },
+          {
+            "heading": "4. Ձեր իրավունքները",
+            "body": "<p>Դուք կարող եք պահանջել մուտք, ուղղում, ջնջում կամ համաձայնության հետ կանչելու՝ գրելով <a href=\"mailto:info@healthyspinedoc.com\">info@healthyspinedoc.com</a>։</p>"
+          }
+        ]
+      },
+      "cookies": {
+        "title": "Cookie քաղաքականություն",
+        "updated": "Վերջին թարմացում՝ 17 հունիս, 2026",
+        "sections": [
+          {
+            "heading": "Cookie-ներ, որ օգտագործում ենք",
+            "body": "<ul><li><strong>gkb_lang</strong> — լեզվի նախընտրություն</li><li><strong>gkb_cookie_consent</strong> — cookie ընտրություն</li><li><strong>gkb_admin_session</strong> — ադմին մուտք</li></ul>"
+          },
+          {
+            "heading": "Կառավարում",
+            "body": "<p>Կարող եք մաքրել cookie-ները դիտարկչի կարգավորումներից կամ ընտրել <strong>Միայն անհրաժեշտ</strong> մեր բաններում։</p>"
+          }
+        ]
+      },
+      "terms": {
+        "title": "Օգտագործման պայմաններ",
+        "updated": "Վերջին թարմացում՝ 17 հունիս, 2026",
+        "sections": [
+          {
+            "heading": "Բժշկական հրաժարական",
+            "body": "<p>Կայքի բովանդակությունը <strong>տեղեկատվական է</strong> և չի փոխարինում բժշկի խորհրդատվությունը։ Արտակարգ դեպքում զանգահարեք <strong>103</strong>։</p>"
+          },
+          {
+            "heading": "Իրավասություն",
+            "body": "<p>Պայմանները կարգավորվում են Հայաստանի Հանրապետության օրենսդրությամբ։</p>"
+          }
+        ]
+      },
+      "patient": {
+        "title": "Հիվանդի տեղեկատվություն",
+        "updated": "Վերջին թարմացում՝ 17 հունիս, 2026",
+        "sections": [
+          {
+            "heading": "Ձեր խնամքը",
+            "body": "<p>«Առողջ ողնաշար» կենտրոնում մենք տրամադրում ենք պոզանոցի և հոդերի վերականգնողական օգնություն։</p>"
+          },
+          {
+            "heading": "Արտակարգ օգնություն",
+            "body": "<p>Կյանքին սպառնացող արտակարգ իրավիճակներում զանգահարեք <strong>103</strong>։</p>"
+          }
+        ]
+      }
+    }
+  },
+  "ru": {
+    "cookieBanner": {
+      "title": "Мы ценим вашу конфиденциальность",
+      "text": "Мы используем необходимые cookie для языка и настроек. Подробнее в",
+      "accept": "Принять все",
+      "essential": "Только необходимые",
+      "policyLink": "Политике cookie"
+    },
+    "formConsent": "Я прочитал(а) и согласен(на) с <a href=\"privacy-policy.html\">Политикой конфиденциальности</a> и обработкой персональных данных для этой заявки.",
+    "pages": {
+      "privacy": {
+        "title": "Политика конфиденциальности",
+        "updated": "Обновлено: 17 июня 2026 · healthyspinedoc.com",
+        "sections": [
+          {
+            "heading": "1. Кто мы",
+            "body": "<p>Сайт управляется <strong>CHIC NGO</strong> (реабилитационный центр «Առողջ ողնաշար»), Ереван, Армения. Контакт: <a href=\"mailto:info@healthyspinedoc.com\">info@healthyspinedoc.com</a>.</p>"
+          },
+          {
+            "heading": "2. Какие данные собираем",
+            "body": "<ul><li><strong>Формы записи и обратной связи:</strong> имя, телефон, email, дата, отделение, сообщение</li><li><strong>Технические данные:</strong> IP, браузер, журналы безопасности (до 30 дней)</li><li><strong>Настройки:</strong> язык и согласие на cookie</li></ul>"
+          },
+          {
+            "heading": "3. Как используем",
+            "body": "<p>Данные используются только для записи, ответов на обращения и безопасности сайта. Мы <strong>не продаём</strong> ваши данные.</p>"
+          },
+          {
+            "heading": "4. Ваши права",
+            "body": "<p>Вы можете запросить доступ, исправление, удаление данных или отозвать согласие: <a href=\"mailto:info@healthyspinedoc.com\">info@healthyspinedoc.com</a>.</p>"
+          }
+        ]
+      },
+      "cookies": {
+        "title": "Политика cookie",
+        "updated": "Обновлено: 17 июня 2026",
+        "sections": [
+          {
+            "heading": "Используемые cookie",
+            "body": "<ul><li><strong>gkb_lang</strong> — язык интерфейса</li><li><strong>gkb_cookie_consent</strong> — выбор cookie</li><li><strong>gkb_admin_session</strong> — сессия админки</li></ul>"
+          },
+          {
+            "heading": "Управление",
+            "body": "<p>Очистите cookie в настройках браузера или выберите <strong>Только необходимые</strong> в баннере.</p>"
+          }
+        ]
+      },
+      "terms": {
+        "title": "Условия использования",
+        "updated": "Обновлено: 17 июня 2026",
+        "sections": [
+          {
+            "heading": "Медицинский отказ от ответственности",
+            "body": "<p>Информация на сайте <strong>не заменяет</strong> консультацию врача. При угрозе жизни звоните <strong>103</strong>.</p>"
+          },
+          {
+            "heading": "Применимое право",
+            "body": "<p>Условия регулируются законодательством Республики Армения.</p>"
+          }
+        ]
+      },
+      "patient": {
+        "title": "Информация для пациентов",
+        "updated": "Обновлено: 17 июня 2026",
+        "sections": [
+          {
+            "heading": "Ваше лечение",
+            "body": "<p>Центр «Առողջ ողնաշար» предоставляет консервативную реабилитацию позвоночника и суставов.</p>"
+          },
+          {
+            "heading": "Экстренная помощь",
+            "body": "<p>При угрозе жизни звоните <strong>103</strong>. Центр не является отделением неотложной помощи.</p>"
+          }
+        ]
+      }
+    }
+  }
+}

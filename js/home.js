@@ -105,12 +105,22 @@ function renderHomePage() {
   const t = (k) => I18n.t(k);
 
   const heroTitle = document.getElementById('hero-title');
-  if (heroTitle) heroTitle.textContent = h.name || h.shortName;
+  if (heroTitle) {
+    const cmsHero = data._cms?.homeSections?.hero;
+    const cmsTitle = cmsHero?.title?.[I18n.getLang()] || cmsHero?.title?.hy;
+    heroTitle.textContent = cmsTitle || h.name || h.shortName;
+  }
 
   const heroSubtitle = document.getElementById('hero-subtitle');
   if (heroSubtitle) {
-    const text = h.heroTagline || h.tagline || t('pages.home.heroSubtitle');
-    heroSubtitle.innerHTML = `<strong>${text}</strong>`;
+    const cmsHero = data._cms?.homeSections?.hero;
+    const cmsSub =
+      cmsHero?.subtitle?.[I18n.getLang()] ||
+      cmsHero?.subtitle?.hy ||
+      h.heroTagline ||
+      h.tagline ||
+      t('pages.home.heroSubtitle');
+    heroSubtitle.innerHTML = `<strong>${cmsSub}</strong>`;
   }
 
   initDoctorSearch(data);

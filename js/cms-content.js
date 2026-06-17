@@ -1,0 +1,69 @@
+/**
+ * Fetch dynamic CMS content for the public website.
+ */
+const CmsContent = (function () {
+  let cache = null;
+  let cacheLang = null;
+  let cacheTime = 0;
+  const TTL = 60000;
+
+  async function fetchContent(lang) {
+    const code = lang || (typeof I18n !== 'undefined' ? I18n.getLang() : 'hy');
+    const now = Date.now();
+    if (cache && cacheLang === code && now - cacheTime < TTL) {
+      return cache;
+    }
+
+    const base = CmsConfig.apiBase();
+    try {
+      const res = await fetch(`${base}/public/content?lang=${code}`, {
+        headers: { Accept: 'application/json' }
+      });
+      if (!res.ok) throw new Error(`CMS ${res.status}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error('CMS unavailable');
+
+      cache = data;
+      cacheLang = code;
+      cacheTime = now;
+      return data;
+    } catch (err) {
+      console.warn('[CmsContent]', err.message);
+      return null;
+    }
+  }
+
+  function mergeIntoHospital(baseData, cms) {
+    if (!cms || !baseData) return baseData;
+
+    const merged = { ...baseData };
+    if (cms.hospital) {
+      merged.hospital = { ...merged.hospital, ...cms.hospital };
+    }
+    if (cms.departments?.length) merged.departments = cms.departments;
+    if (cms.doctors?.length) merged.doctors = cms.doctors;
+    if (cms.serviceCategories?.length) merged.serviceCategories = cms.serviceCategories;
+    if (cms.testimonials?.length) merged.reviews = cms.testimonials;
+
+    const extraKeys = [
+      'trustPoints', 'conditions', 'equipment', 'programs', 'advantages',
+      'introParagraphs', 'feature', 'approachParagraphs', 'expertsParagraphs',
+      'imagingParagraphs', 'news', 'storyVideos', 'patientStories', 'patientHero',
+      'backInGame', 'expertiseOverlay', 'awards', 'reviews', 'moveBetter', 'timeSlots'
+    ];
+    for (const key of extraKeys) {
+      if (cms[key]) merged[key] = cms[key];
+    }
+
+    merged._cms = { homeSections: cms.homeSections || {}, seo: cms.seo || {} };
+    return merged;
+  }
+
+  function invalidate() {
+    cache = null;
+    cacheLang = null;
+    cacheTime = 0;
+  }
+
+  return { fetchContent, mergeIntoHospital, invalidate };
+})();

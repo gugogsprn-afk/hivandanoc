@@ -3,30 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Departments</title>
+    <meta name="robots" content="index, follow">
+    <title>Patient Information</title>
     <link rel="stylesheet" href="css/hospital-theme.css?v=20260619">
     <link rel="stylesheet" href="css/hss-spine.css?v=20260619">
+    <link rel="stylesheet" href="css/legal.css?v=20260619">
 </head>
-<body class="hss-page" data-page="departments" data-i18n-title="pages.departments.title">
+<body class="hss-page" data-page="legal-patient" data-legal-page="patient" data-i18n-title="footer.policyPatient">
     <div id="site-nav"></div>
     <header class="hss-hero hss-hero--inner">
         <div class="hss-wrap">
-            <h1 data-i18n="pages.departments.heroTitle">—</h1>
-            <p class="hss-hero__tagline" data-i18n="pages.departments.heroDesc">—</p>
+            <h1 id="legal-page-title">—</h1>
         </div>
     </header>
-    <section class="hss-section">
-        <div class="hss-wrap">
-            <div class="hss-filter-bar" id="service-filters"></div>
-            <div id="departments-grid"></div>
-        </div>
-    </section>
+    <main class="hss-legal-page" id="main-content">
+        <div class="hss-wrap" id="legal-content"><p data-i18n="common.loading">—</p></div>
+    </main>
     <div id="site-footer"></div>
     <script src="js/storage.js"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/legal-page.js"></script>
     <script src="js/cms-config.js"></script>
     <script src="js/cms-content.js"></script>
     <script src="js/common.js"></script>
-    <script src="js/pages.js"></script>
 </body>
 </html>

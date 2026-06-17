@@ -52,6 +52,26 @@ const SiteSEO = (function () {
       descriptionKey: 'pages.moveBetter.seoDescription',
       fallbackDescription: 'Health articles and patient resources from Healthy Spine.',
       path: '/move-better.html'
+    },
+    'legal-privacy': {
+      descriptionKey: 'footer.policyPrivacy',
+      fallbackDescription: 'Privacy Policy — how Healthy Spine collects, uses, and protects your personal data.',
+      path: '/privacy-policy.html'
+    },
+    'legal-cookies': {
+      descriptionKey: 'footer.policyCookies',
+      fallbackDescription: 'Cookie Policy — how we use cookies and similar technologies on healthyspinedoc.com.',
+      path: '/cookies-policy.html'
+    },
+    'legal-terms': {
+      descriptionKey: 'footer.policyTerms',
+      fallbackDescription: 'Terms of Use for the Healthy Spine website.',
+      path: '/terms.html'
+    },
+    'legal-patient': {
+      descriptionKey: 'footer.policyPatient',
+      fallbackDescription: 'Patient information and rights at Healthy Spine rehabilitation center.',
+      path: '/patient-information.html'
     }
   };
 

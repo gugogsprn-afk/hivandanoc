@@ -430,9 +430,10 @@ const HospitalApp = (function () {
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.policiesTitle">${t('footer.policiesTitle')}</h4>
-              <a href="#" data-i18n="footer.policyPrivacy">${t('footer.policyPrivacy')}</a>
-              <a href="#" data-i18n="footer.policyTerms">${t('footer.policyTerms')}</a>
-              <a href="#" data-i18n="footer.policyPatient">${t('footer.policyPatient')}</a>
+              <a href="${prefix}privacy-policy.html" data-i18n="footer.policyPrivacy">${t('footer.policyPrivacy')}</a>
+              <a href="${prefix}cookies-policy.html" data-i18n="footer.policyCookies">${t('footer.policyCookies')}</a>
+              <a href="${prefix}terms.html" data-i18n="footer.policyTerms">${t('footer.policyTerms')}</a>
+              <a href="${prefix}patient-information.html" data-i18n="footer.policyPatient">${t('footer.policyPatient')}</a>
             </div>
           </div>
         </div>
@@ -581,6 +582,13 @@ const HospitalApp = (function () {
         doctors: override.doctors || data.doctors,
         advantages: override.advantages || data.advantages
       };
+    }
+
+    if (typeof CmsContent !== 'undefined') {
+      const cms = await CmsContent.fetchContent(I18n.getLang());
+      if (cms) {
+        data = CmsContent.mergeIntoHospital(data, cms);
+      }
     }
 
     baseData = data;
@@ -748,6 +756,59 @@ const HospitalApp = (function () {
     onScroll();
   }
 
+  function loadScriptOnce(src) {
+    const name = src.split('/').pop().split('?')[0];
+    if (document.querySelector(`script[src*="${name}"]`)) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = resolve;
+      document.body.appendChild(s);
+    });
+  }
+
+  async function initCompliance() {
+    if (document.body.classList.contains('admin-body')) return;
+    const prefix = pathPrefix();
+    if (!document.querySelector('link[href*="legal.css"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `${prefix}css/legal.css?v=20260619`;
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[src*="seo.js"]')) {
+      await loadScriptOnce(`${prefix}js/seo.js`);
+    }
+    if (!document.querySelector('script[src*="cookie-consent"]')) {
+      await loadScriptOnce(`${prefix}js/legal-page.js`);
+      await loadScriptOnce(`${prefix}js/cookie-consent.js`);
+    }
+    injectFormConsentText();
+  }
+
+  async function injectFormConsentText() {
+    const el = document.getElementById('form-privacy-consent-text');
+    if (!el) return;
+    const prefix = pathPrefix();
+    try {
+      const res = await fetch(`${prefix}lang/legal.json`);
+      if (res.ok) {
+        const data = await res.json();
+        const bundle = data[I18n.getLang()] || data.en || {};
+        if (bundle.formConsent) {
+          el.innerHTML = bundle.formConsent.replace(/href="([^"]+)"/g, `href="${prefix}$1"`);
+          return;
+        }
+      }
+    } catch {
+      /* fallback */
+    }
+    el.innerHTML = `I agree to the <a href="${prefix}privacy-policy.html">Privacy Policy</a>.`;
+  }
+
   async function refreshLanguage() {
     animObserver = null;
     await loadData();
@@ -755,6 +816,7 @@ const HospitalApp = (function () {
     renderFooter();
     applyBranding();
     initPageUtilities();
+    injectFormConsentText();
     I18n.applyDOM();
     document.querySelectorAll('[data-anim-observed]').forEach((el) => {
       delete el.dataset.animObserved;
@@ -796,6 +858,7 @@ const HospitalApp = (function () {
       I18n.applyDOM();
       initAnimations();
       initPageUtilities();
+      initCompliance();
 
       if (!i18nHooked) {
         i18nHooked = true;
