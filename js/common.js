@@ -39,8 +39,18 @@ const HospitalApp = (function () {
     );
   }
 
+  function brandName() {
+    const h = getData()?.hospital;
+    if (h?.shortName) return h.shortName;
+    if (h?.name) return h.name;
+    const loc = typeof I18n !== 'undefined' ? I18n.getContent() : null;
+    if (loc?.hospital?.shortName) return loc.hospital.shortName;
+    if (loc?.hospital?.name) return loc.hospital.name;
+    return 'Առողջ ողնաշար';
+  }
+
   function logoAlt() {
-    return 'CHIC';
+    return brandName();
   }
 
   function logoMarkPath() {
@@ -49,17 +59,18 @@ const HospitalApp = (function () {
 
   function logoMarkup(prefix, variant) {
     const mark = logoMarkPath();
+    const name = brandName();
     if (variant === 'footer') {
       return `
         <span class="logo-brand logo-brand--footer">
           <img src="${mark}" alt="" class="logo-img logo-img--mark" width="48" height="48" loading="lazy" aria-hidden="true" />
-          <span class="logo-brand__name">CHIC</span>
+          <span class="logo-brand__name">${name}</span>
         </span>`;
     }
     return `
       <span class="logo-brand">
         <img src="${mark}" alt="" class="logo-img logo-img--mark" width="48" height="48" loading="eager" aria-hidden="true" />
-        <span class="logo-brand__name">CHIC</span>
+        <span class="logo-brand__name">${name}</span>
       </span>`;
   }
 
@@ -169,7 +180,7 @@ const HospitalApp = (function () {
         </div>
         <nav class="navbar">
           <div class="nav-container">
-            <a href="${prefix}index.html" class="logo logo--brand" aria-label="CHIC">
+            <a href="${prefix}index.html" class="logo logo--brand" aria-label="${brandName()}">
               ${logoMarkup(prefix, 'header')}
             </a>
             <ul class="nav-links nav-links--hss">${links}</ul>
@@ -610,7 +621,11 @@ const HospitalApp = (function () {
     });
 
     document.querySelectorAll('.logo-brand__name').forEach((el) => {
-      el.textContent = 'CHIC';
+      el.textContent = h.shortName || h.name || brandName();
+    });
+
+    document.querySelectorAll('.logo.logo--brand').forEach((el) => {
+      el.setAttribute('aria-label', h.shortName || h.name || brandName());
     });
 
     const footer = document.getElementById('footer-copy');

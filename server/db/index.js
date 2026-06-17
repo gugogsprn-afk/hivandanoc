@@ -1,11 +1,60 @@
 const path = require('path');
 const fs = require('fs');
-const Database = require('better-sqlite3');
+const { DatabaseSync } = require('node:sqlite');
 
 const DATA_DIR = process.env.CMS_DATA_DIR || path.join(__dirname, '../../data/cms');
 const DB_PATH = process.env.CMS_DB_PATH || path.join(DATA_DIR, 'cms.db');
 
 let db = null;
+
+function bindParams(params) {
+  return params.map((p) => (p === undefined ? null : p));
+}
+
+function wrapStatement(stmt) {
+  return {
+    get(...params) {
+      return stmt.get(...bindParams(params));
+    },
+    all(...params) {
+      return stmt.all(...bindParams(params));
+    },
+    run(...params) {
+      return stmt.run(...bindParams(params));
+    }
+  };
+}
+
+function wrapDatabase(database) {
+  return {
+    exec(sql) {
+      database.exec(sql);
+    },
+    pragma(value) {
+      database.exec(`PRAGMA ${value}`);
+    },
+    prepare(sql) {
+      return wrapStatement(database.prepare(sql));
+    },
+    transaction(fn) {
+      return (...args) => {
+        database.exec('BEGIN IMMEDIATE');
+        try {
+          const result = fn(...args);
+          database.exec('COMMIT');
+          return result;
+        } catch (err) {
+          try {
+            database.exec('ROLLBACK');
+          } catch {
+            /* ignore rollback errors */
+          }
+          throw err;
+        }
+      };
+    }
+  };
+}
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -20,7 +69,8 @@ function ensureDataDir() {
 function getDb() {
   if (!db) {
     ensureDataDir();
-    db = new Database(DB_PATH);
+    const database = new DatabaseSync(DB_PATH);
+    db = wrapDatabase(database);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
   }

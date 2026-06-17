@@ -1483,11 +1483,12 @@ body.hss-page {
 
 .hss-header .logo-brand__name {
   font-family: var(--font-serif, Georgia, serif);
-  font-size: 1.75rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--navy, #1A4F4F);
-  letter-spacing: 0.06em;
-  line-height: 1;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .hss-header .logo--brand:hover .logo-brand__name {
@@ -2522,6 +2523,13 @@ body.hss-share-open {
 
   .hss-mobile-bar {
     display: flex;
+  }
+
+  .hss-header .logo-brand__name {
+    font-size: 1.05rem;
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   @supports (-webkit-touch-callout: none) {
