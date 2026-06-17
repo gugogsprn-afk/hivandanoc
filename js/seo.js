@@ -5,7 +5,7 @@ const SiteSEO = (function () {
   const SITE = {
     name: 'Առողջ ողնաշար',
     org: 'CHIC NGO',
-    baseUrl: 'http://95.111.233.120:8088',
+    baseUrl: 'http://173.212.240.38',
     defaultImage: 'images/brand/logo-chic.png',
     phone: '+37410000000',
     email: 'info@healthyspine.am'
