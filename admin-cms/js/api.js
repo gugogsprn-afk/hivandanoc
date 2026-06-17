@@ -19,14 +19,21 @@ const AdminApi = (function () {
     const t = token();
     if (t) headers.Authorization = `Bearer ${t}`;
 
-    const res = await fetch(`${AdminConfig.apiBase()}${path}`, {
-      ...options,
-      headers,
-      body:
-        options.body instanceof FormData || options.body == null
-          ? options.body
-          : JSON.stringify(options.body)
-    });
+    let res;
+    try {
+      res = await fetch(`${AdminConfig.apiBase()}${path}`, {
+        ...options,
+        headers,
+        body:
+          options.body instanceof FormData || options.body == null
+            ? options.body
+            : JSON.stringify(options.body)
+      });
+    } catch {
+      throw new Error(
+        'Cannot reach the server. Check your internet connection or try again in a moment.'
+      );
+    }
 
     const json = await res.json().catch(() => ({}));
     if (res.status === 401) {

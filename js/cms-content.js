@@ -33,6 +33,17 @@ const CmsContent = (function () {
     }
   }
 
+  function applyCmsPresentation(cms) {
+    if (!cms) return;
+    if (cms.i18nOverrides && typeof I18n !== 'undefined' && I18n.setOverrides) {
+      I18n.setOverrides(cms.i18nOverrides);
+      I18n.applyDOM();
+    }
+    if (typeof HospitalApp !== 'undefined' && HospitalApp.applyCmsVisuals) {
+      HospitalApp.applyCmsVisuals(cms);
+    }
+  }
+
   function mergeIntoHospital(baseData, cms) {
     if (!cms || !baseData) return baseData;
 
@@ -48,14 +59,17 @@ const CmsContent = (function () {
     const extraKeys = [
       'trustPoints', 'conditions', 'equipment', 'programs', 'advantages',
       'introParagraphs', 'feature', 'approachParagraphs', 'expertsParagraphs',
-      'imagingParagraphs', 'news', 'storyVideos', 'patientStories', 'patientHero',
-      'backInGame', 'expertiseOverlay', 'awards', 'reviews', 'moveBetter', 'timeSlots'
+      'imagingParagraphs', 'approachImage', 'expertsImage', 'imagingImage',
+      'news', 'storyVideos', 'patientStories', 'patientHero',
+      'backInGame', 'expertiseOverlay', 'awards', 'reviews', 'moveBetter', 'timeSlots',
+      'pageImages', 'inlineText', 'elementStyles'
     ];
     for (const key of extraKeys) {
       if (cms[key]) merged[key] = cms[key];
     }
 
     merged._cms = { homeSections: cms.homeSections || {}, seo: cms.seo || {} };
+    applyCmsPresentation(cms);
     return merged;
   }
 

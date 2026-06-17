@@ -15,7 +15,7 @@ const AdminUI = (function () {
   const VIEW_TITLES = {
     dashboard: 'Dashboard',
     leads: 'Leads & Appointments',
-    homepage: 'Homepage Editor',
+    pages: 'Page Editor',
     doctors: 'Doctors',
     services: 'Services',
     media: 'Media Library',

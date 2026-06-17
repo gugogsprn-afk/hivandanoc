@@ -3,7 +3,7 @@ const fs = require('fs');
 const express = require('express');
 const helmet = require('helmet');
 const { initDb } = require('./db');
-const { seed } = require('./db/seed');
+const { seed, ensureStaffUsers } = require('./db/seed');
 const { apiLimiter } = require('./middleware/rateLimit');
 
 const authRoutes = require('./routes/auth');
@@ -41,6 +41,12 @@ function createCmsApp() {
       seed();
     } catch (err) {
       console.error('[cms] seed error:', err.message);
+    }
+  } else {
+    try {
+      ensureStaffUsers();
+    } catch (err) {
+      console.error('[cms] staff users error:', err.message);
     }
   }
 

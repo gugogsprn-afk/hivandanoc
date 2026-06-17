@@ -828,6 +828,40 @@ const HospitalApp = (function () {
     }
   }
 
+  function resolveCmsStyleKey(key) {
+    if (key.includes('#')) {
+      return document.getElementById(key.split('#').pop());
+    }
+    const [page, tag, idxStr] = key.split('|');
+    const pageName = location.pathname.split('/').pop() || 'index.html';
+    if (page !== pageName) return null;
+    const list = document.getElementsByTagName(tag);
+    return list[parseInt(idxStr, 10)] || null;
+  }
+
+  function applyCmsVisuals(cms) {
+    if (!cms) return;
+    Object.entries(cms.pageImages || {}).forEach(([key, url]) => {
+      if (!url) return;
+      const el = resolveCmsStyleKey(key);
+      if (el?.tagName === 'IMG') el.src = url;
+    });
+    const lang = I18n.getLang();
+    Object.entries(cms.inlineText || {}).forEach(([key, texts]) => {
+      const text = texts?.[lang];
+      if (!text) return;
+      const el = resolveCmsStyleKey(key);
+      if (el && !el.hasAttribute('data-i18n')) el.textContent = text;
+    });
+    Object.entries(cms.elementStyles || {}).forEach(([key, style]) => {
+      const el = resolveCmsStyleKey(key);
+      if (!el || !style) return;
+      if (style.width) el.style.width = style.width;
+      if (style.height) el.style.height = style.height;
+      if (style.fontSize) el.style.fontSize = style.fontSize;
+    });
+  }
+
   async function init() {
     if (initPromise) return initPromise;
     initPromise = (async () => {
@@ -878,9 +912,19 @@ const HospitalApp = (function () {
     pathPrefix,
     initAnimations,
     resetAnimations,
+    applyCmsVisuals,
     phoneTelUri,
     updatePhoneLinks
   };
+})();
+
+/** Load visual CMS editor on public pages when ?cms-edit=1 */
+(function loadCmsEditIfNeeded() {
+  if (!/[?&]cms-edit=1/.test(location.search)) return;
+  const base = (document.querySelector('script[src*="common.js"]')?.src || '').replace(/\/js\/common\.js.*$/, '/');
+  const s = document.createElement('script');
+  s.src = `${base}js/cms-edit-mode.js?v=20260625`;
+  document.body.appendChild(s);
 })();
 
 /** Резервная инициализация, если страница не вызвала HospitalApp.init() */

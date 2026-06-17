@@ -128,7 +128,7 @@ function renderDoctors(data, surgeonOnly) {
   grid.innerHTML = list
     .map(
       (doc) => `
-    <article class="hss-doctor-item fade-in" data-dept="${doc.departmentId}">
+    <article class="hss-doctor-item fade-in" data-dept="${doc.departmentId}" data-doctor-id="${doc.id}">
       <div class="hss-doctor-item__main">
         <div class="hss-doctor-item__name">${doc.name}</div>
         <div class="hss-doctor-item__role">${doc.role}</div>

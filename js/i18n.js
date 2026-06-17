@@ -15,6 +15,7 @@ const I18n = (function () {
 
   let currentLang = 'hy';
   let dictionary = {};
+  let overrides = {};
   let config = { ...DEFAULT_CONFIG, languages: [...DEFAULT_CONFIG.languages] };
   const listeners = new Set();
   let initPromise = null;
@@ -87,10 +88,13 @@ const I18n = (function () {
 
   function t(key, params) {
     const parts = key.split('.');
-    let val = dictionary;
-    for (const p of parts) {
-      val = val?.[p];
-      if (val === undefined) break;
+    let val = overrides[currentLang]?.[key];
+    if (typeof val !== 'string') {
+      val = dictionary;
+      for (const p of parts) {
+        val = val?.[p];
+        if (val === undefined) break;
+      }
     }
     if (typeof val !== 'string') return key;
     if (params) {
@@ -181,6 +185,10 @@ const I18n = (function () {
     window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
   }
 
+  function setOverrides(map) {
+    overrides = map || {};
+  }
+
   function onChange(fn) {
     listeners.add(fn);
     return () => listeners.delete(fn);
@@ -213,6 +221,7 @@ const I18n = (function () {
     getLang: () => currentLang,
     getContent,
     get,
+    setOverrides,
     onChange,
     renderSwitcher,
     applyDOM,

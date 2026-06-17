@@ -19,8 +19,38 @@ function seedUsers() {
     `INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)`
   ).run(email, hash, 'Super Admin', 'super_admin');
 
-  console.log(`[cms:seed] Default admin: ${email} / ${password}`);
+  console.log(`[cms:seed] Default admin: ${email}`);
   console.log('[cms:seed] Change CMS_ADMIN_PASSWORD in .env immediately!');
+}
+
+/** Create or update staff accounts from .env (SMM, etc.) — safe to run on every startup. */
+function ensureStaffUsers() {
+  const db = getDb();
+  const accounts = [
+    {
+      email: process.env.CMS_SMM_EMAIL,
+      password: process.env.CMS_SMM_PASSWORD,
+      name: process.env.CMS_SMM_NAME || 'SMM Specialist',
+      role: 'manager'
+    }
+  ];
+
+  for (const acc of accounts) {
+    if (!acc.email || !acc.password) continue;
+    const hash = bcrypt.hashSync(acc.password, 12);
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(acc.email);
+    if (existing) {
+      db.prepare(
+        `UPDATE users SET password_hash = ?, name = ?, role = ? WHERE email = ?`
+      ).run(hash, acc.name, acc.role, acc.email);
+      console.log(`[cms] Staff user updated: ${acc.email} (${acc.role})`);
+    } else {
+      db.prepare(
+        `INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)`
+      ).run(acc.email, hash, acc.name, acc.role);
+      console.log(`[cms] Staff user created: ${acc.email} (${acc.role})`);
+    }
+  }
 }
 
 function seedFromHospitalJson() {
@@ -178,6 +208,7 @@ function seedFromHospitalJson() {
 function seed() {
   initDb();
   seedUsers();
+  ensureStaffUsers();
   const svcCount = getDb().prepare('SELECT COUNT(*) AS c FROM services').get().c;
   if (svcCount === 0) {
     seedFromHospitalJson();
@@ -190,4 +221,4 @@ if (require.main === module) {
   seed();
 }
 
-module.exports = { seed, seedFromHospitalJson, seedUsers };
+module.exports = { seed, seedFromHospitalJson, seedUsers, ensureStaffUsers };

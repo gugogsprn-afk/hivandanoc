@@ -156,7 +156,7 @@ function renderHomePage() {
 
   const approachImg = document.getElementById('home-approach-image');
   if (approachImg) {
-    approachImg.src = SPLIT_IMAGES.approach;
+    approachImg.src = data.approachImage || SPLIT_IMAGES.approach;
     approachImg.alt = t('pages.home.approachTitle');
     approachImg.loading = 'lazy';
     approachImg.decoding = 'async';
@@ -168,7 +168,7 @@ function renderHomePage() {
 
   const expertsImg = document.getElementById('home-experts-image');
   if (expertsImg) {
-    expertsImg.src = SPLIT_IMAGES.experts;
+    expertsImg.src = data.expertsImage || SPLIT_IMAGES.experts;
     expertsImg.alt = t('pages.home.expertsTitle');
     expertsImg.loading = 'lazy';
     expertsImg.decoding = 'async';
@@ -180,7 +180,7 @@ function renderHomePage() {
 
   const imagingImg = document.getElementById('home-imaging-image');
   if (imagingImg) {
-    imagingImg.src = data.equipment?.[0]?.image || SPLIT_IMAGES.imaging;
+    imagingImg.src = data.imagingImage || data.equipment?.[0]?.image || SPLIT_IMAGES.imaging;
     imagingImg.alt = t('pages.home.equipmentTitle');
     imagingImg.loading = 'lazy';
     imagingImg.decoding = 'async';

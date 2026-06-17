@@ -1,0 +1,288 @@
+/* Visual CMS edit mode — only when ?cms-edit=1 */
+body.cms-edit-mode {
+  cursor: default;
+  padding-top: 36px;
+}
+
+.cms-edit-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99990;
+  background: #064e3b;
+  color: #fff;
+  text-align: center;
+  font: 600 13px/36px system-ui, sans-serif;
+  padding: 0 1rem;
+}
+
+body.cms-edit-mode [data-cms-editable] {
+  position: relative;
+  outline: 2px dashed transparent;
+  outline-offset: 3px;
+  transition: outline-color 0.15s, background 0.15s;
+  cursor: pointer;
+  pointer-events: auto !important;
+}
+
+body.cms-edit-mode [data-cms-editable]:hover {
+  outline-color: #14b8a6;
+  background: rgba(20, 184, 166, 0.08);
+}
+
+body.cms-edit-mode [data-cms-editable].cms-editing {
+  outline-color: #0d9488;
+  outline-style: solid;
+  background: rgba(20, 184, 166, 0.12);
+}
+
+body.cms-edit-mode [data-cms-editable]::before {
+  content: '✎ Edit';
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 600 11px/1.2 system-ui, sans-serif;
+  background: #064e3b;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  z-index: 60;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+body.cms-edit-mode [data-cms-editable]:hover::before {
+  opacity: 1;
+}
+
+body.cms-edit-mode [data-cms-editable]::after {
+  content: attr(data-cms-label);
+  position: absolute;
+  top: 0;
+  left: 0;
+  font: 600 10px/1 system-ui, sans-serif;
+  background: #0d9488;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 0 0 4px 0;
+  opacity: 0;
+  z-index: 50;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+body.cms-edit-mode [data-cms-editable]:hover::after {
+  opacity: 1;
+}
+
+body.cms-edit-mode img[data-cms-editable]:hover::before {
+  bottom: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cms-resizable {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+  box-sizing: border-box;
+}
+
+.cms-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #0d9488;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  z-index: 70;
+  pointer-events: auto !important;
+}
+
+.cms-resize-handle--nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.cms-resize-handle--ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.cms-resize-handle--sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.cms-resize-handle--se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+.cms-edit-popover {
+  position: fixed;
+  z-index: 99999;
+  background: #fff;
+  border: 1px solid #d1e7e4;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(6, 78, 59, 0.2);
+  padding: 1rem;
+  width: min(380px, calc(100vw - 2rem));
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+.cms-edit-popover h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #064e3b;
+}
+
+.cms-edit-lang,
+.cms-edit-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #5b7a75;
+}
+
+.cms-edit-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.cms-edit-tab {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d1e7e4;
+  border-radius: 8px;
+  background: #f8fffe;
+  font: 600 12px system-ui, sans-serif;
+  cursor: pointer;
+  color: #064e3b;
+}
+
+.cms-edit-tab.active {
+  background: #0d9488;
+  color: #fff;
+  border-color: #0d9488;
+}
+
+.cms-edit-popover input,
+.cms-edit-popover textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1e7e4;
+  border-radius: 8px;
+  font: inherit;
+  margin-bottom: 0.5rem;
+  box-sizing: border-box;
+}
+
+.cms-edit-popover textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.cms-edit-file {
+  padding: 0.75rem !important;
+  background: #f0fdfa;
+}
+
+.cms-edit-popover__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.cms-edit-popover button {
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 0;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.cms-edit-popover .cms-save {
+  background: #0d9488;
+  color: #fff;
+}
+
+.cms-edit-popover .cms-cancel {
+  background: #f0fdfa;
+  border: 1px solid #d1e7e4;
+}
+
+.cms-edit-toast {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #064e3b;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font: 500 14px system-ui, sans-serif;
+  z-index: 100000;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.cms-edit-toast.is-visible {
+  opacity: 1;
+}
+
+.cms-doctor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background: #ecfdf5;
+  border: 2px dashed #14b8a6;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font: 500 13px system-ui, sans-serif;
+  color: #064e3b;
+}
+
+.cms-doctor-add {
+  padding: 0.45rem 0.9rem;
+  background: #0d9488;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cms-doctor-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+
+.cms-doctor-actions button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: #064e3b;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cms-doctor-actions .cms-doctor-del {
+  background: #b91c1c;
+}
+
+body.cms-edit-mode a:not([data-cms-editable]),
+body.cms-edit-mode button:not([data-cms-editable]):not(.cms-doctor-add):not(.cms-edit-tab):not(.cms-save):not(.cms-cancel),
+body.cms-edit-mode input,
+body.cms-edit-mode select,
+body.cms-edit-mode textarea:not(.cms-edit-popover textarea) {
+  pointer-events: none;
+}
+
+body.cms-edit-mode .hss-mobile-bar {
+  display: none;
+}

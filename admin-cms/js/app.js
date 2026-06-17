@@ -8,7 +8,7 @@
   const VIEW_SUBTITLES = {
     dashboard: 'Overview of clinic activity and recent leads',
     leads: 'Manage appointment requests and contact form submissions',
-    homepage: 'Edit homepage sections — changes appear on the public site within ~1 min',
+    pages: 'Visual editor — click text or images to edit. Buttons and links are disabled in preview.',
     doctors: 'Add and manage doctors shown on the public website',
     services: 'Manage service categories and treatment offerings',
     media: 'Upload and manage images for doctors, clinic, and blog',
@@ -81,7 +81,7 @@
     const loaders = {
       dashboard: renderDashboard,
       leads: renderLeads,
-      homepage: renderHomepage,
+      pages: renderPages,
       doctors: renderDoctors,
       services: renderServices,
       media: renderMedia,
@@ -117,7 +117,7 @@
           )}
           ${AdminUI.card('Quick actions', `
             <div class="cms-quick-actions">
-              <button type="button" class="cms-btn cms-btn--ghost" data-go="homepage">🏠 Homepage</button>
+              <button type="button" class="cms-btn cms-btn--ghost" data-go="pages">📄 Pages</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="doctors">👨‍⚕️ Doctors</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="services">🩺 Services</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="media">🖼️ Media</button>
@@ -223,129 +223,19 @@
     });
   }
 
-  async function renderHomepage() {
-    const root = $('#view-homepage');
-    root.innerHTML = AdminUI.loadingHTML('Loading homepage sections…');
-    try {
-      const data = await AdminApi.get('/admin/homepage?page=home');
-      root.innerHTML = `
-        <div class="cms-split">
-          <div class="cms-panel">
-            <div class="cms-panel__head"><h2>Homepage sections</h2><span class="cms-muted">${data.sections.length} sections</span></div>
-            <div class="cms-panel__body" id="sections-list"></div>
-          </div>
-          <div class="cms-panel" id="section-editor" hidden>
-            <div class="cms-panel__head"><h2 id="section-editor-title">Edit section</h2></div>
-            <div class="cms-panel__body"><form id="section-form" class="cms-form"></form></div>
-          </div>
-        </div>`;
-
-      const list = $('#sections-list', root);
-      if (!data.sections.length) {
-        list.innerHTML = AdminUI.emptyHTML('No sections', 'Homepage sections will appear after seed.');
-        return;
-      }
-
-      data.sections.forEach((sec) => {
-        const row = document.createElement('div');
-        row.className = 'cms-section-row';
-        row.innerHTML = `
-          <label class="cms-toggle"><input type="checkbox" ${sec.enabled ? 'checked' : ''} data-enabled> Visible</label>
-          <div>
-            <strong>${esc(sec.section_key.replace(/_/g, ' '))}</strong>
-            <br><span class="cms-muted">Display order: ${sec.sort_order}</span>
-          </div>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-edit>Edit content</button>
-          <input type="number" class="cms-order-input" value="${sec.sort_order}" min="0" data-order title="Sort order">`;
-        list.appendChild(row);
-
-        $('[data-edit]', row).addEventListener('click', () => openSectionEditor(sec));
-        $('[data-enabled]', row).addEventListener('change', async (e) => {
-          try {
-            await AdminApi.put(`/admin/homepage/${sec.section_key}`, {
-              page_key: 'home', enabled: e.target.checked, sort_order: sec.sort_order, content: sec.content
-            });
-            toast(e.target.checked ? 'Section enabled' : 'Section hidden');
-          } catch (err) { toast(err.message, 'error'); }
-        });
-        $('[data-order]', row).addEventListener('change', async (e) => {
-          try {
-            await AdminApi.put(`/admin/homepage/${sec.section_key}`, {
-              page_key: 'home', enabled: !!sec.enabled, sort_order: Number(e.target.value), content: sec.content
-            });
-            toast('Order updated');
-            renderHomepage();
-          } catch (err) { toast(err.message, 'error'); }
-        });
-      });
-    } catch (err) {
-      root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-homepage');
-      $('#retry-homepage', root)?.addEventListener('click', renderHomepage);
+  async function renderPages() {
+    const root = $('#view-pages');
+    root.innerHTML = AdminUI.loadingHTML('Loading visual editor…');
+    if (!AdminApi.token()) {
+      root.innerHTML = AdminUI.errorHTML('Please sign in first.');
+      return;
     }
-  }
-
-  function openSectionEditor(sec) {
-    const editor = $('#section-editor');
-    const form = $('#section-form');
-    editor.hidden = false;
-    $('#section-editor-title').textContent = `Edit: ${sec.section_key.replace(/_/g, ' ')}`;
-    editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    const content = sec.content || {};
-    const renderFields = () => {
-      form.innerHTML = '';
-      form.prepend(langTabs(renderFields));
-
-      if (sec.section_key === 'hero') {
-        form.insertAdjacentHTML('beforeend', triField('Title', 'title', content.title || {}));
-        form.insertAdjacentHTML('beforeend', triField('Subtitle', 'subtitle', content.subtitle || {}));
-        form.insertAdjacentHTML('beforeend', `<div class="cms-field"><label>Hero image URL<input name="image" value="${esc(content.image || '')}" placeholder="https://… or /api/v1/media/files/…"></label></div>`);
-        form.insertAdjacentHTML('beforeend', `<div class="cms-field"><label>CTA button link<input name="ctaLink" value="${esc(content.ctaLink || 'appointment.html')}"></label></div>`);
-      } else if (sec.section_key === 'about') {
-        form.insertAdjacentHTML('beforeend', triField('Title', 'title', content.title || {}));
-        form.insertAdjacentHTML('beforeend', triField('Text', 'text', content.text || {}, true));
-        form.insertAdjacentHTML('beforeend', `<div class="cms-field"><label>Image URL<input name="image" value="${esc(content.image || '')}"></label></div>`);
-      } else {
-        form.insertAdjacentHTML('beforeend', `<div class="cms-field"><label>Section content (JSON)<textarea name="raw_json" rows="14" class="cms-code">${esc(JSON.stringify(content, null, 2))}</textarea></label><p class="cms-muted">Advanced: edit raw JSON. Invalid JSON will be rejected.</p></div>`);
-      }
-      form.insertAdjacentHTML('beforeend', '<button type="submit" class="cms-btn cms-btn--primary">Save section</button>');
-    };
-    renderFields();
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const btn = form.querySelector('[type="submit"]');
-      btn.disabled = true;
-      let newContent = { ...content };
-      if (form.querySelector('[name="raw_json"]')) {
-        try { newContent = JSON.parse(form.querySelector('[name="raw_json"]').value); }
-        catch { toast('Invalid JSON — please check syntax', 'error'); btn.disabled = false; return; }
-      } else {
-        newContent.title = newContent.title || {};
-        newContent.subtitle = newContent.subtitle || {};
-        newContent.text = newContent.text || {};
-        AdminConfig.langs.forEach((l) => {
-          const t = form.querySelector(`[name="title_${l.code}"]`);
-          const s = form.querySelector(`[name="subtitle_${l.code}"]`);
-          const x = form.querySelector(`[name="text_${l.code}"]`);
-          if (t) newContent.title[l.code] = t.value;
-          if (s) newContent.subtitle[l.code] = s.value;
-          if (x) newContent.text[l.code] = x.value;
-        });
-        const img = form.querySelector('[name="image"]');
-        const cta = form.querySelector('[name="ctaLink"]');
-        if (img) newContent.image = img.value;
-        if (cta) newContent.ctaLink = cta.value;
-      }
-      try {
-        await AdminApi.put(`/admin/homepage/${sec.section_key}`, {
-          page_key: 'home', enabled: !!sec.enabled, sort_order: sec.sort_order, content: newContent
-        });
-        toast('Section saved', 'success');
-        sec.content = newContent;
-      } catch (err) { toast(err.message, 'error'); }
-      finally { btn.disabled = false; }
-    };
+    try {
+      PageEditor.mount(root);
+    } catch (err) {
+      root.innerHTML = AdminUI.errorHTML(err.message, 'retry-pages');
+      $('#retry-pages', root)?.addEventListener('click', renderPages);
+    }
   }
 
   let editingDoctorId = null;
@@ -719,8 +609,18 @@
     }
   }
 
+  window.__cmsShowView = (name, doctorId) => {
+    showView(name);
+    if (name === 'doctors' && doctorId) {
+      setTimeout(() => {
+        document.querySelector(`[data-edit-doctor="${doctorId}"]`)?.click();
+      }, 600);
+    }
+  };
+
   async function bootApp(user) {
     currentUser = user;
+    document.body.classList.add('cms-authenticated');
     $('#login-screen').hidden = true;
     $('#app-shell').hidden = false;
     $('#user-email').textContent = user.email;
@@ -772,6 +672,8 @@
       }
     }
     $('#login-screen').hidden = false;
+    $('#app-shell').hidden = true;
+    document.body.classList.remove('cms-authenticated');
   }
 
   document.addEventListener('DOMContentLoaded', init);
