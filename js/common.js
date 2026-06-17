@@ -923,7 +923,8 @@ const HospitalApp = (function () {
   if (!/[?&]cms-edit=1/.test(location.search)) return;
   const base = (document.querySelector('script[src*="common.js"]')?.src || '').replace(/\/js\/common\.js.*$/, '/');
   const s = document.createElement('script');
-  s.src = `${base}js/cms-edit-mode.js?v=20260626`;
+  const build = new URLSearchParams(location.search).get('cms_build') || '20260627';
+  s.src = `${base}js/cms-edit-mode.js?v=${build}`;
   document.body.appendChild(s);
 })();
 

@@ -656,7 +656,7 @@
     if (document.querySelector('link[href*="cms-edit-mode.css"]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'js/cms-edit-mode.css?v=20260626';
+    link.href = `js/cms-edit-mode.css?v=${new URLSearchParams(location.search).get('cms_build') || '20260627'}`;
     document.head.appendChild(link);
   }
 
