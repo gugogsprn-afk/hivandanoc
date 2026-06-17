@@ -6,13 +6,17 @@
 (function () {
   const host = location.hostname;
   const isLocal = host === 'localhost' || host === '127.0.0.1';
+  const isProduction =
+    host === '173.212.240.38' ||
+    host === 'healthyspine.am' ||
+    host === 'www.healthyspine.am';
 
-  // Полный API (Render / Cloudflare) — почта + Telegram. Пусто = только FormSubmit для почты.
+  // Полный API (Render / Contabo). Пусто = same-origin /api через nginx.
   const PRODUCTION_API = '';
 
   // Куда приходят заявки с GitHub Pages (FormSubmit)
   const NOTIFY_EMAIL = 'gugogsprn@gmail.com';
 
-  window.FORM_API_BASE = isLocal ? '' : PRODUCTION_API.replace(/\/$/, '');
+  window.FORM_API_BASE = isLocal || isProduction ? '' : PRODUCTION_API.replace(/\/$/, '');
   window.NOTIFY_EMAIL = NOTIFY_EMAIL;
 })();

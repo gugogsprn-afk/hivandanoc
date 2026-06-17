@@ -6,7 +6,7 @@ const { notifyForm, isEmailConfigured, isTelegramConfigured } = require('./notif
 const root = path.join(__dirname, '..');
 const app = express();
 const PORT = Number(process.env.PORT || 8765);
-const HOST = process.env.RENDER ? '0.0.0.0' : '127.0.0.1';
+const HOST = process.env.HOST || (process.env.RENDER || process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
 
 function isAllowedOrigin(origin) {
   if (!origin) return false;
@@ -14,6 +14,8 @@ function isAllowedOrigin(origin) {
     const { hostname, protocol } = new URL(origin);
     if (protocol !== 'http:' && protocol !== 'https:') return false;
     if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+    if (hostname === '173.212.240.38') return true;
+    if (hostname === 'healthyspine.am' || hostname === 'www.healthyspine.am') return true;
     if (hostname.endsWith('.github.io')) return true;
     return false;
   } catch {

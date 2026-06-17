@@ -5,7 +5,10 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update -qq
-apt-get install -y -qq nginx certbot python3-certbot-nginx ufw rsync
+apt-get install -y -qq nginx certbot python3-certbot-nginx ufw rsync curl
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y -qq nodejs
+npm install -g pm2
 
 mkdir -p /var/www/hivandanoc
 
