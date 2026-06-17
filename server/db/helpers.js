@@ -197,8 +197,8 @@ function buildPublicContent(lang = 'hy') {
     nav: getSetting('nav', null),
     footer: getSetting('footer', null),
     i18nOverrides: getSetting('i18n_overrides', {}),
-    pageFields,
-    ...extra
+    ...extra,
+    pageFields
   };
 }
 
