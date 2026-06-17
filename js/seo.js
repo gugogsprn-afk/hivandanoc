@@ -4,9 +4,9 @@
 const SiteSEO = (function () {
   const SITE = {
     name: 'Առողջ ողնաշար',
-    org: 'CHIC NGO',
+    org: '«Առողջ ողնաշար»',
     baseUrl: 'https://healthyspinedoc.com',
-    defaultImage: 'images/brand/logo-chic.png',
+    defaultImage: 'images/brand/logo.png',
     phone: '+37410000000',
     email: 'info@healthyspine.am'
   };
@@ -20,7 +20,7 @@ const SiteSEO = (function () {
     },
     about: {
       descriptionKey: 'pages.about.seoDescription',
-      fallbackDescription: 'About CHIC Healthy Spine rehabilitation center — mission, team, and evidence-based care.',
+      fallbackDescription: 'About «Առողջ ողնաշար» rehabilitation center — mission, team, and evidence-based care.',
       path: '/about.html'
     },
     doctors: {

@@ -69,7 +69,7 @@ function linesFromObject(obj, skip = new Set(['type'])) {
 }
 
 async function notifyForm({ type, title, payload }) {
-  const subject = `[CHIC] ${title}`;
+  const subject = `[Առողջ ողնաշար] ${title}`;
   const body = `${title}\n\n${linesFromObject(payload)}\n\nВремя: ${new Date().toLocaleString('ru-RU')}`;
   const results = { email: null, telegram: null };
 

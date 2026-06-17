@@ -32,7 +32,7 @@ GitHub Pages — это только статические файлы (HTML, CS
          NOTIFY_EMAIL=gugogsprn@gmail.com
          SMTP_USER=gugogsprn@gmail.com
          SMTP_PASS=пароль-приложения-gmail
-         MAIL_FROM=CHIC Healthy Spine <gugogsprn@gmail.com>
+         MAIL_FROM=Առողջ ողնաշար <gugogsprn@gmail.com>
          TELEGRAM_BOT_TOKEN=...
          TELEGRAM_CHAT_ID=7657305054
 

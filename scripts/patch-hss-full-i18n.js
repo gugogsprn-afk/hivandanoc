@@ -9,7 +9,7 @@ const patches = {
     nav: {
       locations: 'Հասցեներ',
       whyUs: 'Ինչու մենք',
-      aboutOrg: 'CHIC մասին',
+      aboutOrg: '«Առողջ ողնաշար» մասին',
       doctors: 'Գտնել բժիշկ'
     },
     home: {
@@ -29,7 +29,7 @@ const patches = {
     nav: {
       locations: 'Адреса',
       whyUs: 'Почему мы',
-      aboutOrg: 'О CHIC',
+      aboutOrg: 'О «Առողջ ողնաշար»',
       doctors: 'Найти врача'
     },
     home: {
@@ -49,7 +49,7 @@ const patches = {
     nav: {
       locations: 'Locations',
       whyUs: 'Why Choose Us',
-      aboutOrg: 'About CHIC',
+      aboutOrg: 'About «Առողջ ողնաշար»',
       doctors: 'Find a Doctor'
     },
     home: {

@@ -18,7 +18,7 @@ const HospitalApp = (function () {
   }
 
   function logoPath() {
-    return `${pathPrefix()}images/brand/logo-chic.png`;
+    return `${pathPrefix()}images/brand/logo.png`;
   }
 
   function showPreviewNotice(message) {
@@ -54,7 +54,7 @@ const HospitalApp = (function () {
   }
 
   function logoMarkPath() {
-    return `${pathPrefix()}images/brand/logo-chic.png`;
+    return `${pathPrefix()}images/brand/logo.png`;
   }
 
   function logoMarkup(prefix, variant) {
@@ -428,7 +428,7 @@ const HospitalApp = (function () {
               <h4 data-i18n="footer.learnTitle">${t('footer.learnTitle')}</h4>
               <a href="${prefix}about.html" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
               <a href="${prefix}index.html#news" data-i18n="footer.learnNews">${t('footer.learnNews')}</a>
-              <a href="${prefix}about.html" data-i18n="footer.learnChic">${t('footer.learnChic')}</a>
+              <a href="${prefix}about.html" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
               <a href="${prefix}contacts.html" data-i18n="footer.learnContact">${t('footer.learnContact')}</a>
             </div>
             <div class="hss-footer__col">

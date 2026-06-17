@@ -90,7 +90,7 @@ const AdminUI = (function () {
     const title = VIEW_TITLES[name] || name;
     const el = document.getElementById('view-title');
     if (el) el.textContent = title;
-    document.title = `${title} — CHIC CMS`;
+    document.title = `${title} — Առողջ ողնաշար CMS`;
   }
 
   function toggleSidebar(open) {

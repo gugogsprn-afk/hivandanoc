@@ -90,7 +90,7 @@ const FormApi = (function () {
         Accept: 'application/json'
       },
       body: JSON.stringify({
-        _subject: `[CHIC] ${title}`,
+        _subject: `[Առողջ ողնաշար] ${title}`,
         _template: 'table',
         _captcha: 'false',
         form_type: endpoint,

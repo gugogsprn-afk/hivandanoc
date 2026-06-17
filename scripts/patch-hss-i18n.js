@@ -6,7 +6,7 @@ const hospital = JSON.parse(fs.readFileSync(path.join(root, 'data/hospital.json'
 
 const homePages = {
   hy: {
-    heroBadge: 'Վերականգնողական կենտրոն · CHIC',
+    heroBadge: 'Վերականգնողական կենտրոն · Առողջ ողնաշար',
     introLabel: 'Մեր մոտեցումը',
     introTitle: 'Բազմակողմանի վերականգնողական կենտրոն',
     conditionsLabel: 'Բուժում',
@@ -34,7 +34,7 @@ const homePages = {
     tileContactsDesc: 'Ինչպես գտնել մեզ և կապվել'
   },
   ru: {
-    heroBadge: 'Реабилитационный центр · CHIC',
+    heroBadge: 'Реабилитационный центр · Առողջ ողնաշար',
     introLabel: 'Наш подход',
     introTitle: 'Мультидисциплинарный реабилитационный центр',
     conditionsLabel: 'Лечение',
@@ -62,7 +62,7 @@ const homePages = {
     tileContactsDesc: 'Как нас найти и связаться с нами'
   },
   en: {
-    heroBadge: 'Rehabilitation Center · CHIC',
+    heroBadge: 'Rehabilitation Center · Առողջ ողնաշար',
     introLabel: 'Our approach',
     introTitle: 'A Multidisciplinary Rehabilitation Center',
     conditionsLabel: 'Treatment',
