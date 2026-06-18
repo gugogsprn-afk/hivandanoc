@@ -6,14 +6,76 @@ const {
   logActivity
 } = require('../../db/helpers');
 const { syncPageFieldsToStores } = require('../../db/page-sync');
-const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
+const { publishAll, getPublishStatus } = require('../../services/content-publish');
 
 const router = express.Router();
 
 const PAGE_KEYS = ['home', 'doctors', 'contacts', 'departments', 'about'];
 
+function normalizeFieldItems(items) {
+  return items
+    .map((f) => ({
+      field_key: String(f.fieldKey || f.field_key || '').trim(),
+      lang: ['hy', 'ru', 'en'].includes(f.lang) ? f.lang : 'hy',
+      value: f.value != null ? String(f.value) : '',
+      value_type: f.value_type === 'image' || f.value_type === 'video' ? f.value_type : 'text'
+    }))
+    .filter((f) => f.field_key);
+}
+
+function saveFieldsForPage(pageKey, items, req) {
+  upsertPageFields(pageKey, items);
+  syncPageFieldsToStores(pageKey, items);
+  logActivity(req.user.sub, 'update', 'page_fields', pageKey, { count: items.length }, req.ip);
+  for (const row of items) {
+    console.log('[cms] Saved field', pageKey, row.field_key, row.lang);
+  }
+}
+
 router.get('/', authRequired, (_req, res) => {
   res.json({ ok: true, pages: PAGE_KEYS });
+});
+
+/** Multi-page bulk save */
+router.patch('/bulk/fields', authRequired, requireRole('super_admin', 'manager'), async (req, res) => {
+  const raw = req.body.changes || req.body.fields || [];
+  console.log('[cms] bulk save received', raw.length, 'change(s)');
+
+  const byPage = {};
+  for (const c of raw) {
+    const pageKey = c.pageKey || c.page_key;
+    if (!PAGE_KEYS.includes(pageKey)) continue;
+    if (!byPage[pageKey]) byPage[pageKey] = [];
+    byPage[pageKey].push(c);
+  }
+
+  let total = 0;
+  const fieldsByPage = {};
+  for (const [pageKey, list] of Object.entries(byPage)) {
+    const normalized = normalizeFieldItems(list);
+    if (!normalized.length) continue;
+    saveFieldsForPage(pageKey, normalized, req);
+    total += normalized.length;
+    fieldsByPage[pageKey] = getPageFieldsForPage(pageKey);
+  }
+
+  if (!total) {
+    return res.status(400).json({ ok: false, error: 'No valid changes to save' });
+  }
+
+  let publish;
+  try {
+    publish = await publishAll();
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message || 'Publish failed after save' });
+  }
+
+  res.json({
+    ok: true,
+    saved: total,
+    fields_by_page: fieldsByPage,
+    publish
+  });
 });
 
 router.get('/:pageKey', authRequired, (req, res) => {
@@ -24,7 +86,39 @@ router.get('/:pageKey', authRequired, (req, res) => {
   res.json({ ok: true, page_key: pageKey, fields: getPageFieldsForPage(pageKey) });
 });
 
-router.patch('/:pageKey/fields', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
+router.patch('/:pageKey/fields/bulk', authRequired, requireRole('super_admin', 'manager'), async (req, res) => {
+  const pageKey = req.params.pageKey;
+  if (!PAGE_KEYS.includes(pageKey)) {
+    return res.status(404).json({ ok: false, error: 'Unknown page' });
+  }
+
+  const raw = req.body.changes || req.body.fields || [];
+  console.log('[cms] page bulk save received', pageKey, raw.length, 'change(s)');
+
+  const normalized = normalizeFieldItems(raw);
+  if (!normalized.length) {
+    return res.status(400).json({ ok: false, error: 'No valid fields to save' });
+  }
+
+  saveFieldsForPage(pageKey, normalized, req);
+
+  let publish;
+  try {
+    publish = await publishAll();
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message || 'Publish failed after save' });
+  }
+
+  res.json({
+    ok: true,
+    page_key: pageKey,
+    fields: getPageFieldsForPage(pageKey),
+    saved: normalized.length,
+    publish
+  });
+});
+
+router.patch('/:pageKey/fields', authRequired, requireRole('super_admin', 'manager'), async (req, res) => {
   const pageKey = req.params.pageKey;
   if (!PAGE_KEYS.includes(pageKey)) {
     return res.status(404).json({ ok: false, error: 'Unknown page' });
@@ -33,37 +127,32 @@ router.patch('/:pageKey/fields', authRequired, requireRole('super_admin', 'manag
   let items = [];
   if (Array.isArray(req.body.fields)) {
     items = req.body.fields;
-  } else if (req.body.field_key) {
+  } else if (req.body.field_key || req.body.fieldKey) {
     items = [req.body];
   } else {
     return res.status(400).json({ ok: false, error: 'fields array or field_key required' });
   }
 
-  const normalized = items
-    .map((f) => ({
-      field_key: String(f.field_key || '').trim(),
-      lang: ['hy', 'ru', 'en'].includes(f.lang) ? f.lang : 'hy',
-      value: f.value != null ? String(f.value) : '',
-      value_type: f.value_type === 'image' || f.value_type === 'video' ? f.value_type : 'text'
-    }))
-    .filter((f) => f.field_key);
-
+  const normalized = normalizeFieldItems(items);
   if (!normalized.length) {
     return res.status(400).json({ ok: false, error: 'No valid fields to save' });
   }
 
-  upsertPageFields(pageKey, normalized);
-  syncPageFieldsToStores(pageKey, normalized);
-  logActivity(req.user.sub, 'update', 'page_fields', pageKey, { count: normalized.length }, req.ip);
+  saveFieldsForPage(pageKey, normalized, req);
 
-  const publish = schedulePublish(2500);
+  let publish;
+  try {
+    publish = await publishAll();
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message || 'Publish failed after save' });
+  }
 
   res.json({
     ok: true,
     page_key: pageKey,
     fields: getPageFieldsForPage(pageKey),
     saved: normalized.length,
-    publish: { ...getPublishStatus(), ...publish }
+    publish
   });
 });
 

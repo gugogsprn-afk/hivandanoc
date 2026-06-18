@@ -17,7 +17,7 @@ const PageEditor = (function () {
 
   function previewUrl(page = currentPage) {
     const base = AdminConfig.publicSite().replace(/\/$/, '');
-    const build = window.CMS_BUILD || '20260701';
+    const build = window.CMS_BUILD || '20260702';
     return `${base}/${page.path}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
   }
 
@@ -38,7 +38,7 @@ const PageEditor = (function () {
     return `
       <div class="cms-visual-editor__toolbar">
         <div class="cms-visual-editor__hint">
-          <strong>Edit mode</strong> — click text or images to edit, then press <strong>Save All</strong> to publish on the public site.
+          <strong>Edit mode</strong> — click to edit, press <strong>Save</strong> to queue changes, then <strong>Save All</strong> to publish to the live website.
         </div>
         <div class="cms-visual-editor__actions">
           <span class="cms-muted">Language:</span>
@@ -75,12 +75,11 @@ const PageEditor = (function () {
       const btn = document.getElementById('preview-save-all');
       if (!btn || !iframe?.contentWindow) return;
       btn.disabled = true;
-      const prev = btn.textContent;
-      btn.textContent = 'Saving…';
+      const prev = btn.textContent.replace(/ \(\d+\)$/, '');
 
       try {
         const result = await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => resolve({ fallback: true }), 12000);
+          const timeout = setTimeout(() => reject(new Error('Save All timed out — try again')), 20000);
           function onMsg(ev) {
             if (ev.data?.type === 'cms-save-all-done') {
               clearTimeout(timeout);
@@ -93,23 +92,29 @@ const PageEditor = (function () {
               reject(new Error(ev.data.error || 'Save failed'));
             }
           }
+          window.removeEventListener('message', onMsg);
           window.addEventListener('message', onMsg);
+          btn.textContent = 'Saving…';
           iframe.contentWindow.postMessage({ type: 'cms-save-all' }, '*');
         });
 
-        if (result.fallback) {
-          await AdminApi.post('/admin/publish');
+        if (!result.verified) {
+          throw new Error('Save was not verified against the public API');
         }
 
-        AdminUI.toast('All changes saved — live on healthyspinedoc.com', 'success');
-        setTimeout(() => {
-          iframe.src = previewUrl();
-        }, 500);
+        AdminUI.toast(
+          result.saved
+            ? `Saved ${result.saved} field(s) — verified on healthyspinedoc.com`
+            : 'Published — site is up to date',
+          'success'
+        );
+        iframe.src = previewUrl();
       } catch (err) {
         AdminUI.toast(err.message, 'error');
       } finally {
+        const n = btn.dataset.pending || '';
         btn.disabled = false;
-        btn.textContent = prev;
+        btn.textContent = n ? `${prev} (${n})` : prev;
       }
     });
 
@@ -167,16 +172,20 @@ const PageEditor = (function () {
   }
 
   function onMessage(ev) {
+    if (ev.data?.type === 'cms-pending-count') {
+      const btn = document.getElementById('preview-save-all');
+      if (btn) {
+        const base = 'Save All';
+        btn.dataset.pending = ev.data.count || '';
+        btn.textContent = ev.data.count ? `${base} (${ev.data.count})` : base;
+      }
+      return;
+    }
     if (ev.data?.type === 'cms-save-all-done') {
-      AdminUI.toast('All changes published to the public website', 'success');
       return;
     }
     if (ev.data?.type === 'cms-saved') {
-      const pub = ev.data.publish;
-      const msg = pub?.pending
-        ? 'Saved — publishing to public site (live in ~30 sec)'
-        : 'Saved & published to public site';
-      AdminUI.toast(msg, 'success');
+      return;
     }
     if (ev.data?.type === 'cms-open-doctors') {
       if (typeof window.__cmsShowView === 'function') {

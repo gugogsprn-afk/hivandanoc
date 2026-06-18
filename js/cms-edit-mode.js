@@ -17,6 +17,8 @@
   };
 
   let pageFieldsCache = {};
+  /** @type {Map<string, object>} */
+  const pendingChanges = new Map();
 
   const apiBase = () => `${location.protocol}//${location.host}/api/v1`;
 
@@ -101,6 +103,98 @@
     return pageFieldsCache[field_key]?.[lang];
   }
 
+  function sectionKeyFor(field_key) {
+    if (field_key === 'hero-title' || field_key === 'hero-subtitle') return 'hero';
+    if (field_key.startsWith('patient-hero')) return 'patient-hero';
+    if (field_key.startsWith('home-feature')) return 'feature';
+    if (field_key.startsWith('back-in-game')) return 'back-in-game';
+    if (field_key.startsWith('expertise')) return 'expertise';
+    return 'content';
+  }
+
+  function pendingKey(page_key, field_key, lng) {
+    return `${page_key}:${field_key}:${lng}`;
+  }
+
+  function updatePendingUI() {
+    const n = pendingChanges.size;
+    window.parent.postMessage({ type: 'cms-pending-count', count: n }, '*');
+    const bar = document.getElementById('cms-edit-banner');
+    if (bar) {
+      bar.textContent = n
+        ? `✎ Edit mode — ${n} unsaved change(s). Press Save All in admin toolbar to publish.`
+        : '✎ Edit mode — hover text or images to edit. Press Save All to publish changes.';
+    }
+  }
+
+  function queueFieldChange(el, value, opts = {}) {
+    const field_key = opts.fieldKey || fieldKeyFor(el);
+    const page_key = cmsPageKey();
+    const entry = {
+      pageKey: page_key,
+      page_key,
+      sectionKey: opts.sectionKey || sectionKeyFor(field_key),
+      section_key: opts.sectionKey || sectionKeyFor(field_key),
+      fieldKey: field_key,
+      field_key,
+      lang,
+      value,
+      value_type: opts.valueType || (el?.tagName === 'IMG' || el?.tagName === 'VIDEO' ? 'image' : 'text')
+    };
+
+    pendingChanges.set(pendingKey(page_key, field_key, lang), entry);
+
+    if (!pageFieldsCache[field_key]) pageFieldsCache[field_key] = { _type: entry.value_type };
+    pageFieldsCache[field_key][lang] = value;
+    pageFieldsCache[field_key]._type = entry.value_type;
+
+    if (opts.i18nKey) {
+      i18nOverrides[lang] = i18nOverrides[lang] || {};
+      i18nOverrides[lang][opts.i18nKey] = value;
+      if (typeof I18n !== 'undefined' && I18n.setOverrides) {
+        I18n.setOverrides(i18nOverrides);
+      }
+    }
+
+    updatePendingUI();
+    console.log('[cms-edit] Queued change', entry);
+    return { queued: true, entry };
+  }
+
+  async function verifyPublicFields(changes) {
+    const failures = [];
+    const langs = [...new Set(changes.map((c) => c.lang))];
+    const snapshots = {};
+
+    for (const lng of langs) {
+      const res = await fetch(`${apiBase()}/public/content?lang=${lng}&_t=${Date.now()}`, {
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }
+      });
+      if (!res.ok) throw new Error(`Public API verification failed (${res.status})`);
+      snapshots[lng] = await res.json();
+    }
+
+    for (const c of changes) {
+      const got = snapshots[c.lang]?.pageFields?.[c.page_key || c.pageKey]?.[c.field_key || c.fieldKey];
+      if (got !== c.value) {
+        failures.push({
+          field: c.field_key || c.fieldKey,
+          lang: c.lang,
+          expected: c.value,
+          got: got ?? null
+        });
+      }
+    }
+
+    if (failures.length) {
+      console.error('[cms-edit] Verification failed', failures);
+      throw new Error(
+        `Save verification failed for "${failures[0].field}" (${failures[0].lang}). Database may not have updated.`
+      );
+    }
+    return true;
+  }
+
   async function reloadPreviewFromServer() {
     if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
     if (typeof HospitalApp !== 'undefined' && HospitalApp.reloadFromCms) {
@@ -116,17 +210,7 @@
   }
 
   async function persistField(el, value, opts = {}) {
-    const field_key = opts.fieldKey || fieldKeyFor(el);
-    const value_type = opts.valueType || (el.tagName === 'IMG' || el.tagName === 'VIDEO' ? 'image' : 'text');
-    const res = await api(`/admin/pages/${cmsPageKey()}/fields`, 'PATCH', {
-      fields: [{ field_key, lang, value, value_type }]
-    });
-    if (res.fields) pageFieldsCache = res.fields;
-
-    if (opts.i18nKey) await saveI18n(opts.i18nKey, value);
-
-    await reloadPreviewFromServer();
-    return res;
+    return queueFieldChange(el, value, opts);
   }
 
   let contentExtra = {};
@@ -291,36 +375,63 @@
     document.querySelectorAll('.cms-editing').forEach((el) => el.classList.remove('cms-editing'));
   }
 
-  async function saveAllChanges() {
-    let lastRes = null;
+  async function flushPendingToServer() {
+    const changes = [...pendingChanges.values()];
+    console.log('[cms-edit] Pending changes before Save All', changes);
+    if (!changes.length) {
+      const pub = await api('/admin/publish', 'POST');
+      return { saved: 0, publish: pub.publish, fields_by_page: {} };
+    }
 
+    const res = await api('/admin/pages/bulk/fields', 'PATCH', { changes });
+    console.log('[cms-edit] Save All response', res);
+
+    await verifyPublicFields(changes);
+
+    if (res.fields_by_page) {
+      const pageFields = res.fields_by_page[cmsPageKey()];
+      if (pageFields) pageFieldsCache = pageFields;
+    }
+
+    pendingChanges.clear();
+    updatePendingUI();
+    return res;
+  }
+
+  async function saveAllChanges() {
     if (activeEdit && popover) {
       const val = activeEdit.getValue();
       if (val) {
-        lastRes = await activeEdit.field.save(val, activeEdit.el);
+        queueFieldChange(activeEdit.el, val, activeEdit.opts || {});
         setText(activeEdit.el, val, activeEdit.field);
       }
     }
 
-    const pub = await api('/admin/publish', 'POST');
-    lastRes = { ...lastRes, publish: pub.publish };
+    const res = await flushPendingToServer();
 
     if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
     await reloadPreviewFromServer();
     closePopover();
 
-    toast('All changes saved — now live on the public website');
-    window.parent.postMessage({ type: 'cms-save-all-done', publish: pub.publish }, '*');
-    return lastRes;
+    window.parent.postMessage(
+      {
+        type: 'cms-save-all-done',
+        verified: true,
+        saved: res.saved,
+        publish: res.publish
+      },
+      '*'
+    );
+    return res;
   }
 
-  function notifySaved(res) {
-    const pending = res?.publish?.pending;
-    toast(pending ? 'Saved — publishing to public site…' : 'Saved & published to public site');
-    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
-    if (window.parent !== window) {
-      window.parent.postMessage({ type: 'cms-saved', publish: res?.publish }, '*');
-    }
+  function notifyQueued() {
+    const n = pendingChanges.size;
+    toast(n === 1 ? '1 change queued — press Save All to publish' : `${n} changes queued — press Save All to publish`);
+  }
+
+  function notifySaved() {
+    notifyQueued();
   }
 
   function notifyError(err) {
@@ -398,6 +509,7 @@
     activeEdit = {
       field,
       el,
+      opts: { valueType: 'image', fieldKey: fieldKeyFor(el) },
       getValue: () => (urlInput.value || pendingUrl).trim()
     };
 
@@ -432,9 +544,9 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        const saved = await field.save(val, el);
+        await field.save(val, el);
         setText(el, val, field);
-        notifySaved(saved);
+        notifySaved();
         closePopover();
       } catch (err) {
         notifyError(err);
@@ -463,6 +575,7 @@
     activeEdit = {
       field,
       el,
+      opts: {},
       getValue: () => input.value.trim()
     };
 
@@ -472,9 +585,9 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
-        const saved = await field.save(input.value.trim(), el);
+        await field.save(input.value.trim(), el);
         setText(el, input.value.trim(), field);
-        notifySaved(saved);
+        notifySaved();
         closePopover();
       } catch (err) {
         notifyError(err);
@@ -773,6 +886,7 @@
       /* partial edit still works */
     }
     attachAll();
+    updatePendingUI();
     window.addEventListener('hospital:refresh', () => setTimeout(attachAll, 200));
     window.addEventListener('languagechange', () => setTimeout(attachAll, 300));
   }
