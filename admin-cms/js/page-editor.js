@@ -17,7 +17,7 @@ const PageEditor = (function () {
 
   function previewUrl(page = currentPage) {
     const base = AdminConfig.publicSite().replace(/\/$/, '');
-    const build = window.CMS_BUILD || '20260630';
+    const build = window.CMS_BUILD || '20260701';
     return `${base}/${page.path}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
   }
 
@@ -38,11 +38,12 @@ const PageEditor = (function () {
     return `
       <div class="cms-visual-editor__toolbar">
         <div class="cms-visual-editor__hint">
-          <strong>Edit mode</strong> — hover text/images for ✎ Edit. Buttons &amp; links do not navigate. Images: upload or paste URL.
+          <strong>Edit mode</strong> — click text or images to edit, then press <strong>Save All</strong> to publish on the public site.
         </div>
         <div class="cms-visual-editor__actions">
           <span class="cms-muted">Language:</span>
           <div class="cms-lang-tabs" style="margin:0">${langs}</div>
+          <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="preview-save-all">Save All</button>
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-refresh">↻ Refresh</button>
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-manage-doctors" hidden>Manage doctors</button>
           <a href="${AdminConfig.publicSite()}/${currentPage.path}" target="_blank" rel="noopener" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-open-public">Open live page ↗</a>
@@ -68,6 +69,48 @@ const PageEditor = (function () {
 
     document.getElementById('preview-refresh')?.addEventListener('click', () => {
       iframe.src = previewUrl();
+    });
+
+    document.getElementById('preview-save-all')?.addEventListener('click', async () => {
+      const btn = document.getElementById('preview-save-all');
+      if (!btn || !iframe?.contentWindow) return;
+      btn.disabled = true;
+      const prev = btn.textContent;
+      btn.textContent = 'Saving…';
+
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => resolve({ fallback: true }), 12000);
+          function onMsg(ev) {
+            if (ev.data?.type === 'cms-save-all-done') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', onMsg);
+              resolve(ev.data);
+            }
+            if (ev.data?.type === 'cms-save-all-error') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', onMsg);
+              reject(new Error(ev.data.error || 'Save failed'));
+            }
+          }
+          window.addEventListener('message', onMsg);
+          iframe.contentWindow.postMessage({ type: 'cms-save-all' }, '*');
+        });
+
+        if (result.fallback) {
+          await AdminApi.post('/admin/publish');
+        }
+
+        AdminUI.toast('All changes saved — live on healthyspinedoc.com', 'success');
+        setTimeout(() => {
+          iframe.src = previewUrl();
+        }, 500);
+      } catch (err) {
+        AdminUI.toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prev;
+      }
     });
 
     const manageBtn = document.getElementById('preview-manage-doctors');
@@ -124,6 +167,10 @@ const PageEditor = (function () {
   }
 
   function onMessage(ev) {
+    if (ev.data?.type === 'cms-save-all-done') {
+      AdminUI.toast('All changes published to the public website', 'success');
+      return;
+    }
     if (ev.data?.type === 'cms-saved') {
       const pub = ev.data.publish;
       const msg = pub?.pending

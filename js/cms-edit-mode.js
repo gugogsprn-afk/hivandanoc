@@ -279,14 +279,39 @@
   ];
 
   let popover = null;
+  let activeEdit = null;
   const attached = new WeakSet();
 
   function closePopover() {
+    activeEdit = null;
     if (popover) {
       popover.remove();
       popover = null;
     }
     document.querySelectorAll('.cms-editing').forEach((el) => el.classList.remove('cms-editing'));
+  }
+
+  async function saveAllChanges() {
+    let lastRes = null;
+
+    if (activeEdit && popover) {
+      const val = activeEdit.getValue();
+      if (val) {
+        lastRes = await activeEdit.field.save(val, activeEdit.el);
+        setText(activeEdit.el, val, activeEdit.field);
+      }
+    }
+
+    const pub = await api('/admin/publish', 'POST');
+    lastRes = { ...lastRes, publish: pub.publish };
+
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
+    await reloadPreviewFromServer();
+    closePopover();
+
+    toast('All changes saved — now live on the public website');
+    window.parent.postMessage({ type: 'cms-save-all-done', publish: pub.publish }, '*');
+    return lastRes;
   }
 
   function notifySaved(res) {
@@ -370,6 +395,12 @@
 
     field.get().then((v) => { urlInput.value = v || ''; pendingUrl = v || ''; }).catch(() => {});
 
+    activeEdit = {
+      field,
+      el,
+      getValue: () => (urlInput.value || pendingUrl).trim()
+    };
+
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files?.[0];
       if (!file) return;
@@ -428,6 +459,12 @@
     positionPopover(rect);
 
     field.get().then((v) => { input.value = v; }).catch(() => { input.value = getText(el); });
+
+    activeEdit = {
+      field,
+      el,
+      getValue: () => input.value.trim()
+    };
 
     actions.querySelector('.cms-cancel').onclick = closePopover;
     actions.querySelector('.cms-save').onclick = async () => {
@@ -754,5 +791,11 @@
       location.href = u.toString();
     }
     if (ev.data?.type === 'cms-refresh') location.reload();
+    if (ev.data?.type === 'cms-save-all') {
+      saveAllChanges().catch((err) => {
+        notifyError(err);
+        window.parent.postMessage({ type: 'cms-save-all-error', error: err.message }, '*');
+      });
+    }
   });
 })();
