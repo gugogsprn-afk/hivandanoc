@@ -21,9 +21,25 @@ router.get('/', authRequired, (_req, res) => {
 });
 
 router.put('/global', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
-  setSetting('global', req.body);
+  let next = req.body;
+  if (req.body?.merge && req.body.hospital) {
+    const current = getSetting('global', {});
+    const deepMerge = (a, b) => {
+      const out = { ...a };
+      for (const k of Object.keys(b || {})) {
+        if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') {
+          out[k] = deepMerge(a[k], b[k]);
+        } else {
+          out[k] = b[k];
+        }
+      }
+      return out;
+    };
+    next = deepMerge(current, { hospital: req.body.hospital });
+  }
+  setSetting('global', next);
   logActivity(req.user.sub, 'update', 'settings', 'global', null, req.ip);
-  res.json({ ok: true });
+  publishAfterSave(req, res, { ok: true, global: next });
 });
 
 router.put('/seo', authRequired, requireRole('super_admin', 'manager'), (req, res) => {

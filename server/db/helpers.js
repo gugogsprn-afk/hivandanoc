@@ -13,6 +13,16 @@ function pick(row, field, lang) {
   return '';
 }
 
+/** Triplet object { hy, ru, en } — no cross-language fallback except on hy. */
+function pickTriplet(obj, lang) {
+  if (!obj) return '';
+  if (typeof obj === 'string') return obj;
+  const v = obj[lang];
+  if (v) return v;
+  if (lang === 'hy') return obj.hy || obj.ru || obj.en || '';
+  return '';
+}
+
 function triplet(value) {
   const v = value || '';
   return { hy: v, ru: v, en: v };
@@ -84,7 +94,11 @@ function getPageFieldsMap(lang = 'hy') {
   for (const r of rows) {
     if (!out[r.page_key]) out[r.page_key] = {};
     out[r.page_key][r.field_key] = r.value;
-    if (r.value_type && r.value_type !== 'text') out[r.page_key][`${r.field_key}__type`] = r.value_type;
+    let valueType = r.value_type;
+    if (valueType === 'image' && /\.(mp4|webm|ogg)(\?|#|$)/i.test(r.value || '')) {
+      valueType = 'video';
+    }
+    if (valueType && valueType !== 'text') out[r.page_key][`${r.field_key}__type`] = valueType;
   }
   return out;
 }
@@ -171,19 +185,19 @@ function buildPublicContent(lang = 'hy') {
 
   return {
     hospital: {
-      name: hospital.name?.[lang] || hospital.name?.hy || '',
-      shortName: hospital.shortName?.[lang] || hospital.shortName?.hy || '',
-      tagline: hospital.tagline?.[lang] || hospital.tagline?.hy || '',
-      heroTagline: hospital.heroTagline?.[lang] || hospital.heroTagline?.hy || '',
+      name: pickTriplet(hospital.name, lang),
+      shortName: pickTriplet(hospital.shortName, lang),
+      tagline: pickTriplet(hospital.tagline, lang),
+      heroTagline: pickTriplet(hospital.heroTagline, lang),
       logo: hospital.logo || 'images/brand/logo.png',
       phone: hospital.phone || '',
       emergency: hospital.emergency || '103',
       email: hospital.email || '',
-      address: hospital.address?.[lang] || hospital.address?.hy || '',
-      hours: hospital.hours?.[lang] || hospital.hours?.hy || '',
+      address: pickTriplet(hospital.address, lang),
+      hours: pickTriplet(hospital.hours, lang),
       social: hospital.social || {},
-      about: hospital.about?.[lang] || hospital.about?.hy || '',
-      mission: hospital.mission?.[lang] || hospital.mission?.hy || '',
+      about: pickTriplet(hospital.about, lang),
+      mission: pickTriplet(hospital.mission, lang),
       heroImage: hospital.heroImage || '',
       aboutImage: hospital.aboutImage || '',
       stats: hospital.stats || []

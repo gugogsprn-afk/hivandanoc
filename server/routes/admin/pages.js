@@ -14,12 +14,24 @@ const PAGE_KEYS = ['home', 'doctors', 'contacts', 'departments', 'about'];
 
 function normalizeFieldItems(items) {
   return items
-    .map((f) => ({
-      field_key: String(f.fieldKey || f.field_key || '').trim(),
-      lang: ['hy', 'ru', 'en'].includes(f.lang) ? f.lang : 'hy',
-      value: f.value != null ? String(f.value) : '',
-      value_type: f.value_type === 'image' || f.value_type === 'video' ? f.value_type : 'text'
-    }))
+    .map((f) => {
+      const value = f.value != null ? String(f.value) : '';
+      let value_type =
+        f.value_type === 'image' || f.value_type === 'video' ? f.value_type : 'text';
+      if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(value)) value_type = 'video';
+      else if (
+        value_type === 'text' &&
+        /\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i.test(value)
+      ) {
+        value_type = 'image';
+      }
+      return {
+        field_key: String(f.fieldKey || f.field_key || '').trim(),
+        lang: ['hy', 'ru', 'en'].includes(f.lang) ? f.lang : 'hy',
+        value,
+        value_type
+      };
+    })
     .filter((f) => f.field_key);
 }
 

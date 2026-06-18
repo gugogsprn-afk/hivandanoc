@@ -1,7 +1,18 @@
 /* Visual CMS edit mode — only when ?cms-edit=1 */
+:root {
+  --cms-edit-banner-h: 36px;
+}
+
 body.cms-edit-mode {
   cursor: default;
-  padding-top: 36px;
+  overflow-x: auto;
+  /* Edit banner + fixed site header (do not replace header offset with 36px only) */
+  padding-top: calc(var(--cms-edit-banner-h) + var(--hss-header-h, 130px)) !important;
+}
+
+body.cms-edit-mode .header-wrap,
+body.cms-edit-mode #site-header {
+  top: var(--cms-edit-banner-h);
 }
 
 .cms-edit-banner {
@@ -9,11 +20,12 @@ body.cms-edit-mode {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 99990;
+  z-index: 100001;
+  height: var(--cms-edit-banner-h);
   background: #064e3b;
   color: #fff;
   text-align: center;
-  font: 600 13px/36px system-ui, sans-serif;
+  font: 600 13px/var(--cms-edit-banner-h) system-ui, sans-serif;
   padding: 0 1rem;
 }
 
@@ -307,6 +319,78 @@ body.cms-edit-mode textarea:not(.cms-edit-popover textarea) {
 
 .cms-edit-file {
   display: none !important;
+}
+
+/* Compact header in admin preview — keep phone + book button visible */
+body.cms-edit-mode .hss-header,
+body.cms-edit-mode .header-wrap {
+  overflow: visible;
+}
+
+body.cms-edit-mode .hss-header .navbar {
+  overflow: visible;
+}
+
+body.cms-edit-mode .hss-header .nav-container {
+  flex-wrap: nowrap;
+  overflow: visible;
+  min-width: 0;
+  width: 100%;
+}
+
+body.cms-edit-mode .hss-header .nav-search {
+  display: none;
+}
+
+body.cms-edit-mode .hss-header .nav-links--hss {
+  gap: 1rem;
+  margin-left: 0.75rem;
+}
+
+body.cms-edit-mode .hss-header .nav-links--hss a {
+  font-size: 0.8125rem;
+}
+
+body.cms-edit-mode .hss-header .nav-actions {
+  gap: 0.5rem;
+}
+
+body.cms-edit-mode .hss-header .nav-cta.hss-btn {
+  padding: 0 0.85rem;
+  font-size: 0.8125rem;
+}
+
+body.cms-edit-mode .hss-header .logo-brand__name {
+  font-size: 1.1rem;
+}
+
+body.cms-edit-mode .hss-header .nav-container {
+  max-width: none;
+  padding-right: 1rem;
+}
+
+body.cms-edit-mode .hss-header .nav-phone,
+body.cms-edit-mode .hss-header .nav-cta.hss-btn {
+  flex-shrink: 0;
+}
+
+body.cms-edit-mode .hss-header .nav-phone span {
+  display: inline;
+  max-width: none;
+}
+
+body.cms-edit-mode #site-header [data-cms-editable] {
+  z-index: 5;
+}
+
+body.cms-edit-mode #site-header [data-cms-editable]:hover {
+  z-index: 20;
+}
+
+@media (max-width: 1280px) {
+  body.cms-edit-mode .hss-header .nav-links--hss {
+    gap: 0.75rem;
+  }
 }
 
 body.cms-edit-mode .hss-mobile-bar {

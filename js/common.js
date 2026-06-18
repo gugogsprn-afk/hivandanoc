@@ -13,6 +13,108 @@ const HospitalApp = (function () {
   let animObserver = null;
   let i18nHooked = false;
 
+  const VIDEO_URL_RE = /\.(mp4|webm|ogg)(\?|#|$)/i;
+
+  function isVideoUrl(url) {
+    return typeof url === 'string' && VIDEO_URL_RE.test(url);
+  }
+
+  function inferMediaType(url, explicitType) {
+    if (explicitType === 'video' || explicitType === 'image') return explicitType;
+    return isVideoUrl(url) ? 'video' : 'image';
+  }
+
+  function applyMediaElement({ container, elementId, url, type, className, defaultImage }) {
+    if (!container) return null;
+    const mediaUrl = (url || '').trim();
+    const fallback = defaultImage || '';
+    const isVideo = mediaUrl && inferMediaType(mediaUrl, type) === 'video';
+    let el = document.getElementById(elementId);
+
+    if (!mediaUrl) {
+      if (el?.tagName === 'IMG' && fallback) el.src = fallback;
+      return el;
+    }
+
+    if (isVideo) {
+      if (!el || el.tagName !== 'VIDEO') {
+        if (el) el.remove();
+        el = document.createElement('video');
+        el.id = elementId;
+        if (className) el.className = className;
+        el.muted = true;
+        el.loop = true;
+        el.playsInline = true;
+        el.setAttribute('playsinline', '');
+        el.preload = 'metadata';
+        container.insertBefore(el, container.firstChild);
+      }
+      el.src = mediaUrl;
+      container.closest('.hss-video-hero')?.classList.add('has-video');
+      container.closest('.hss-feature')?.classList.add('has-video');
+    } else {
+      if (!el || el.tagName !== 'IMG') {
+        if (el) el.remove();
+        el = document.createElement('img');
+        el.id = elementId;
+        if (className) el.className = className;
+        el.alt = '';
+        el.loading = 'lazy';
+        el.decoding = 'async';
+        container.insertBefore(el, container.firstChild);
+      }
+      el.src = mediaUrl;
+      container.closest('.hss-video-hero')?.classList.remove('has-video');
+      container.closest('.hss-feature')?.classList.remove('has-video');
+    }
+    return el;
+  }
+
+  function applyPatientHeroMedia(url, type) {
+    const section = document.getElementById('patient-hero');
+    const container = document.getElementById('patient-hero-media') || section;
+    const el = applyMediaElement({
+      container,
+      elementId: 'patient-hero-image',
+      url,
+      type,
+      className: 'hss-video-hero__bg',
+      defaultImage: 'images/about-image-01.jpg'
+    });
+    if (el?.tagName === 'IMG') {
+      el.width = 1200;
+      el.height = 675;
+    }
+    return el;
+  }
+
+  function applyFeatureMedia(url, type) {
+    const container = document.querySelector('#feature .hss-feature__media');
+    return applyMediaElement({
+      container,
+      elementId: 'home-feature-image',
+      url,
+      type,
+      className: '',
+      defaultImage: 'images/about-image-01.jpg'
+    });
+  }
+
+  function initVideoHeroPlayers() {
+    document.querySelectorAll('.hss-video-hero__play').forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', () => {
+        const media = document.getElementById('patient-hero-image');
+        if (media?.tagName !== 'VIDEO') return;
+        media.muted = false;
+        media.controls = true;
+        media.play().catch(() => {});
+        btn.hidden = true;
+      });
+    });
+  }
+
   function pathPrefix() {
     return window.location.pathname.includes('/admin/') ? '../' : '';
   }
@@ -40,12 +142,12 @@ const HospitalApp = (function () {
   }
 
   function brandName() {
-    const h = getData()?.hospital;
-    if (h?.shortName) return h.shortName;
-    if (h?.name) return h.name;
     const loc = typeof I18n !== 'undefined' ? I18n.getContent() : null;
     if (loc?.hospital?.shortName) return loc.hospital.shortName;
     if (loc?.hospital?.name) return loc.hospital.name;
+    const h = getData()?.hospital;
+    if (h?.shortName) return h.shortName;
+    if (h?.name) return h.name;
     return 'Առողջ ողնաշար';
   }
 
@@ -69,8 +171,8 @@ const HospitalApp = (function () {
     }
     return `
       <span class="logo-brand">
-        <img src="${mark}" alt="" class="logo-img logo-img--mark" width="48" height="48" loading="eager" aria-hidden="true" />
-        <span class="logo-brand__name">${name}</span>
+        <img src="${mark}" alt="" id="header-logo" class="logo-img logo-img--mark" width="48" height="48" loading="eager" aria-hidden="true" />
+        <span class="logo-brand__name" id="header-brand-name">${name}</span>
       </span>`;
   }
 
@@ -167,7 +269,7 @@ const HospitalApp = (function () {
 
     const links = NAV_ITEMS.map((item) => {
       const cls = page === item.id ? 'active' : '';
-      return `<li><a href="${prefix}${item.href}" class="${cls}" data-nav-id="${item.id}">${I18n.t(item.key)}</a></li>`;
+      return `<li><a href="${prefix}${item.href}" class="${cls}" data-nav-id="${item.id}" data-i18n="${item.key}">${I18n.t(item.key)}</a></li>`;
     }).join('');
 
     mount.innerHTML = `
@@ -191,9 +293,9 @@ const HospitalApp = (function () {
               <div class="lang-switcher" role="group" aria-label="${I18n.t('nav.langAria')}"></div>
               <a href="tel:${tel}" class="nav-phone" id="header-phone" aria-label="${I18n.t('common.callUs')}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                <span>${h.phone || '+7 (495) 123-45-67'}</span>
+                <span id="header-phone-text">${h.phone || '+7 (495) 123-45-67'}</span>
               </a>
-              <a href="${prefix}appointment.html" class="nav-cta hss-btn hss-btn--primary">${I18n.t('common.bookAppointment')}</a>
+              <a href="${prefix}appointment.html" class="nav-cta hss-btn hss-btn--primary" id="header-book-btn" data-i18n="common.bookAppointment">${I18n.t('common.bookAppointment')}</a>
             </div>
             <div class="mobile-menu" aria-label="${I18n.t('nav.menuAria')}">
               <span></span><span></span><span></span>
@@ -614,31 +716,37 @@ const HospitalApp = (function () {
   function applyBranding() {
     const data = getData();
     if (!data?.hospital) return;
-    const h = data.hospital;
+    const locH = typeof I18n !== 'undefined' ? I18n.getContent()?.hospital || {} : {};
+    const h = { ...data.hospital };
+    const TEXT = ['name', 'shortName', 'tagline', 'heroTagline', 'address', 'hours', 'about', 'mission'];
+    TEXT.forEach((k) => {
+      if (locH[k]) h[k] = locH[k];
+    });
 
     document.querySelectorAll('.logo-img--mark').forEach((img) => {
       img.alt = '';
     });
 
+    const displayName = h.shortName || h.name || brandName();
     document.querySelectorAll('.logo-brand__name').forEach((el) => {
-      el.textContent = h.shortName || h.name || brandName();
+      el.textContent = displayName;
     });
 
     document.querySelectorAll('.logo.logo--brand').forEach((el) => {
-      el.setAttribute('aria-label', h.shortName || h.name || brandName());
+      el.setAttribute('aria-label', displayName);
     });
 
     const footer = document.getElementById('footer-copy');
     if (footer) {
       footer.textContent = I18n.t('footer.copyright', {
         year: new Date().getFullYear(),
-        name: h.name
+        name: h.name || displayName
       });
     }
 
     const tagline = document.getElementById('footer-tagline');
     if (tagline && !tagline.hasAttribute('data-i18n')) {
-      tagline.textContent = h.tagline || h.about?.slice(0, 100);
+      tagline.textContent = h.tagline || I18n.t('footer.tagline') || h.about?.slice(0, 100);
     }
 
     const setHref = (id, href, text) => {
@@ -827,6 +935,7 @@ const HospitalApp = (function () {
 
   async function refreshLanguage() {
     animObserver = null;
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate();
     await loadData();
     renderNav();
     renderFooter();
@@ -834,6 +943,17 @@ const HospitalApp = (function () {
     initPageUtilities();
     injectFormConsentText();
     I18n.applyDOM();
+    const data = getData();
+    const page = document.body.dataset.page || 'home';
+    const pageKeyMap = {
+      home: 'home',
+      doctors: 'doctors',
+      contacts: 'contacts',
+      departments: 'departments',
+      about: 'about'
+    };
+    applyPageFields(data.pageFields?.[pageKeyMap[page] || page]);
+    applyCmsVisuals(data);
     document.querySelectorAll('[data-anim-observed]').forEach((el) => {
       delete el.dataset.animObserved;
     });
@@ -857,6 +977,10 @@ const HospitalApp = (function () {
 
   function applyPageFields(fields) {
     if (!fields || typeof fields !== 'object') return;
+    const MEDIA_FIELDS = {
+      'patient-hero-image': applyPatientHeroMedia,
+      'home-feature-image': applyFeatureMedia
+    };
     Object.entries(fields).forEach(([key, val]) => {
       if (key.endsWith('__type') || val == null || val === '') return;
       if (key.startsWith('i18n_')) {
@@ -866,6 +990,11 @@ const HospitalApp = (function () {
           if (attr) el.setAttribute(attr, val);
           else el.textContent = val;
         });
+        return;
+      }
+      if (MEDIA_FIELDS[key]) {
+        const mediaType = fields[`${key}__type`] || inferMediaType(val);
+        MEDIA_FIELDS[key](val, mediaType);
         return;
       }
       const el = document.getElementById(key);
@@ -987,7 +1116,12 @@ const HospitalApp = (function () {
     applyPageFields,
     reloadFromCms,
     phoneTelUri,
-    updatePhoneLinks
+    updatePhoneLinks,
+    isVideoUrl,
+    inferMediaType,
+    applyPatientHeroMedia,
+    applyFeatureMedia,
+    initVideoHeroPlayers
   };
 })();
 

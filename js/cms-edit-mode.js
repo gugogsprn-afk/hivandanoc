@@ -19,6 +19,10 @@
   let pageFieldsCache = {};
   /** @type {Map<string, object>} */
   const pendingChanges = new Map();
+  /** @type {Map<string, object>} */
+  const pendingGlobalChanges = new Map();
+
+  let globalSettings = {};
 
   const apiBase = () => `${location.protocol}//${location.host}/api/v1`;
 
@@ -70,8 +74,29 @@
     return (el.innerText || el.textContent || '').trim();
   }
 
+  function isVideoUrl(url) {
+    return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '');
+  }
+
+  function inferFieldValueType(value, el, opts = {}) {
+    if (opts.valueType === 'video' || opts.valueType === 'image') return opts.valueType;
+    if (isVideoUrl(value)) return 'video';
+    if (/\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i.test(value || '')) return 'image';
+    if (el?.tagName === 'VIDEO') return 'video';
+    if (el?.tagName === 'IMG') return 'image';
+    return 'text';
+  }
+
   function setText(el, val, field) {
-    if (el.tagName === 'IMG') {
+    if (el?.id === 'patient-hero-image' && typeof HospitalApp !== 'undefined') {
+      HospitalApp.applyPatientHeroMedia(val, inferFieldValueType(val, el));
+      return;
+    }
+    if (el?.id === 'home-feature-image' && typeof HospitalApp !== 'undefined') {
+      HospitalApp.applyFeatureMedia(val, inferFieldValueType(val, el));
+      return;
+    }
+    if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
       el.src = val;
       return;
     }
@@ -81,6 +106,31 @@
     }
     if (el.id === 'hero-subtitle') {
       el.innerHTML = `<strong>${val}</strong>`;
+      return;
+    }
+    if (el.id === 'header-phone-text') {
+      el.textContent = val;
+      const link = document.getElementById('header-phone');
+      if (link && typeof HospitalApp !== 'undefined') {
+        link.href = `tel:${HospitalApp.phoneTelUri(val)}`;
+      }
+      return;
+    }
+    if (el.id === 'header-email') {
+      el.textContent = val;
+      if (el.tagName === 'A') el.href = `mailto:${val}`;
+      return;
+    }
+    if (el.id === 'header-brand-name') {
+      document.querySelectorAll('.logo-brand__name').forEach((n) => {
+        n.textContent = val;
+      });
+      return;
+    }
+    if (el.id === 'header-logo') {
+      document.querySelectorAll('#header-logo, .logo-img--mark').forEach((img) => {
+        img.src = val;
+      });
       return;
     }
     if (el.classList.contains('hss-prose') || el.id === 'back-in-game-text') {
@@ -117,7 +167,7 @@
   }
 
   function updatePendingUI() {
-    const n = pendingChanges.size;
+    const n = pendingChanges.size + pendingGlobalChanges.size;
     window.parent.postMessage({ type: 'cms-pending-count', count: n }, '*');
     const bar = document.getElementById('cms-edit-banner');
     if (bar) {
@@ -139,7 +189,7 @@
       field_key,
       lang,
       value,
-      value_type: opts.valueType || (el?.tagName === 'IMG' || el?.tagName === 'VIDEO' ? 'image' : 'text')
+      value_type: inferFieldValueType(value, el, opts)
     };
 
     pendingChanges.set(pendingKey(page_key, field_key, lang), entry);
@@ -159,6 +209,53 @@
     updatePendingUI();
     console.log('[cms-edit] Queued change', entry);
     return { queued: true, entry };
+  }
+
+  function queueGlobalHospitalChange(key, value, opts = {}) {
+    const lng = opts.lang || lang;
+    const id = `global:${key}:${lng}`;
+    pendingGlobalChanges.set(id, { key, value, lang: lng });
+    globalSettings.hospital = globalSettings.hospital || {};
+    const h = globalSettings.hospital;
+    if (['name', 'shortName', 'tagline', 'address', 'hours'].includes(key)) {
+      h[key] = { ...(h[key] || {}), [lng]: value };
+      if (key === 'name') {
+        h.shortName = { ...(h.shortName || {}), [lng]: value };
+      }
+    } else {
+      h[key] = value;
+    }
+    updatePendingUI();
+    console.log('[cms-edit] Queued global change', { key, value, lang: lng });
+    return { queued: true };
+  }
+
+  function hospitalField(key, lng) {
+    const h = globalSettings.hospital || {};
+    const tri = h[key];
+    if (tri && typeof tri === 'object' && !Array.isArray(tri)) {
+      return tri[lng] || tri.hy || tri.ru || tri.en || '';
+    }
+    return h[key] || '';
+  }
+
+  async function flushGlobalHospitalChanges() {
+    if (!pendingGlobalChanges.size) return 0;
+    const patch = {};
+    for (const ch of pendingGlobalChanges.values()) {
+      if (['name', 'shortName', 'tagline', 'address', 'hours'].includes(ch.key)) {
+        patch[ch.key] = { ...(patch[ch.key] || {}), [ch.lang]: ch.value };
+        if (ch.key === 'name') {
+          patch.shortName = { ...(patch.shortName || {}), [ch.lang]: ch.value };
+        }
+      } else {
+        patch[ch.key] = ch.value;
+      }
+    }
+    await api('/admin/settings/global', 'PUT', { merge: true, hospital: patch });
+    pendingGlobalChanges.clear();
+    updatePendingUI();
+    return Object.keys(patch).length;
   }
 
   async function verifyPublicFields(changes) {
@@ -218,15 +315,17 @@
   let elementStyles = {};
 
   async function loadStores() {
-    const [extra, i18n, pages] = await Promise.all([
+    const [extra, i18n, pages, settings] = await Promise.all([
       api('/admin/settings/content-extra', 'GET'),
       api('/admin/settings/i18n-overrides', 'GET'),
-      api(`/admin/pages/${cmsPageKey()}`, 'GET')
+      api(`/admin/pages/${cmsPageKey()}`, 'GET'),
+      api('/admin/settings', 'GET').catch(() => ({ global: {} }))
     ]);
     contentExtra = extra.content_extra || {};
     i18nOverrides = i18n.i18n_overrides || {};
     elementStyles = contentExtra.elementStyles || {};
     pageFieldsCache = pages.fields || {};
+    globalSettings = settings.global || {};
   }
 
   async function saveContentExtra(merge) {
@@ -288,18 +387,36 @@
     { sel: '#hero-subtitle', label: 'Hero subtitle', type: 'text',
       async get() { return getCachedField('hero-subtitle') || (await loadHeroSection()).subtitle?.[lang] || getText(document.querySelector('#hero-subtitle')); },
       async save(val, el) { await persistField(el || document.querySelector('#hero-subtitle'), val); } },
-    { sel: '#patient-hero-image', label: 'Patient story image', type: 'image',
-      async get() { return getCachedField('patient-hero-image') || contentExtra.patientHero?.image || document.querySelector('#patient-hero-image')?.src || ''; },
-      async save(val, el) { await persistField(el || document.querySelector('#patient-hero-image'), val, { valueType: 'image' }); } },
+    { sel: '#patient-hero-image', label: 'Patient story photo / video', type: 'image',
+      async get() {
+        const el = document.getElementById('patient-hero-image');
+        return getCachedField('patient-hero-image') || contentExtra.patientHero?.image || el?.src || el?.currentSrc || '';
+      },
+      async save(val, el) {
+        const target = el || document.getElementById('patient-hero-image');
+        await persistField(target, val, {
+          fieldKey: 'patient-hero-image',
+          valueType: inferFieldValueType(val, target)
+        });
+      } },
     { sel: '#patient-hero-quote', label: 'Patient quote', type: 'textarea',
       async get() { return getCachedField('patient-hero-quote') || contentExtra.patientHero?.quote || getText(document.querySelector('#patient-hero-quote')); },
       async save(val, el) { await persistField(el || document.querySelector('#patient-hero-quote'), val); } },
     { sel: '#patient-hero-cta', label: 'Patient story button', type: 'text',
       async get() { return getCachedField('patient-hero-cta') || contentExtra.patientHero?.ctaText || getText(document.querySelector('#patient-hero-cta')); },
       async save(val, el) { await persistField(el || document.querySelector('#patient-hero-cta'), val); } },
-    { sel: '#home-feature-image', label: 'Feature image', type: 'image',
-      async get() { return getCachedField('home-feature-image') || contentExtra.feature?.image || ''; },
-      async save(val, el) { await persistField(el || document.querySelector('#home-feature-image'), val, { valueType: 'image' }); } },
+    { sel: '#home-feature-image', label: 'Feature photo / video', type: 'image',
+      async get() {
+        const el = document.getElementById('home-feature-image');
+        return getCachedField('home-feature-image') || contentExtra.feature?.image || el?.src || el?.currentSrc || '';
+      },
+      async save(val, el) {
+        const target = el || document.getElementById('home-feature-image');
+        await persistField(target, val, {
+          fieldKey: 'home-feature-image',
+          valueType: inferFieldValueType(val, target)
+        });
+      } },
     { sel: '#home-feature-title', label: 'Feature title', type: 'text',
       async get() { return getCachedField('home-feature-title') || contentExtra.feature?.title || getText(document.querySelector('#home-feature-title')); },
       async save(val, el) { await persistField(el || document.querySelector('#home-feature-title'), val); } },
@@ -362,6 +479,47 @@
       async save(val, el) { await persistField(el || document.querySelector('#home-intro-prose'), val); } }
   ];
 
+  const HEADER_FIELDS = [
+    { sel: '#header-brand-name', label: 'Clinic name (header)', type: 'text',
+      async get() {
+        return hospitalField('name', lang) || hospitalField('shortName', lang) || getText(document.querySelector('#header-brand-name'));
+      },
+      async save(val, el) {
+        queueGlobalHospitalChange('name', val, { lang });
+      } },
+    { sel: '#header-logo', label: 'Logo image', type: 'image',
+      async get() {
+        const el = document.querySelector('#header-logo');
+        return hospitalField('logo', lang) || el?.src || '';
+      },
+      async save(val, el) {
+        queueGlobalHospitalChange('logo', val);
+      } },
+    { sel: '#header-phone-text', label: 'Phone number', type: 'text',
+      async get() {
+        return hospitalField('phone', lang) || getText(document.querySelector('#header-phone-text'));
+      },
+      async save(val, el) {
+        queueGlobalHospitalChange('phone', val);
+      } },
+    { sel: '#header-email', label: 'Email (header bar)', type: 'text',
+      async get() {
+        return hospitalField('email', lang) || getText(document.querySelector('#header-email'));
+      },
+      async save(val, el) {
+        queueGlobalHospitalChange('email', val);
+      } },
+    { sel: '#header-book-btn', label: 'Book appointment button', type: 'text',
+      i18nKey: 'common.bookAppointment',
+      async get() {
+        return getCachedField('i18n_common.bookAppointment') || i18nOverrides[lang]?.['common.bookAppointment'] ||
+          (typeof I18n !== 'undefined' ? I18n.t('common.bookAppointment') : getText(document.querySelector('#header-book-btn')));
+      },
+      async save(val, el) {
+        await persistField(el, val, { fieldKey: 'i18n_common.bookAppointment', i18nKey: 'common.bookAppointment' });
+      } }
+  ];
+
   let popover = null;
   let activeEdit = null;
   const attached = new WeakSet();
@@ -376,11 +534,13 @@
   }
 
   async function flushPendingToServer() {
+    const globalSaved = await flushGlobalHospitalChanges();
     const changes = [...pendingChanges.values()];
     console.log('[cms-edit] Pending changes before Save All', changes);
+
     if (!changes.length) {
       const pub = await api('/admin/publish', 'POST');
-      return { saved: 0, publish: pub.publish, fields_by_page: {} };
+      return { saved: globalSaved, publish: pub.publish, fields_by_page: {} };
     }
 
     const res = await api('/admin/pages/bulk/fields', 'PATCH', { changes });
@@ -395,7 +555,7 @@
 
     pendingChanges.clear();
     updatePendingUI();
-    return res;
+    return { ...res, saved: (res.saved || 0) + globalSaved };
   }
 
   async function saveAllChanges() {
@@ -426,7 +586,7 @@
   }
 
   function notifyQueued() {
-    const n = pendingChanges.size;
+    const n = pendingChanges.size + pendingGlobalChanges.size;
     toast(n === 1 ? '1 change queued — press Save All to publish' : `${n} changes queued — press Save All to publish`);
   }
 
@@ -523,8 +683,15 @@
       try {
         pendingUrl = await uploadFile(file);
         urlInput.value = pendingUrl;
-        if (statusEl) statusEl.textContent = 'Upload complete — click Save';
-        toast('File uploaded');
+        const uploadedType = file.type.startsWith('video/') || isVideoUrl(pendingUrl) ? 'video' : 'image';
+        if (activeEdit) activeEdit.opts.valueType = uploadedType;
+        if (statusEl) {
+          statusEl.textContent =
+            uploadedType === 'video'
+              ? 'Video uploaded — click Save'
+              : 'Upload complete — click Save';
+        }
+        toast(uploadedType === 'video' ? 'Video uploaded' : 'File uploaded');
       } catch (err) {
         notifyError(err);
         if (statusEl) statusEl.textContent = err.message;
@@ -544,8 +711,14 @@
       btn.disabled = true;
       btn.textContent = 'Saving…';
       try {
+        const valueType = inferFieldValueType(val, el, activeEdit?.opts || {});
         await field.save(val, el);
         setText(el, val, field);
+        if (el?.id === 'patient-hero-image' && typeof HospitalApp !== 'undefined') {
+          HospitalApp.applyPatientHeroMedia(val, valueType);
+        } else if (el?.id === 'home-feature-image' && typeof HospitalApp !== 'undefined') {
+          HospitalApp.applyFeatureMedia(val, valueType);
+        }
         notifySaved();
         closePopover();
       } catch (err) {
@@ -642,10 +815,14 @@
       label: 'Image / video',
       type: 'image',
       async get() {
-        return getCachedField(fk) || contentExtra.pageImages?.[cmsKey(el)] || el.src || '';
+        return getCachedField(fk) || contentExtra.pageImages?.[cmsKey(el)] || el.src || el.currentSrc || '';
       },
       async save(val) {
-        await persistField(el, val, { fieldKey: fk, valueType: 'image' });
+        const target = document.getElementById(el.id) || el;
+        await persistField(target, val, {
+          fieldKey: fk,
+          valueType: inferFieldValueType(val, target)
+        });
       }
     };
   }
@@ -734,12 +911,24 @@
     });
   }
 
+  function isNonEditableChrome(el) {
+    return el.closest('.lang-switcher, .mobile-menu, #nav-search-btn, .nav-search, .cms-edit-banner');
+  }
+
   function isInsideChrome(el) {
-    return el.closest('#site-nav, #site-footer, .cms-edit-popover, .cms-edit-toast, .cms-doctor-toolbar');
+    return el.closest('#site-footer, .cms-edit-popover, .cms-edit-toast, .cms-doctor-toolbar');
   }
 
   function attachAll() {
-    const claimed = new Set(HOME_FIELDS.map((f) => f.sel));
+    const claimed = new Set([
+      ...HOME_FIELDS.map((f) => f.sel),
+      ...HEADER_FIELDS.map((f) => f.sel)
+    ]);
+
+    HEADER_FIELDS.forEach((field) => {
+      const el = document.querySelector(field.sel);
+      if (el) markEditable(el, field);
+    });
 
     HOME_FIELDS.forEach((field) => {
       const el = document.querySelector(field.sel);
@@ -747,26 +936,26 @@
     });
 
     document.querySelectorAll('[data-i18n]').forEach((el) => {
-      if (isInsideChrome(el) || claimed.has(`#${el.id}`)) return;
+      if (isInsideChrome(el) || isNonEditableChrome(el) || claimed.has(`#${el.id}`)) return;
       const key = el.getAttribute('data-i18n');
       if (!key) return;
       markEditable(el, fieldFromI18n(el, key, false));
     });
 
     document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
-      if (isInsideChrome(el)) return;
+      if (isInsideChrome(el) || isNonEditableChrome(el)) return;
       const key = el.getAttribute('data-i18n-placeholder');
       markEditable(el, { ...fieldFromI18n(el, key, true), type: 'text', fieldType: 'placeholder' });
     });
 
-    document.querySelectorAll('main img, .hss-wrap img, .hss-hero img, .hss-section img, .hss-about-hero img, .hss-video-hero__bg, #patient-hero-image').forEach((img) => {
+    document.querySelectorAll('main img, main video, .hss-wrap img, .hss-hero img, .hss-section img, .hss-about-hero img, .hss-video-hero__bg, #patient-hero-image, #home-feature-image').forEach((img) => {
       if (isInsideChrome(img) || img.closest('[data-cms-editable]')) return;
       if (HOME_FIELDS.some((f) => f.sel === `#${img.id}`)) return;
       markEditable(img, fieldFromImage(img));
     });
 
     document.querySelectorAll('main h1, main h2, main h3, main h4, main p, main span, main label span, .hss-btn, button.hss-btn, a.hss-btn').forEach((el) => {
-      if (isInsideChrome(el) || el.hasAttribute('data-cms-editable') || el.closest('[data-cms-editable]')) return;
+      if (isInsideChrome(el) || isNonEditableChrome(el) || el.closest('#site-header') || el.hasAttribute('data-cms-editable') || el.closest('[data-cms-editable]')) return;
       if (el.children.length > 0 && !el.classList.contains('hss-btn')) return;
       const text = getText(el);
       if (!text || text.length < 2) return;
@@ -774,12 +963,16 @@
     });
 
     document.querySelectorAll('.hss-btn, button.hss-btn, a.hss-btn, button[type="submit"]').forEach((btn) => {
-      if (isInsideChrome(btn)) return;
+      if (isInsideChrome(btn) || isNonEditableChrome(btn)) return;
+      if (btn.closest('#site-header') && btn.id !== 'header-book-btn') return;
+      if (btn.id === 'header-book-btn') return;
       addResizeHandles(btn);
     });
 
+    syncEditLayout();
     applyElementStyles();
     attachDoctorControls();
+    reportPreviewHeight();
   }
 
   function attachDoctorControls() {
@@ -862,6 +1055,13 @@
     document.head.appendChild(link);
   }
 
+  function syncEditLayout() {
+    const header = document.getElementById('site-header');
+    if (!header) return;
+    const h = Math.ceil(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--hss-header-h', `${h}px`);
+  }
+
   function showEditBanner() {
     if (document.getElementById('cms-edit-banner')) return;
     const bar = document.createElement('div');
@@ -869,6 +1069,26 @@
     bar.className = 'cms-edit-banner';
     bar.textContent = '✎ Edit mode — hover text or images to edit. Links and buttons are disabled.';
     document.body.prepend(bar);
+  }
+
+  function reportPreviewHeight() {
+    if (!window.parent || window.parent === window) return;
+    const height = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+      document.documentElement.offsetHeight,
+      720
+    );
+    window.parent.postMessage({ type: 'cms-preview-height', height }, '*');
+  }
+
+  let previewResizeObserver = null;
+  function watchPreviewHeight() {
+    reportPreviewHeight();
+    if (previewResizeObserver || typeof ResizeObserver === 'undefined') return;
+    previewResizeObserver = new ResizeObserver(() => reportPreviewHeight());
+    previewResizeObserver.observe(document.body);
+    previewResizeObserver.observe(document.documentElement);
   }
 
   async function init() {
@@ -879,6 +1099,10 @@
     document.body.classList.add('cms-edit-mode');
     injectStyles();
     showEditBanner();
+    syncEditLayout();
+    setTimeout(syncEditLayout, 150);
+    setTimeout(syncEditLayout, 600);
+    window.addEventListener('resize', syncEditLayout, { passive: true });
     blockInteractions();
     try {
       await loadStores();
@@ -887,8 +1111,19 @@
     }
     attachAll();
     updatePendingUI();
-    window.addEventListener('hospital:refresh', () => setTimeout(attachAll, 200));
-    window.addEventListener('languagechange', () => setTimeout(attachAll, 300));
+    watchPreviewHeight();
+    setTimeout(reportPreviewHeight, 300);
+    setTimeout(reportPreviewHeight, 1200);
+    window.addEventListener('hospital:refresh', () => {
+      setTimeout(attachAll, 200);
+      setTimeout(syncEditLayout, 250);
+      setTimeout(reportPreviewHeight, 400);
+    });
+    window.addEventListener('languagechange', () => {
+      setTimeout(attachAll, 300);
+      setTimeout(syncEditLayout, 350);
+      setTimeout(reportPreviewHeight, 500);
+    });
   }
 
   if (document.readyState === 'loading') {

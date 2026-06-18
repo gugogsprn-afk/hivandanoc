@@ -206,7 +206,17 @@ const I18n = (function () {
         /* ignore */
       }
       const codes = supportedCodes();
-      const lang = codes.includes(saved) ? saved : config.default || 'hy';
+      let urlLang = null;
+      try {
+        urlLang = new URLSearchParams(location.search).get('lang');
+      } catch {
+        /* ignore */
+      }
+      const lang = codes.includes(urlLang)
+        ? urlLang
+        : codes.includes(saved)
+          ? saved
+          : config.default || 'hy';
       await loadLanguage(lang);
       applyDOM();
       return currentLang;

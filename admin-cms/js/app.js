@@ -4,16 +4,9 @@
 
   let currentUser = null;
   let activeLang = 'hy';
+  let currentView = 'dashboard';
 
-  const VIEW_SUBTITLES = {
-    dashboard: 'Overview of clinic activity and recent leads',
-    leads: 'Manage appointment requests and contact form submissions',
-    pages: 'Visual editor — click text or images to edit. Saves go to the server and publish to the public site automatically.',
-    doctors: 'Add and manage doctors shown on the public website',
-    services: 'Manage service categories and treatment offerings',
-    media: 'Upload and manage images for doctors, clinic, and blog',
-    settings: 'Clinic name, contact info, hours, and social links (HY / RU / EN)'
-  };
+  const t = (key, params) => (typeof AdminI18n !== 'undefined' ? AdminI18n.t(key, params) : key);
 
   function toast(msg, type = 'success') {
     AdminUI.toast(msg, type);
@@ -71,13 +64,14 @@
   }
 
   function showView(name) {
+    currentView = name;
     $$('.cms-view').forEach((v) => { v.hidden = true; });
     const view = $(`#view-${name}`);
     if (view) view.hidden = false;
     $$('#main-nav button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
     AdminUI.setViewTitle(name);
     const sub = $('#view-subtitle');
-    if (sub) sub.textContent = VIEW_SUBTITLES[name] || '';
+    if (sub) sub.textContent = t(`view.subtitle.${name}`);
     const loaders = {
       dashboard: renderDashboard,
       leads: renderLeads,
@@ -227,7 +221,7 @@
     const root = $('#view-pages');
     root.innerHTML = AdminUI.loadingHTML('Loading visual editor…');
     if (!AdminApi.token()) {
-      root.innerHTML = AdminUI.errorHTML('Please sign in first.');
+      root.innerHTML = AdminUI.errorHTML(t('common.signInFirst'));
       return;
     }
     try {
@@ -629,8 +623,24 @@
   }
 
   async function init() {
+    if (typeof AdminI18n !== 'undefined') AdminI18n.init();
     injectNavIcons();
     AdminUI.bindMobileNav();
+
+    if (typeof AdminI18n !== 'undefined') {
+      AdminI18n.onChange(() => {
+        const loaders = {
+          dashboard: renderDashboard,
+          leads: renderLeads,
+          pages: renderPages,
+          doctors: renderDoctors,
+          services: renderServices,
+          media: renderMedia,
+          settings: renderSettings
+        };
+        loaders[currentView]?.();
+      });
+    }
 
     $$('#main-nav button').forEach((btn) => {
       btn.addEventListener('click', () => showView(btn.dataset.view));

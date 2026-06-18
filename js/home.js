@@ -14,19 +14,24 @@ function initDoctorSearch(data) {
 
 function renderPatientHero(ph, pf = {}) {
   if (!ph && !pf['patient-hero-image']) return;
-  const img = document.getElementById('patient-hero-image');
+  const url = pf['patient-hero-image'] || ph?.image || '';
+  const mediaType = pf['patient-hero-image__type'] || inferMediaType(url);
+  const el = HospitalApp.applyPatientHeroMedia(url, mediaType);
+  if (el?.tagName === 'IMG' && !url) {
+    el.alt = ph?.quote ? ph.quote.slice(0, 120) : I18n.t('pages.home.reviewsTitle');
+  }
   const quote = document.getElementById('patient-hero-quote');
   const cta = document.getElementById('patient-hero-cta');
-  if (img) {
-    img.src = pf['patient-hero-image'] || ph?.image || 'images/about-image-01.jpg';
-    img.alt = ph.quote ? ph.quote.slice(0, 120) : I18n.t('pages.home.reviewsTitle');
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.width = 1200;
-    img.height = 675;
-  }
   if (quote) quote.textContent = pf['patient-hero-quote'] || ph?.quote || '';
   if (cta) cta.textContent = pf['patient-hero-cta'] || ph?.ctaText || I18n.t('pages.home.patientHeroCta');
+  HospitalApp.initVideoHeroPlayers();
+}
+
+function inferMediaType(url, explicitType) {
+  if (typeof HospitalApp !== 'undefined' && HospitalApp.inferMediaType) {
+    return HospitalApp.inferMediaType(url, explicitType);
+  }
+  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '') ? 'video' : 'image';
 }
 
 function renderBackInGame(big, pf = {}) {
@@ -98,18 +103,35 @@ function renderNewsCards(news) {
     .join('');
 }
 
+function cmsTriplet(obj, lang) {
+  if (!obj) return '';
+  if (typeof obj === 'string') return obj;
+  const v = obj[lang];
+  if (v) return v;
+  return lang === 'hy' ? obj.hy || '' : '';
+}
+
 function renderHomePage() {
   const data = HospitalApp.getData();
   if (!data) return;
   const h = data.hospital;
+  const lang = I18n.getLang();
+  const locH = I18n.getContent()?.hospital || {};
   const t = (k) => I18n.t(k);
   const pf = data.pageFields?.home || {};
 
   const heroTitle = document.getElementById('hero-title');
   if (heroTitle) {
     const cmsHero = data._cms?.homeSections?.hero;
-    const cmsTitle = cmsHero?.title?.[I18n.getLang()] || cmsHero?.title?.hy;
-    heroTitle.textContent = pf['hero-title'] || cmsTitle || h.name || h.shortName;
+    const cmsTitle = cmsTriplet(cmsHero?.title, lang);
+    heroTitle.textContent =
+      pf['hero-title'] ||
+      cmsTitle ||
+      locH.name ||
+      locH.shortName ||
+      h.name ||
+      h.shortName ||
+      '';
   }
 
   const heroSubtitle = document.getElementById('hero-subtitle');
@@ -117,8 +139,9 @@ function renderHomePage() {
     const cmsHero = data._cms?.homeSections?.hero;
     const cmsSub =
       pf['hero-subtitle'] ||
-      cmsHero?.subtitle?.[I18n.getLang()] ||
-      cmsHero?.subtitle?.hy ||
+      cmsTriplet(cmsHero?.subtitle, lang) ||
+      locH.heroTagline ||
+      locH.tagline ||
       h.heroTagline ||
       h.tagline ||
       t('pages.home.heroSubtitle');
@@ -147,12 +170,11 @@ function renderHomePage() {
   renderAwards(data.awards);
 
   const feature = data.feature || {};
-  const featImg = document.getElementById('home-feature-image');
-  if (featImg) {
-    featImg.src = pf['home-feature-image'] || feature.image || h.heroImage || 'images/about-image-01.jpg';
+  const featUrl = pf['home-feature-image'] || feature.image || h.heroImage || 'images/about-image-01.jpg';
+  const featType = pf['home-feature-image__type'] || inferMediaType(featUrl);
+  const featImg = HospitalApp.applyFeatureMedia(featUrl, featType);
+  if (featImg?.tagName === 'IMG') {
     featImg.alt = feature.title || h.name || '';
-    featImg.loading = 'lazy';
-    featImg.decoding = 'async';
     featImg.width = 800;
     featImg.height = 500;
   }

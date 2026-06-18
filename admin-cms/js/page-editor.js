@@ -3,12 +3,14 @@
  */
 const PageEditor = (function () {
   const PAGES = [
-    { id: 'home', label: 'Home page', path: 'index.html' },
-    { id: 'doctors', label: 'Find a Doctor', path: 'doctors.html' },
-    { id: 'locations', label: 'Locations', path: 'contacts.html' },
-    { id: 'patient-care', label: 'Patient Care', path: 'departments.html' },
-    { id: 'about', label: 'About', path: 'about.html' }
+    { id: 'home', labelKey: 'pageEditor.home', path: 'index.html' },
+    { id: 'doctors', labelKey: 'pageEditor.doctors', path: 'doctors.html' },
+    { id: 'locations', labelKey: 'pageEditor.locations', path: 'contacts.html' },
+    { id: 'patient-care', labelKey: 'pageEditor.patientCare', path: 'departments.html' },
+    { id: 'about', labelKey: 'pageEditor.about', path: 'about.html' }
   ];
+
+  const t = (key) => (typeof AdminI18n !== 'undefined' ? AdminI18n.t(key) : key);
 
   let currentLang = localStorage.getItem('gkb_lang') || 'hy';
   let currentPage = PAGES[0];
@@ -21,10 +23,38 @@ const PageEditor = (function () {
     return `${base}/${page.path}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
   }
 
+  function resizePreviewFrame() {
+    if (!iframe) return;
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) return;
+      const height = Math.max(
+        doc.documentElement?.scrollHeight || 0,
+        doc.body?.scrollHeight || 0,
+        doc.documentElement?.offsetHeight || 0,
+        720
+      );
+      iframe.style.height = `${height + 24}px`;
+    } catch {
+      /* cross-origin guard */
+    }
+  }
+
+  function bindIframeResize() {
+    if (!iframe || iframe.dataset.resizeBound) return;
+    iframe.dataset.resizeBound = '1';
+    iframe.addEventListener('load', () => {
+      resizePreviewFrame();
+      setTimeout(resizePreviewFrame, 400);
+      setTimeout(resizePreviewFrame, 1200);
+      setTimeout(resizePreviewFrame, 2500);
+    });
+  }
+
   function pageNavHTML(activeId) {
     return PAGES.map(
       (p) =>
-        `<button type="button" class="cms-page-nav__item ${p.id === activeId ? 'active' : ''}" data-page-id="${p.id}">${p.label}</button>`
+        `<button type="button" class="cms-page-nav__item ${p.id === activeId ? 'active' : ''}" data-page-id="${p.id}">${t(p.labelKey)}</button>`
     ).join('');
   }
 
@@ -38,15 +68,15 @@ const PageEditor = (function () {
     return `
       <div class="cms-visual-editor__toolbar">
         <div class="cms-visual-editor__hint">
-          <strong>Edit mode</strong> — click to edit, press <strong>Save</strong> to queue changes, then <strong>Save All</strong> to publish to the live website.
+          <strong>${t('pageEditor.hint')}</strong>
         </div>
         <div class="cms-visual-editor__actions">
-          <span class="cms-muted">Language:</span>
+          <span class="cms-muted">${t('pageEditor.language')}</span>
           <div class="cms-lang-tabs" style="margin:0">${langs}</div>
-          <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="preview-save-all">Save All</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-refresh">↻ Refresh</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-manage-doctors" hidden>Manage doctors</button>
-          <a href="${AdminConfig.publicSite()}/${currentPage.path}" target="_blank" rel="noopener" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-open-public">Open live page ↗</a>
+          <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="preview-save-all">${t('pageEditor.saveAll')}</button>
+          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-refresh">${t('pageEditor.refresh')}</button>
+          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-manage-doctors" hidden>${t('pageEditor.manageDoctors')}</button>
+          <a href="${AdminConfig.publicSite()}/${currentPage.path}" target="_blank" rel="noopener" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-open-public">${t('pageEditor.openLive')}</a>
         </div>
       </div>`;
   }
@@ -59,6 +89,7 @@ const PageEditor = (function () {
         iframe.contentWindow?.postMessage({ type: 'cms-set-lang', lang: currentLang }, '*');
         setTimeout(() => {
           iframe.src = previewUrl();
+          setTimeout(resizePreviewFrame, 800);
         }, 100);
         root.querySelectorAll('[data-preview-lang]').forEach((b) => {
           b.classList.toggle('cms-btn--primary', b.dataset.previewLang === currentLang);
@@ -69,6 +100,7 @@ const PageEditor = (function () {
 
     document.getElementById('preview-refresh')?.addEventListener('click', () => {
       iframe.src = previewUrl();
+      setTimeout(resizePreviewFrame, 800);
     });
 
     document.getElementById('preview-save-all')?.addEventListener('click', async () => {
@@ -140,6 +172,7 @@ const PageEditor = (function () {
       if (manageBtn) manageBtn.hidden = page.id !== 'doctors';
     }
     if (iframe) iframe.src = previewUrl(page);
+    setTimeout(resizePreviewFrame, 800);
   }
 
   function mount(root, initialPageId) {
@@ -154,6 +187,7 @@ const PageEditor = (function () {
         <aside class="cms-page-nav" aria-label="Pages">${pageNavHTML(currentPage.id)}</aside>
         <div class="cms-visual-editor__main">
           ${toolbarHTML()}
+          <p class="cms-visual-editor__frame-scroll-hint">${t('pageEditor.scrollHint')}</p>
           <div class="cms-visual-editor__frame-wrap">
             <iframe id="page-preview-frame" title="Page preview" src="${previewUrl()}"></iframe>
           </div>
@@ -161,6 +195,7 @@ const PageEditor = (function () {
       </div>`;
 
     iframe = document.getElementById('page-preview-frame');
+    bindIframeResize();
 
     root.querySelectorAll('.cms-page-nav__item').forEach((btn) => {
       btn.addEventListener('click', () => switchPage(btn.dataset.pageId));
@@ -169,13 +204,49 @@ const PageEditor = (function () {
     bindToolbar(root);
 
     window.addEventListener('message', onMessage);
+    if (typeof AdminI18n !== 'undefined') {
+      window.addEventListener('admin-lang-change', refreshToolbarLabels);
+    }
+  }
+
+  function refreshToolbarLabels() {
+    if (!rootEl) return;
+    const hint = rootEl.querySelector('.cms-visual-editor__hint strong');
+    if (hint) hint.textContent = t('pageEditor.hint');
+    const langLabel = rootEl.querySelector('.cms-visual-editor__actions > .cms-muted');
+    if (langLabel) langLabel.textContent = t('pageEditor.language');
+    const saveBtn = document.getElementById('preview-save-all');
+    if (saveBtn) {
+      const n = saveBtn.dataset.pending;
+      saveBtn.textContent = n ? `${t('pageEditor.saveAll')} (${n})` : t('pageEditor.saveAll');
+    }
+    const refreshBtn = document.getElementById('preview-refresh');
+    if (refreshBtn) refreshBtn.textContent = t('pageEditor.refresh');
+    const manageBtn = document.getElementById('preview-manage-doctors');
+    if (manageBtn) manageBtn.textContent = t('pageEditor.manageDoctors');
+    const openLink = document.getElementById('preview-open-public');
+    if (openLink) openLink.textContent = t('pageEditor.openLive');
+    const scrollHint = rootEl.querySelector('.cms-visual-editor__frame-scroll-hint');
+    if (scrollHint) scrollHint.textContent = t('pageEditor.scrollHint');
+    const nav = rootEl.querySelector('.cms-page-nav');
+    if (nav) {
+      nav.innerHTML = pageNavHTML(currentPage.id);
+      nav.querySelectorAll('.cms-page-nav__item').forEach((btn) => {
+        btn.addEventListener('click', () => switchPage(btn.dataset.pageId));
+      });
+    }
   }
 
   function onMessage(ev) {
+    if (ev.data?.type === 'cms-preview-height' && iframe) {
+      const height = Math.max(Number(ev.data.height) || 0, 720);
+      iframe.style.height = `${height + 24}px`;
+      return;
+    }
     if (ev.data?.type === 'cms-pending-count') {
       const btn = document.getElementById('preview-save-all');
       if (btn) {
-        const base = 'Save All';
+        const base = t('pageEditor.saveAll');
         btn.dataset.pending = ev.data.count || '';
         btn.textContent = ev.data.count ? `${base} (${ev.data.count})` : base;
       }

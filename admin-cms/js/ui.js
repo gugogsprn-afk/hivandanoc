@@ -22,10 +22,11 @@ const AdminUI = (function () {
     settings: 'Global Settings'
   };
 
-  function loadingHTML(message = 'Loading…') {
+  function loadingHTML(message) {
+    const msg = message || (typeof AdminI18n !== 'undefined' ? AdminI18n.t('common.loading') : 'Loading…');
     return `<div class="cms-state cms-state--loading" role="status" aria-live="polite">
       <div class="cms-spinner" aria-hidden="true"></div>
-      <p>${message}</p>
+      <p>${msg}</p>
     </div>`;
   }
 
@@ -39,11 +40,13 @@ const AdminUI = (function () {
   }
 
   function errorHTML(message, retryId = '') {
+    const title = typeof AdminI18n !== 'undefined' ? AdminI18n.t('common.errorTitle') : 'Something went wrong';
+    const retry = typeof AdminI18n !== 'undefined' ? AdminI18n.t('common.tryAgain') : 'Try again';
     return `<div class="cms-state cms-state--error" role="alert">
       <div class="cms-state__icon" aria-hidden="true">⚠️</div>
-      <h3>Something went wrong</h3>
+      <h3>${title}</h3>
       <p>${message}</p>
-      ${retryId ? `<button type="button" class="cms-btn cms-btn--primary" id="${retryId}">Try again</button>` : ''}
+      ${retryId ? `<button type="button" class="cms-btn cms-btn--primary" id="${retryId}">${retry}</button>` : ''}
     </div>`;
   }
 
@@ -58,8 +61,14 @@ const AdminUI = (function () {
   }
 
   function statusBadge(status) {
-    const labels = { new: 'New', contacted: 'Contacted', booked: 'Booked', cancelled: 'Cancelled' };
-    return `<span class="cms-status cms-status--${status}">${labels[status] || status}</span>`;
+    const key = `status.${status}`;
+    const labels = {
+      new: typeof AdminI18n !== 'undefined' ? AdminI18n.t('status.new') : 'New',
+      contacted: typeof AdminI18n !== 'undefined' ? AdminI18n.t('status.contacted') : 'Contacted',
+      booked: typeof AdminI18n !== 'undefined' ? AdminI18n.t('status.booked') : 'Booked',
+      cancelled: typeof AdminI18n !== 'undefined' ? AdminI18n.t('status.cancelled') : 'Cancelled'
+    };
+    return `<span class="cms-status cms-status--${status}">${labels[status] || (typeof AdminI18n !== 'undefined' ? AdminI18n.t(key) : status)}</span>`;
   }
 
   function pageIntro(text) {
@@ -87,7 +96,7 @@ const AdminUI = (function () {
   }
 
   function setViewTitle(name) {
-    const title = VIEW_TITLES[name] || name;
+    const title = typeof AdminI18n !== 'undefined' ? AdminI18n.t(`view.title.${name}`) : (VIEW_TITLES[name] || name);
     const el = document.getElementById('view-title');
     if (el) el.textContent = title;
     document.title = `${title} — Առողջ ողնաշար CMS`;
@@ -118,7 +127,9 @@ const AdminUI = (function () {
     if (!btn) return;
     btn.disabled = loading;
     btn.classList.toggle('is-loading', loading);
-    btn.textContent = loading ? 'Signing in…' : 'Sign in';
+    const signIn = typeof AdminI18n !== 'undefined' ? AdminI18n.t('login.submit') : 'Sign in';
+    const signingIn = typeof AdminI18n !== 'undefined' ? AdminI18n.t('login.signingIn') : 'Signing in…';
+    btn.textContent = loading ? signingIn : signIn;
   }
 
   return {

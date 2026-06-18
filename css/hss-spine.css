@@ -1582,6 +1582,12 @@ body.hss-page {
   background: var(--navy);
 }
 
+.hss-video-hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 .hss-video-hero__bg {
   width: 100%;
   height: 100%;
@@ -1589,6 +1595,25 @@ body.hss-page {
   object-fit: cover;
   display: block;
   opacity: 0.95;
+}
+
+.hss-video-hero video.hss-video-hero__bg {
+  background: var(--navy);
+}
+
+.hss-video-hero.has-video .hss-video-hero__play {
+  display: flex;
+}
+
+.hss-feature__media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hss-feature.has-video .hss-feature__play {
+  pointer-events: none;
 }
 
 .hss-video-hero__box {

@@ -47,9 +47,28 @@ const CmsContent = (function () {
   function mergeIntoHospital(baseData, cms) {
     if (!cms || !baseData) return baseData;
 
+    const lang = typeof I18n !== 'undefined' ? I18n.getLang() : 'hy';
+    const locH = typeof I18n !== 'undefined' ? I18n.getContent()?.hospital || {} : {};
+    const HOSPITAL_TEXT = ['name', 'shortName', 'tagline', 'heroTagline', 'address', 'hours', 'about', 'mission'];
+    const LANG_CONTENT_KEYS = [
+      'introParagraphs', 'approachParagraphs', 'expertsParagraphs', 'imagingParagraphs',
+      'conditions', 'feature', 'patientHero', 'backInGame', 'expertiseOverlay',
+      'trustPoints', 'advantages', 'equipment', 'programs', 'awards', 'news',
+      'storyVideos', 'patientStories', 'reviews'
+    ];
+
     const merged = { ...baseData };
     if (cms.hospital) {
-      merged.hospital = { ...merged.hospital, ...cms.hospital };
+      merged.hospital = { ...merged.hospital };
+      for (const [key, val] of Object.entries(cms.hospital)) {
+        if (val == null || val === '') continue;
+        if (!HOSPITAL_TEXT.includes(key)) merged.hospital[key] = val;
+      }
+      for (const key of HOSPITAL_TEXT) {
+        const cmsVal = cms.hospital[key];
+        const locVal = locH[key];
+        merged.hospital[key] = cmsVal || locVal || merged.hospital[key] || '';
+      }
     }
     if (cms.departments?.length) merged.departments = cms.departments;
     if (cms.doctors?.length) merged.doctors = cms.doctors;
@@ -57,15 +76,18 @@ const CmsContent = (function () {
     if (cms.testimonials?.length) merged.reviews = cms.testimonials;
 
     const extraKeys = [
-      'trustPoints', 'conditions', 'equipment', 'programs', 'advantages',
-      'introParagraphs', 'feature', 'approachParagraphs', 'expertsParagraphs',
-      'imagingParagraphs', 'approachImage', 'expertsImage', 'imagingImage',
-      'news', 'storyVideos', 'patientStories', 'patientHero',
-      'backInGame', 'expertiseOverlay', 'awards', 'reviews', 'moveBetter', 'timeSlots',
+      'approachImage', 'expertsImage', 'imagingImage',
+      'moveBetter', 'timeSlots',
       'pageImages', 'inlineText', 'elementStyles', 'pageFields'
     ];
     for (const key of extraKeys) {
       if (cms[key]) merged[key] = cms[key];
+    }
+    for (const key of LANG_CONTENT_KEYS) {
+      if (!cms[key]) continue;
+      const existing = merged[key];
+      const hasExisting = Array.isArray(existing) ? existing.length > 0 : existing && typeof existing === 'object';
+      if (!hasExisting) merged[key] = cms[key];
     }
     if (cms.pageFields) merged.pageFields = cms.pageFields;
 
