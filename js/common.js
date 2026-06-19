@@ -904,7 +904,7 @@ const HospitalApp = (function () {
       document.head.appendChild(link);
     }
     if (!document.querySelector('script[src*="seo.js"]')) {
-      await loadScriptOnce(`${prefix}js/seo.js`);
+      await loadScriptOnce(`${prefix}js/seo.js?v=20260711`);
     }
     if (!document.querySelector('script[src*="cookie-consent"]')) {
       await loadScriptOnce(`${prefix}js/legal-page.js`);
