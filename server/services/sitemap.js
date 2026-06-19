@@ -1,32 +1,16 @@
 const fs = require('fs');
 const path = require('path');
-const { getDb } = require('../db');
-const { getSetting } = require('../db/helpers');
 
 const SITE_ROOT = path.join(__dirname, '../..');
 
-/** Public indexable routes (clean URLs served via nginx rewrite). */
-const STATIC_ROUTES = [
+/** Core public indexable routes (clean URLs only). */
+const CORE_ROUTES = [
   { path: '/', file: 'index.html', priority: '1.0', changefreq: 'weekly' },
   { path: '/find-a-doctor', file: 'doctors.html', priority: '0.9', changefreq: 'weekly' },
-  { path: '/locations', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
-  { path: '/contact', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
   { path: '/patient-care', file: 'departments.html', priority: '0.9', changefreq: 'weekly' },
   { path: '/about', file: 'about.html', priority: '0.8', changefreq: 'monthly' },
-  { path: '/move-better', file: 'move-better.html', priority: '0.7', changefreq: 'weekly' },
-  { path: '/appointment.html', file: 'appointment.html', priority: '0.95', changefreq: 'monthly' },
-  { path: '/privacy-policy.html', file: 'privacy-policy.html', priority: '0.4', changefreq: 'yearly' },
-  { path: '/cookies-policy.html', file: 'cookies-policy.html', priority: '0.3', changefreq: 'yearly' },
-  { path: '/terms.html', file: 'terms.html', priority: '0.3', changefreq: 'yearly' },
-  { path: '/patient-information.html', file: 'patient-information.html', priority: '0.4', changefreq: 'yearly' }
-];
-
-const EXCLUDED_PATTERNS = [
-  /^\/admin-cms\//i,
-  /^\/admin\//i,
-  /^\/api\//i,
-  /login/i,
-  /submit-story/i
+  { path: '/contact', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
+  { path: '/locations', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' }
 ];
 
 function siteBase() {
@@ -64,88 +48,19 @@ function urlEntry(loc, { lastmod, changefreq, priority }) {
     .join('\n');
 }
 
-function getPublishedDoctors() {
-  try {
-    return getDb()
-      .prepare('SELECT slug, updated_at FROM doctors WHERE published = 1 ORDER BY sort_order, id')
-      .all();
-  } catch {
-    return [];
-  }
-}
-
-function getPublishedServices() {
-  try {
-    return getDb()
-      .prepare('SELECT id, updated_at FROM services WHERE published = 1 ORDER BY sort_order, id')
-      .all();
-  } catch {
-    return [];
-  }
-}
-
-function getPatientStories() {
-  const extra = getSetting('content_extra', {});
-  return Array.isArray(extra.patientStories) ? extra.patientStories : [];
-}
-
 function buildSitemapEntries() {
   const base = siteBase();
-  const entries = [];
-  const seen = new Set();
-
-  function add(pathname, meta = {}) {
-    const p = pathname.startsWith('/') ? pathname : `/${pathname}`;
-    if (EXCLUDED_PATTERNS.some((re) => re.test(p))) return;
-    const loc = `${base}${p}`;
-    if (seen.has(loc)) return;
-    seen.add(loc);
-    entries.push({ loc, ...meta });
-  }
-
-  for (const route of STATIC_ROUTES) {
-    add(route.path, {
-      lastmod: fileLastMod(route.file),
-      changefreq: route.changefreq,
-      priority: route.priority
-    });
-  }
-
-  for (const story of getPatientStories()) {
-    if (!story?.id) continue;
-    add(`/patient-story.html?id=${encodeURIComponent(story.id)}`, {
-      lastmod: fileLastMod('patient-story.html'),
-      changefreq: 'monthly',
-      priority: '0.6'
-    });
-  }
-
-  for (const doctor of getPublishedDoctors()) {
-    if (!doctor.slug) continue;
-    add(`/find-a-doctor/${encodeURIComponent(doctor.slug)}`, {
-      lastmod: (doctor.updated_at || '').slice(0, 10) || fileLastMod('doctors.html'),
-      changefreq: 'weekly',
-      priority: '0.75'
-    });
-  }
-
-  for (const service of getPublishedServices()) {
-    if (!service.id) continue;
-    add(`/patient-care/${encodeURIComponent(service.id)}`, {
-      lastmod: (service.updated_at || '').slice(0, 10) || fileLastMod('departments.html'),
-      changefreq: 'monthly',
-      priority: '0.7'
-    });
-  }
-
-  return entries;
+  return CORE_ROUTES.map((route) => ({
+    loc: route.path === '/' ? `${base}/` : `${base}${route.path}`,
+    lastmod: fileLastMod(route.file),
+    changefreq: route.changefreq,
+    priority: route.priority
+  }));
 }
 
 function buildSitemapXml() {
   const entries = buildSitemapEntries();
-  const body = entries
-    .map((e) => urlEntry(e.loc, e))
-    .join('\n');
+  const body = entries.map((e) => urlEntry(e.loc, e)).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${body}
@@ -153,8 +68,8 @@ ${body}
 }
 
 module.exports = {
-  STATIC_ROUTES,
-  EXCLUDED_PATTERNS,
+  CORE_ROUTES,
+  STATIC_ROUTES: CORE_ROUTES,
   siteBase,
   buildSitemapEntries,
   buildSitemapXml

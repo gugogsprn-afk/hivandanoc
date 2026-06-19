@@ -42,7 +42,12 @@ const SiteSEO = (function () {
     },
     contacts: {
       descriptionKey: 'pages.contacts.seoDescription',
-      fallbackDescription: 'Contact Healthy Spine — address, phone, hours, and directions in Yerevan.',
+      fallbackDescription: 'Contact Healthy Spine — phone, email, working hours, and online appointment booking in Yerevan.',
+      canonical: '/contact'
+    },
+    locations: {
+      descriptionKey: 'pages.contacts.seoDescription',
+      fallbackDescription: 'Healthy Spine clinic location in Yerevan — address, directions, phone, and opening hours.',
       canonical: '/locations'
     },
     'submit-story': {
@@ -93,7 +98,23 @@ const SiteSEO = (function () {
     return `${base}${p}`;
   }
 
+  function pathnameCanonical() {
+    const p = (window.location.pathname || '/').replace(/\/$/, '') || '/';
+    const map = {
+      '/': '/',
+      '/find-a-doctor': '/find-a-doctor',
+      '/patient-care': '/patient-care',
+      '/about': '/about',
+      '/contact': '/contact',
+      '/locations': '/locations',
+      '/move-better': '/move-better'
+    };
+    return map[p] || null;
+  }
+
   function currentCanonicalPath(page) {
+    const fromPath = pathnameCanonical();
+    if (fromPath) return fromPath;
     const meta = PAGE_META[page] || PAGE_META.home;
     if (page === 'patient-story') {
       const id = new URLSearchParams(window.location.search).get('id');
@@ -260,7 +281,7 @@ const SiteSEO = (function () {
       graphs.push(...serviceList(data.departments));
     }
 
-    if (page === 'contacts') {
+    if (page === 'contacts' || page === 'locations') {
       graphs.push({
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
@@ -299,7 +320,10 @@ const SiteSEO = (function () {
   }
 
   function apply(pageOverride) {
-    const page = pageOverride || document.body?.dataset?.page || 'home';
+    const pathCanon = pathnameCanonical();
+    const page =
+      pageOverride ||
+      (pathCanon === '/locations' ? 'locations' : document.body?.dataset?.page || 'home');
     const meta = PAGE_META[page] || PAGE_META.home;
     const title = document.title || SITE.name;
     const description = pageDescription(page, title);

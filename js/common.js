@@ -2,10 +2,10 @@
 
 const HospitalApp = (function () {
   const NAV_ITEMS = [
-    { href: 'doctors.html', key: 'nav.doctors', id: 'doctors' },
-    { href: 'contacts.html', key: 'nav.locations', id: 'contacts' },
-    { href: 'departments.html', key: 'nav.patientCare', id: 'departments' },
-    { href: 'about.html', key: 'nav.about', id: 'about' }
+    { href: '/find-a-doctor', key: 'nav.doctors', id: 'doctors' },
+    { href: '/locations', key: 'nav.locations', id: 'contacts' },
+    { href: '/patient-care', key: 'nav.patientCare', id: 'departments' },
+    { href: '/about', key: 'nav.about', id: 'about' }
   ];
 
   let baseData = null;
@@ -275,14 +275,14 @@ const HospitalApp = (function () {
     mount.innerHTML = `
       <header class="header-wrap hss-header" id="site-header">
         <div class="header-top">
-          <a href="${prefix}about.html" data-i18n="nav.whyUs">${I18n.t('nav.whyUs')}</a>
-          <a href="${prefix}about.html" data-i18n="nav.aboutOrg">${I18n.t('nav.aboutOrg')}</a>
+          <a href="${prefix}about" data-i18n="nav.whyUs">${I18n.t('nav.whyUs')}</a>
+          <a href="${prefix}about" data-i18n="nav.aboutOrg">${I18n.t('nav.aboutOrg')}</a>
           <span class="header-top__sep" aria-hidden="true">|</span>
           <a href="mailto:${h.email || 'info@gkb1.ru'}" id="header-email">${h.email || 'info@gkb1.ru'}</a>
         </div>
         <nav class="navbar">
           <div class="nav-container">
-            <a href="${prefix}index.html" class="logo logo--brand" aria-label="${brandName()}">
+            <a href="${prefix === '../' ? '../' : '/'}" class="logo logo--brand" aria-label="${brandName()}">
               ${logoMarkup(prefix, 'header')}
             </a>
             <ul class="nav-links nav-links--hss">${links}</ul>
@@ -520,25 +520,25 @@ const HospitalApp = (function () {
               </a>
               <div class="hss-footer__socials">${socialRow}</div>
               <nav class="hss-footer__brand-links" aria-label="Footer">
-                <a href="${prefix}contacts.html" data-i18n="footer.linkContact">${t('footer.linkContact')}</a>
+                <a href="${prefix}contact" data-i18n="footer.linkContact">${t('footer.linkContact')}</a>
                 <a href="${prefix}submit-story.html" data-i18n="footer.linkStory">${t('footer.linkStory')}</a>
                 <a href="${prefix}move-better.html" data-i18n="footer.linkArticles">${t('footer.linkArticles')}</a>
-                <a href="${prefix}contacts.html" data-i18n="footer.linkNewsletter">${t('footer.linkNewsletter')}</a>
+                <a href="${prefix}locations" data-i18n="footer.linkNewsletter">${t('footer.linkNewsletter')}</a>
               </nav>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.learnTitle">${t('footer.learnTitle')}</h4>
-              <a href="${prefix}about.html" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
+              <a href="${prefix}about" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
               <a href="${prefix}index.html#news" data-i18n="footer.learnNews">${t('footer.learnNews')}</a>
-              <a href="${prefix}about.html" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
-              <a href="${prefix}contacts.html" data-i18n="footer.learnContact">${t('footer.learnContact')}</a>
+              <a href="${prefix}about" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
+              <a href="${prefix}contact" data-i18n="footer.learnContact">${t('footer.learnContact')}</a>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.infoTitle">${t('footer.infoTitle')}</h4>
               <a href="${prefix}appointment.html" data-i18n="footer.infoPatients">${t('footer.infoPatients')}</a>
-              <a href="${prefix}doctors.html" data-i18n="footer.infoDoctors">${t('footer.infoDoctors')}</a>
-              <a href="${prefix}departments.html" data-i18n="footer.infoServices">${t('footer.infoServices')}</a>
-              <a href="${prefix}contacts.html" data-i18n="footer.infoHours">${t('footer.infoHours')}</a>
+              <a href="${prefix}find-a-doctor" data-i18n="footer.infoDoctors">${t('footer.infoDoctors')}</a>
+              <a href="${prefix}patient-care" data-i18n="footer.infoServices">${t('footer.infoServices')}</a>
+              <a href="${prefix}locations" data-i18n="footer.infoHours">${t('footer.infoHours')}</a>
               <a href="${prefix}appointment.html" data-i18n="footer.infoBook">${t('footer.infoBook')}</a>
             </div>
             <div class="hss-footer__col">

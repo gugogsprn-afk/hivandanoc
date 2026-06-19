@@ -41,7 +41,7 @@ function initDoctorSearchBand(data) {
       const params = new URLSearchParams();
       if (q) params.set('q', q);
       if (cat) params.set('category', cat);
-      const base = form.getAttribute('action') || 'doctors.html';
+      const base = form.getAttribute('action') || '/find-a-doctor';
       window.location.href = `${base}${params.toString() ? `?${params}` : ''}`;
     });
   }

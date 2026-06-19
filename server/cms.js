@@ -18,6 +18,7 @@ const homepageRoutes = require('./routes/admin/homepage');
 const pagesRoutes = require('./routes/admin/pages');
 const publishRoutes = require('./routes/admin/publish');
 const settingsRoutes = require('./routes/admin/settings');
+const seoPageRoutes = require('./routes/seo-pages');
 
 function isAllowedOrigin(origin) {
   if (!origin) return false;
@@ -89,6 +90,7 @@ function createCmsApp() {
   app.use('/api/v1/admin/pages', pagesRoutes);
   app.use('/api/v1/admin/publish', publishRoutes);
   app.use('/api/v1/admin/settings', settingsRoutes);
+  app.use(seoPageRoutes);
   app.use('/api/v1/media/files', mediaRoutes.mediaFilesRouter());
 
   const adminCmsPath = path.join(__dirname, '../admin-cms');

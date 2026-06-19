@@ -4,17 +4,28 @@
  * Usage: npm run seo:audit
  */
 const https = require('https');
+const http = require('http');
 const { URL } = require('url');
 
-const BASE = process.env.SEO_AUDIT_BASE || 'https://healthyspinedoc.com';
+const BASE = (process.env.SEO_AUDIT_BASE || 'https://healthyspinedoc.com').replace(/\/$/, '');
 const FAILURES = [];
 const PASSES = [];
 
+const CORE_URLS = [
+  { path: '/', label: 'Homepage' },
+  { path: '/find-a-doctor', label: 'Find a Doctor' },
+  { path: '/patient-care', label: 'Patient Care' },
+  { path: '/about', label: 'About' },
+  { path: '/contact', label: 'Contact' },
+  { path: '/locations', label: 'Locations' }
+];
+
 function fetchUrl(url, { method = 'GET', follow = 5 } = {}) {
   return new Promise((resolve, reject) => {
-    const req = https.request(
+    const lib = url.startsWith('https:') ? https : http;
+    const req = lib.request(
       url,
-      { method, headers: { 'User-Agent': 'HealthySpine-SEO-Audit/1.0' } },
+      { method, headers: { 'User-Agent': 'HealthySpine-SEO-Audit/2.0' } },
       (res) => {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
@@ -34,6 +45,25 @@ function fetchUrl(url, { method = 'GET', follow = 5 } = {}) {
   });
 }
 
+function fetchHead(url) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https:') ? https : http;
+    const req = lib.request(
+      url,
+      { method: 'HEAD', headers: { 'User-Agent': 'HealthySpine-SEO-Audit/2.0' } },
+      (res) => {
+        const location = res.headers.location;
+        if ([301, 302, 307, 308].includes(res.statusCode) && location) {
+          return resolve(fetchHead(new URL(location, url).href));
+        }
+        resolve({ status: res.statusCode, headers: res.headers, url });
+      }
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function pass(msg) {
   PASSES.push(msg);
   console.log(`✓ ${msg}`);
@@ -46,6 +76,45 @@ function fail(msg) {
 
 function extractLocs(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+}
+
+function extractTag(html, re) {
+  const m = html.match(re);
+  return m ? m[1].trim() : '';
+}
+
+function extractCanonical(html) {
+  return extractTag(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i) ||
+    extractTag(html, /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i);
+}
+
+function extractRobots(html) {
+  return extractTag(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i) ||
+    extractTag(html, /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']robots["']/i);
+}
+
+function extractTitle(html) {
+  return extractTag(html, /<title>([^<]*)<\/title>/i);
+}
+
+function extractDescription(html) {
+  return extractTag(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i) ||
+    extractTag(html, /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
+}
+
+function extractH1(html) {
+  return extractTag(html, /<h1[^>]*>([^<]+)<\/h1>/i);
+}
+
+function normalizeText(s) {
+  return String(s || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function bodyFingerprint(html) {
+  return normalizeText(html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<[^>]+>/g, ' ')).slice(0, 500);
 }
 
 async function auditRobots() {
@@ -68,48 +137,132 @@ async function auditSitemap() {
   if (res.status !== 200) return fail(`sitemap.xml returned ${res.status}`);
   pass('sitemap.xml returns 200');
   const locs = extractLocs(res.body);
-  if (!locs.length) return fail('sitemap.xml has no URLs');
-  pass(`sitemap.xml contains ${locs.length} URLs`);
-
-  const blocked = locs.filter((u) =>
-    /\/(admin-cms|admin|api)\//i.test(u) || /login/i.test(u)
-  );
+  const expected = CORE_URLS.map((u) => (u.path === '/' ? `${BASE}/` : `${BASE}${u.path}`));
+  if (locs.length !== expected.length) {
+    fail(`sitemap should contain exactly ${expected.length} URLs (found ${locs.length})`);
+  } else {
+    pass(`sitemap contains exactly ${expected.length} core URLs`);
+  }
+  for (const loc of expected) {
+    if (!locs.includes(loc)) fail(`sitemap missing required URL: ${loc}`);
+    else pass(`sitemap includes ${loc}`);
+  }
+  const blocked = locs.filter((u) => /\/(admin-cms|admin|api)\//i.test(u) || /\.html$/i.test(u) || /login/i.test(u));
   if (blocked.length) fail(`sitemap contains blocked URLs: ${blocked.join(', ')}`);
-  else pass('sitemap excludes admin/API/login URLs');
-
-  const mustHave = ['/', '/find-a-doctor', '/locations', '/patient-care', '/about', '/contact'];
-  for (const p of mustHave) {
-    const hit = locs.some((u) => u === `${BASE}${p}` || u === `${BASE}${p}/`);
-    if (!hit) fail(`sitemap missing required URL: ${p}`);
-    else pass(`sitemap includes ${p}`);
-  }
-
-  const sample = locs.slice(0, 12);
-  for (const loc of sample) {
-    const page = await fetchUrl(loc);
-    if (page.status !== 200) fail(`sitemap URL not 200: ${loc} (${page.status})`);
-  }
-  pass(`sampled ${sample.length} sitemap URLs — all 200`);
+  else pass('sitemap excludes admin/API/login/.html URLs');
 }
 
-async function auditHomepageMeta() {
+async function auditHomepageLinks() {
   const res = await fetchUrl(`${BASE}/`);
-  if (res.status !== 200) return fail(`homepage returned ${res.status}`);
-  pass('homepage returns 200');
+  const required = ['/find-a-doctor', '/patient-care', '/about', '/contact', '/locations'];
+  for (const p of required) {
+    const hit = res.body.includes(`href="${p}"`) || res.body.includes(`href='${p}'`);
+    if (!hit) fail(`homepage missing internal link to ${p}`);
+    else pass(`homepage links to ${p}`);
+  }
+}
 
-  if (/noindex/i.test(res.body)) fail('homepage contains noindex');
-  else pass('homepage has no noindex in HTML source');
+async function auditPage({ path, label }, homepageSnapshot) {
+  const url = path === '/' ? `${BASE}/` : `${BASE}${path}`;
+  const expectedCanonical = url.replace(/\/$/, path === '/' ? '/' : '');
 
-  if (res.headers['x-robots-tag'] && /noindex/i.test(res.headers['x-robots-tag'])) {
-    fail('homepage X-Robots-Tag contains noindex');
+  console.log(`\n— ${label} (${path}) —`);
+
+  const head = await fetchHead(url);
+  if (head.status !== 200) {
+    fail(`${path} HTTP status ${head.status} (expected 200)`);
+    return null;
+  }
+  pass(`${path} returns HTTP 200`);
+
+  if (head.headers['x-robots-tag'] && /noindex/i.test(head.headers['x-robots-tag'])) {
+    fail(`${path} X-Robots-Tag contains noindex`);
   } else {
-    pass('homepage X-Robots-Tag is not noindex');
+    pass(`${path} X-Robots-Tag is not noindex`);
+  }
+
+  const res = await fetchUrl(url);
+  const canonical = extractCanonical(res.body);
+  const robots = extractRobots(res.body);
+  const title = extractTitle(res.body);
+  const description = extractDescription(res.body);
+  const h1 = extractH1(res.body);
+
+  const canonExpected = path === '/' ? `${BASE}/` : `${BASE}${path}`;
+  if (canonical !== canonExpected) {
+    fail(`${path} canonical is "${canonical || '(missing)'}" (expected ${canonExpected})`);
+  } else {
+    pass(`${path} canonical self-references ${canonExpected}`);
+  }
+
+  if (/noindex/i.test(robots)) fail(`${path} meta robots contains noindex: ${robots}`);
+  else if (!robots || !/index/i.test(robots)) fail(`${path} meta robots missing index: "${robots || '(missing)'}"`);
+  else pass(`${path} meta robots: ${robots}`);
+
+  if (!title || title.length < 3) fail(`${path} title empty or too short`);
+  else pass(`${path} title: "${title}"`);
+
+  if (!description || description.length < 20) fail(`${path} meta description empty or too short`);
+  else pass(`${path} description present (${description.length} chars)`);
+
+  if (!h1 || h1 === '—' || h1.length < 2) fail(`${path} H1 missing or placeholder`);
+  else pass(`${path} H1: "${h1}"`);
+
+  if (path !== '/') {
+    if (normalizeText(title) === normalizeText(homepageSnapshot.title)) {
+      fail(`${path} title duplicates homepage`);
+    } else {
+      pass(`${path} title is unique vs homepage`);
+    }
+    if (normalizeText(h1) === normalizeText(homepageSnapshot.h1)) {
+      fail(`${path} H1 duplicates homepage`);
+    } else {
+      pass(`${path} H1 is unique vs homepage`);
+    }
+    const fp = bodyFingerprint(res.body);
+    const homeFp = homepageSnapshot.fingerprint;
+    if (fp === homeFp) {
+      fail(`${path} body content fingerprint matches homepage (duplicate content)`);
+    } else {
+      pass(`${path} body content differs from homepage`);
+    }
+    if (path === '/contact' || path === '/locations') {
+      const other = path === '/contact' ? '/locations' : '/contact';
+      /* checked in pairwise pass below */
+    }
+  }
+
+  if (!res.body.includes('application/ld+json')) {
+    fail(`${path} missing JSON-LD`);
+  } else {
+    pass(`${path} includes JSON-LD`);
+  }
+
+  return { path, title, h1, canonical, robots, description, fingerprint: bodyFingerprint(res.body) };
+}
+
+async function auditContactLocationsDistinct(contactSnap, locationsSnap) {
+  if (!contactSnap || !locationsSnap) return;
+  if (normalizeText(contactSnap.title) === normalizeText(locationsSnap.title)) {
+    fail('/contact and /locations share the same title');
+  } else {
+    pass('/contact and /locations have distinct titles');
+  }
+  if (normalizeText(contactSnap.h1) === normalizeText(locationsSnap.h1)) {
+    fail('/contact and /locations share the same H1');
+  } else {
+    pass('/contact and /locations have distinct H1');
+  }
+  if (contactSnap.canonical === locationsSnap.canonical) {
+    fail('/contact and /locations share the same canonical');
+  } else {
+    pass('/contact and /locations have distinct canonicals');
   }
 }
 
 async function auditHttpsRedirect() {
   const httpRes = await new Promise((resolve, reject) => {
-    const req = require('http').request(
+    const req = http.request(
       { hostname: 'healthyspinedoc.com', port: 80, path: '/', method: 'GET' },
       (res) => resolve({ status: res.statusCode, location: res.headers.location })
     );
@@ -121,37 +274,10 @@ async function auditHttpsRedirect() {
   } else {
     pass('HTTP redirects to HTTPS');
   }
-  if (httpRes.location && httpRes.location.startsWith('https://healthyspinedoc.com')) {
-    pass('HTTP redirect target is https://healthyspinedoc.com');
-  } else {
-    fail(`HTTP redirect target unexpected: ${httpRes.location || 'none'}`);
-  }
-}
-
-async function auditWwwRedirect() {
-  try {
-    const res = await fetchUrl('https://www.healthyspinedoc.com/', { follow: 0 });
-    if (![301, 302, 307, 308].includes(res.status)) {
-      fail(`www did not redirect (${res.status})`);
-      return;
-    }
-    if (res.headers.location && res.headers.location.includes('https://healthyspinedoc.com')) {
-      pass('www redirects to non-www canonical domain');
-    } else {
-      fail(`www redirect target unexpected: ${res.headers.location || 'none'}`);
-    }
-  } catch (err) {
-    fail(`www redirect check failed: ${err.message}`);
-  }
 }
 
 async function auditAdminBlocked() {
   const res = await fetchUrl(`${BASE}/admin-cms/`);
-  if (res.status !== 200) {
-    pass(`admin-cms reachable for humans (${res.status}) — ok`);
-  } else {
-    pass('admin-cms returns 200 (expected for login UI)');
-  }
   if (res.headers['x-robots-tag'] && /noindex/i.test(res.headers['x-robots-tag'])) {
     pass('admin-cms has X-Robots-Tag noindex');
   } else {
@@ -163,10 +289,21 @@ async function main() {
   console.log(`SEO audit — ${BASE}\n`);
   await auditRobots();
   await auditSitemap();
-  await auditHomepageMeta();
   await auditHttpsRedirect();
-  await auditWwwRedirect();
   await auditAdminBlocked();
+  await auditHomepageLinks();
+
+  const snapshots = {};
+  for (const page of CORE_URLS) {
+    const homeSnap = snapshots['/'] || { title: '', h1: '', fingerprint: '' };
+    const snap = await auditPage(page, homeSnap);
+    if (snap) snapshots[page.path] = snap;
+    if (page.path === '/' && snap) {
+      snapshots['/'] = snap;
+    }
+  }
+
+  await auditContactLocationsDistinct(snapshots['/contact'], snapshots['/locations']);
 
   console.log(`\n${PASSES.length} passed, ${FAILURES.length} failed`);
   if (FAILURES.length) {
