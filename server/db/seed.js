@@ -17,7 +17,7 @@ function seedUsers() {
 
   db.prepare(
     `INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)`
-  ).run(email, hash, 'Super Admin', 'super_admin');
+  ).run(email.trim().toLowerCase(), hash, 'Super Admin', 'super_admin');
 
   console.log(`[cms:seed] Default admin: ${email}`);
   console.log('[cms:seed] Change CMS_ADMIN_PASSWORD in .env immediately!');
@@ -32,25 +32,41 @@ function ensureStaffUsers() {
       password: process.env.CMS_SMM_PASSWORD,
       name: process.env.CMS_SMM_NAME || 'SMM Specialist',
       role: 'manager'
+    },
+    {
+      email: process.env.CMS_ADMIN_EMAIL,
+      password: process.env.CMS_ADMIN_PASSWORD,
+      name: 'Super Admin',
+      role: 'super_admin'
     }
   ];
 
+  let updated = 0;
+
   for (const acc of accounts) {
     if (!acc.email || !acc.password) continue;
+    const email = String(acc.email).trim().toLowerCase();
     const hash = bcrypt.hashSync(acc.password, 12);
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(acc.email);
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
     if (existing) {
       db.prepare(
         `UPDATE users SET password_hash = ?, name = ?, role = ? WHERE email = ?`
-      ).run(hash, acc.name, acc.role, acc.email);
-      console.log(`[cms] Staff user updated: ${acc.email} (${acc.role})`);
+      ).run(hash, acc.name, acc.role, email);
+      console.log(`[cms] Staff user updated: ${email} (${acc.role})`);
     } else {
       db.prepare(
         `INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)`
-      ).run(acc.email, hash, acc.name, acc.role);
-      console.log(`[cms] Staff user created: ${acc.email} (${acc.role})`);
+      ).run(email, hash, acc.name, acc.role);
+      console.log(`[cms] Staff user created: ${email} (${acc.role})`);
     }
+    updated += 1;
   }
+
+  if (!process.env.CMS_SMM_EMAIL || !process.env.CMS_SMM_PASSWORD) {
+    console.warn('[cms] CMS_SMM_EMAIL / CMS_SMM_PASSWORD not set — SMM login will not work');
+  }
+
+  return updated;
 }
 
 function seedFromHospitalJson() {
