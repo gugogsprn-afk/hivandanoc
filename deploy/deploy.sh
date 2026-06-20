@@ -28,6 +28,7 @@ ssh "$SERVER" "export PATH=/usr/bin:\$PATH; cd $REMOTE_DIR \
   && pm2 delete hivandanoc-api 2>/dev/null || true \
   && HOST=127.0.0.1 PORT=8765 NODE_ENV=production pm2 start server/index.js --name hivandanoc-api \
   && pm2 save \
+  && node scripts/sync-staff-users.js \
   && (pm2 startup systemd -u root --hp /root 2>/dev/null | tail -1 | bash || true)"
 
 echo "==> Updating nginx config"

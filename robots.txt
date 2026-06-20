@@ -1,5 +1,9 @@
 User-agent: *
 Allow: /
+
+Disallow: /admin-cms/
 Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/private/
 
 Sitemap: https://healthyspinedoc.com/sitemap.xml

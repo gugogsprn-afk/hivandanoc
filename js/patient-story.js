@@ -77,6 +77,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await HospitalApp.init();
   I18n.applyDOM();
   await renderPatientStory();
+  if (typeof SiteSEO !== 'undefined') {
+    SiteSEO.refresh(HospitalApp.getData(), { page: 'patient-story' });
+  }
   window.addEventListener('hospital:refresh', async () => {
     I18n.applyDOM();
     await renderPatientStory();

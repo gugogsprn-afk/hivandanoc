@@ -5,7 +5,9 @@
     "start": "node server/index.js",
     "dev": "node server/index.js",
     "cms:seed": "node server/db/seed.js",
-    "cms:init": "node -e \"require('./server/db').initDb(); require('./server/db/seed').seed()\""
+    "cms:init": "node -e \"require('./server/db').initDb(); require('./server/db/seed').seed()\"",
+    "cms:staff-sync": "node scripts/sync-staff-users.js",
+    "seo:audit": "node scripts/seo-audit.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

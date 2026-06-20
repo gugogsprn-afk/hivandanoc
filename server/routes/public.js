@@ -5,6 +5,7 @@ const { getPublishStatus, readPublishedContent } = require('../services/content-
 const { publicFormLimiter } = require('../middleware/rateLimit');
 const { validateLead, sanitizeString, sanitizeEmail } = require('../middleware/validate');
 const { notifyForm } = require('../notify');
+const { buildSitemapXml } = require('../services/sitemap');
 
 const router = express.Router();
 
@@ -130,31 +131,21 @@ router.post('/leads/contact', publicFormLimiter, async (req, res) => {
 });
 
 router.get('/sitemap.xml', (_req, res) => {
-  const base = process.env.PUBLIC_SITE_URL || 'https://healthyspinedoc.com';
-  const pages = [
-    '/index.html',
-    '/about.html',
-    '/doctors.html',
-    '/departments.html',
-    '/appointment.html',
-    '/contacts.html',
-    '/move-better.html',
-    '/privacy-policy.html',
-    '/cookies-policy.html',
-    '/terms.html',
-    '/patient-information.html'
-  ];
-  const urls = pages
-    .map(
-      (p) =>
-        `  <url><loc>${base}${p}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`
-    )
-    .join('\n');
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`;
-  res.type('application/xml').send(xml);
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.type('application/xml').send(buildSitemapXml());
+});
+
+router.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').send(`User-agent: *
+Allow: /
+
+Disallow: /admin-cms/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/private/
+
+Sitemap: https://healthyspinedoc.com/sitemap.xml
+`);
 });
 
 module.exports = router;
