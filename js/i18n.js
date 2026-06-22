@@ -69,7 +69,7 @@ const I18n = (function () {
 
   async function loadLanguage(lang) {
     try {
-      const res = await fetch(`${getAssetBase()}lang/${lang}.json`);
+      const res = await fetch(`${getAssetBase()}lang/${lang}.json`, { cache: 'no-store' });
       if (!res.ok) throw new Error(`Locale not found: ${lang}`);
       dictionary = await res.json();
     } catch {

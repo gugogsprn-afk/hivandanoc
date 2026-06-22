@@ -513,8 +513,8 @@ const HospitalApp = (function () {
     const h = getData()?.hospital || {};
     const social = h.social || {};
     const year = new Date().getFullYear();
-    const name = h.shortName || h.name || '—';
-    const t = (k) => I18n.t(k);
+    const name = brandName();
+    const t = (k, params) => I18n.t(k, params);
 
     const socialRow = ['facebook', 'instagram', 'linkedin']
       .map(
@@ -530,7 +530,7 @@ const HospitalApp = (function () {
       <footer class="site-footer hss-footer">
         <div class="hss-footer__cta">
           <div class="hss-wrap">
-            <a href="${prefix}appointment.html" class="hss-footer__cta-link" data-i18n="footer.ctaLink">${t('footer.ctaLink')}</a>
+            <a href="${prefix}appointment.html" class="hss-footer__cta-link" data-footer-brand="ctaLink">${t('footer.ctaLink', { name })}</a>
           </div>
         </div>
         <div class="hss-footer__body">
@@ -549,9 +549,9 @@ const HospitalApp = (function () {
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.learnTitle">${t('footer.learnTitle')}</h4>
-              <a href="${prefix}about" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
+              <a href="${prefix}about" data-footer-brand="aboutOrg">${t('nav.aboutOrg')}</a>
               <a href="${prefix}index.html#news" data-i18n="footer.learnNews">${t('footer.learnNews')}</a>
-              <a href="${prefix}contact" data-i18n="footer.linkSupport">${t('footer.linkSupport')}</a>
+              <a href="${prefix}contact" data-footer-brand="linkSupport">${t('footer.linkSupport', { name })}</a>
               <a href="${prefix}contact" data-i18n="footer.learnContact">${t('footer.learnContact')}</a>
             </div>
             <div class="hss-footer__col">
@@ -573,7 +573,7 @@ const HospitalApp = (function () {
         </div>
         <div class="hss-footer__legal">
           <div class="hss-wrap">
-            <p id="footer-copy">${t('footer.copyright', { year, name: h.name || name })}</p>
+            <p id="footer-copy">${t('footer.copyright', { year, name })}</p>
             <p><span data-i18n="footer.legalAddress">${t('footer.legalAddress')}</span>: <span id="footer-address">${h.address || ''}</span></p>
             <p data-i18n="footer.legalDisclaimer">${t('footer.legalDisclaimer')}</p>
           </div>
@@ -763,9 +763,16 @@ const HospitalApp = (function () {
     if (footer) {
       footer.textContent = I18n.t('footer.copyright', {
         year: new Date().getFullYear(),
-        name: h.name || displayName
+        name: displayName
       });
     }
+
+    document.querySelectorAll('[data-footer-brand]').forEach((el) => {
+      const key = el.getAttribute('data-footer-brand');
+      if (key === 'ctaLink') el.textContent = I18n.t('footer.ctaLink', { name: displayName });
+      else if (key === 'linkSupport') el.textContent = I18n.t('footer.linkSupport', { name: displayName });
+      else if (key === 'aboutOrg') el.textContent = I18n.t('nav.aboutOrg');
+    });
 
     const tagline = document.getElementById('footer-tagline');
     if (tagline && !tagline.hasAttribute('data-i18n')) {

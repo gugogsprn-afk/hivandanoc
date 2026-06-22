@@ -76,13 +76,94 @@
     <script src="js/storage.js"></script>
     <script src="js/api-config.js?v=20260618"></script>
     <script src="js/api-submit.js?v=20260618"></script>
-        <script src="lang/hy.embed.js?v=20260706"></script>
+        <script src=" param($m) $m.Value -replace '\d+"></script>
     <script src="lang/ru.embed.js?v=20260706"></script>
     <script src="lang/en.embed.js?v=20260706"></script>
-<script src="js/i18n.js?v=20260706"></script>
+<script src="js/i18n.js?v=20260622"></script>
     <script src="js/cms-config.js?v=20260706"></script>
     <script src="js/cms-content.js?v=20260706"></script>
-    <script src="js/common.js?v=20260706"></script>
+    <script src="js/common.js?v=20260622"></script>
+    <script src="js/pages.js"></script>
+    <script>
+      document.getElementById('feedback-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const record = {
+          name: fd.get('name'),
+          email: fd.get('email'),
+          message: fd.get('message')
+        };
+        const api = typeof FormApi !== 'undefined' ? await FormApi.submitContact(record) : { offline: true };
+        if (api.ok || api.offline || api.status === 503) {
+          alert(I18n.t('pages.contacts.feedbackThanks'));
+          e.target.reset();
+        } else {
+          alert(api.error || 'Ошибка отправки. Попробуйте позже.');
+        }
+      });
+    </script>
+</body>
+</html>
+,'20260622' "></script>
+    <script src=" param($m) $m.Value -replace '\d+"></script>
+    <script src="lang/en.embed.js?v=20260706"></script>
+<script src="js/i18n.js?v=20260622"></script>
+    <script src="js/cms-config.js?v=20260706"></script>
+    <script src="js/cms-content.js?v=20260706"></script>
+    <script src="js/common.js?v=20260622"></script>
+    <script src="js/pages.js"></script>
+    <script>
+      document.getElementById('feedback-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const record = {
+          name: fd.get('name'),
+          email: fd.get('email'),
+          message: fd.get('message')
+        };
+        const api = typeof FormApi !== 'undefined' ? await FormApi.submitContact(record) : { offline: true };
+        if (api.ok || api.offline || api.status === 503) {
+          alert(I18n.t('pages.contacts.feedbackThanks'));
+          e.target.reset();
+        } else {
+          alert(api.error || 'Ошибка отправки. Попробуйте позже.');
+        }
+      });
+    </script>
+</body>
+</html>
+,'20260622' "></script>
+    <script src=" param($m) $m.Value -replace '\d+"></script>
+<script src="js/i18n.js?v=20260622"></script>
+    <script src="js/cms-config.js?v=20260706"></script>
+    <script src="js/cms-content.js?v=20260706"></script>
+    <script src="js/common.js?v=20260622"></script>
+    <script src="js/pages.js"></script>
+    <script>
+      document.getElementById('feedback-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const record = {
+          name: fd.get('name'),
+          email: fd.get('email'),
+          message: fd.get('message')
+        };
+        const api = typeof FormApi !== 'undefined' ? await FormApi.submitContact(record) : { offline: true };
+        if (api.ok || api.offline || api.status === 503) {
+          alert(I18n.t('pages.contacts.feedbackThanks'));
+          e.target.reset();
+        } else {
+          alert(api.error || 'Ошибка отправки. Попробуйте позже.');
+        }
+      });
+    </script>
+</body>
+</html>
+,'20260622' "></script>
+<script src="js/i18n.js?v=20260622"></script>
+    <script src="js/cms-config.js?v=20260706"></script>
+    <script src="js/cms-content.js?v=20260706"></script>
+    <script src="js/common.js?v=20260622"></script>
     <script src="js/pages.js"></script>
     <script>
       document.getElementById('feedback-form')?.addEventListener('submit', async (e) => {
