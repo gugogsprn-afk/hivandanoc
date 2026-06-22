@@ -148,6 +148,12 @@ const HospitalApp = (function () {
     const h = getData()?.hospital;
     if (h?.shortName) return h.shortName;
     if (h?.name) return h.name;
+    if (typeof I18n !== 'undefined') {
+      const fromMeta = I18n.t('meta.siteTitle');
+      if (fromMeta && fromMeta !== 'meta.siteTitle') {
+        return fromMeta.split('—')[0].split(' - ')[0].trim();
+      }
+    }
     return 'Առողջ ողնաշար';
   }
 
@@ -545,7 +551,7 @@ const HospitalApp = (function () {
               <h4 data-i18n="footer.learnTitle">${t('footer.learnTitle')}</h4>
               <a href="${prefix}about" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
               <a href="${prefix}index.html#news" data-i18n="footer.learnNews">${t('footer.learnNews')}</a>
-              <a href="${prefix}about" data-i18n="footer.learnAbout">${t('footer.learnAbout')}</a>
+              <a href="${prefix}contact" data-i18n="footer.linkSupport">${t('footer.linkSupport')}</a>
               <a href="${prefix}contact" data-i18n="footer.learnContact">${t('footer.learnContact')}</a>
             </div>
             <div class="hss-footer__col">
