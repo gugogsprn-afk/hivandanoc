@@ -44,6 +44,20 @@ const CmsContent = (function () {
     }
   }
 
+  function mergeLocalizedById(primary, localized) {
+    if (!localized?.length) return primary;
+    const map = new Map(localized.map((x) => [x.id, x]));
+    return (primary || []).map((item) => {
+      const tr = map.get(item.id);
+      if (!tr) return item;
+      return {
+        ...item,
+        ...tr,
+        services: tr.services?.length ? tr.services : item.services
+      };
+    });
+  }
+
   function mergeIntoHospital(baseData, cms) {
     if (!cms || !baseData) return baseData;
 
@@ -70,9 +84,18 @@ const CmsContent = (function () {
         merged.hospital[key] = cmsVal || locVal || merged.hospital[key] || '';
       }
     }
-    if (cms.departments?.length) merged.departments = cms.departments;
-    if (cms.doctors?.length) merged.doctors = cms.doctors;
-    if (cms.serviceCategories?.length) merged.serviceCategories = cms.serviceCategories;
+    if (cms.departments?.length) {
+      const locDepts = typeof I18n !== 'undefined' ? I18n.getContent()?.departments : null;
+      merged.departments = mergeLocalizedById(cms.departments, locDepts);
+    }
+    if (cms.doctors?.length) {
+      const locDocs = typeof I18n !== 'undefined' ? I18n.getContent()?.doctors : null;
+      merged.doctors = mergeLocalizedById(cms.doctors, locDocs);
+    }
+    if (cms.serviceCategories?.length) {
+      const locCats = typeof I18n !== 'undefined' ? I18n.getContent()?.serviceCategories : null;
+      merged.serviceCategories = mergeLocalizedById(cms.serviceCategories, locCats);
+    }
     if (cms.testimonials?.length) merged.reviews = cms.testimonials;
 
     const extraKeys = [
@@ -89,6 +112,8 @@ const CmsContent = (function () {
       const hasExisting = Array.isArray(existing) ? existing.length > 0 : existing && typeof existing === 'object';
       if (!hasExisting) merged[key] = cms[key];
     }
+    const locContent = typeof I18n !== 'undefined' ? I18n.getContent() : null;
+    if (locContent?.conditions?.length) merged.conditions = locContent.conditions;
     if (cms.pageFields) merged.pageFields = cms.pageFields;
 
     merged._cms = {

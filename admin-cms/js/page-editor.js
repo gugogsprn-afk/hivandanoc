@@ -16,6 +16,13 @@ const PageEditor = (function () {
   let currentPage = PAGES[0];
   let iframe = null;
   let rootEl = null;
+  let editorEl = null;
+  let isFullscreen = false;
+
+  const ICON_MAXIMIZE =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+  const ICON_MINIMIZE =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>';
 
   function previewUrl(page = currentPage) {
     const base = AdminConfig.publicSite().replace(/\/$/, '');
@@ -28,15 +35,76 @@ const PageEditor = (function () {
     try {
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!doc) return;
-      const height = Math.max(
+      const contentHeight = Math.max(
         doc.documentElement?.scrollHeight || 0,
         doc.body?.scrollHeight || 0,
         doc.documentElement?.offsetHeight || 0,
         720
       );
-      iframe.style.height = `${height + 24}px`;
+      if (isFullscreen) {
+        const wrap = rootEl?.querySelector('.cms-visual-editor__frame-wrap');
+        const wrapHeight = wrap?.clientHeight || window.innerHeight;
+        iframe.style.height = `${Math.max(contentHeight, wrapHeight - 8)}px`;
+        iframe.style.width = '100%';
+      } else {
+        iframe.style.height = `${contentHeight + 24}px`;
+        iframe.style.width = '1440px';
+      }
     } catch {
       /* cross-origin guard */
+    }
+  }
+
+  function fullscreenBtnHTML() {
+    return `<button type="button" class="cms-preview-fs-btn" id="preview-fullscreen-toggle" aria-pressed="false" title="${t('pageEditor.maximize')}" aria-label="${t('pageEditor.maximize')}">
+      <span class="cms-preview-fs-btn__icon cms-preview-fs-btn__icon--max">${ICON_MAXIMIZE}</span>
+      <span class="cms-preview-fs-btn__icon cms-preview-fs-btn__icon--min" hidden>${ICON_MINIMIZE}</span>
+    </button>`;
+  }
+
+  function updateFullscreenButton() {
+    const btn = document.getElementById('preview-fullscreen-toggle');
+    if (!btn) return;
+    btn.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
+    btn.title = isFullscreen ? t('pageEditor.minimize') : t('pageEditor.maximize');
+    btn.setAttribute('aria-label', btn.title);
+    btn.querySelector('.cms-preview-fs-btn__icon--max')?.toggleAttribute('hidden', isFullscreen);
+    btn.querySelector('.cms-preview-fs-btn__icon--min')?.toggleAttribute('hidden', !isFullscreen);
+  }
+
+  function enterFullscreen() {
+    if (isFullscreen) return;
+    isFullscreen = true;
+    document.body.classList.add('cms-page-editor-fullscreen');
+    editorEl?.classList.add('cms-visual-editor--fullscreen');
+    updateFullscreenButton();
+    resizePreviewFrame();
+    setTimeout(resizePreviewFrame, 200);
+    setTimeout(resizePreviewFrame, 800);
+  }
+
+  function exitFullscreen() {
+    if (!isFullscreen) return;
+    isFullscreen = false;
+    document.body.classList.remove('cms-page-editor-fullscreen');
+    editorEl?.classList.remove('cms-visual-editor--fullscreen');
+    updateFullscreenButton();
+    if (iframe) {
+      iframe.style.width = '1440px';
+    }
+    resizePreviewFrame();
+    setTimeout(resizePreviewFrame, 200);
+  }
+
+  function toggleFullscreen() {
+    if (isFullscreen) exitFullscreen();
+    else enterFullscreen();
+  }
+
+  function onFullscreenKeydown(ev) {
+    if (ev.key === 'Escape' && isFullscreen) {
+      ev.preventDefault();
+      exitFullscreen();
     }
   }
 
@@ -76,6 +144,7 @@ const PageEditor = (function () {
           <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="preview-save-all">${t('pageEditor.saveAll')}</button>
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-refresh">${t('pageEditor.refresh')}</button>
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-manage-doctors" hidden>${t('pageEditor.manageDoctors')}</button>
+          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-fullscreen-toolbar" title="${t('pageEditor.maximize')}">${ICON_MAXIMIZE}<span class="cms-preview-fs-btn__label">${t('pageEditor.maximize')}</span></button>
           <a href="${AdminConfig.publicSite()}/${currentPage.path}" target="_blank" rel="noopener" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-open-public">${t('pageEditor.openLive')}</a>
         </div>
       </div>`;
@@ -97,6 +166,8 @@ const PageEditor = (function () {
         });
       });
     });
+
+    document.getElementById('preview-fullscreen-toolbar')?.addEventListener('click', toggleFullscreen);
 
     document.getElementById('preview-refresh')?.addEventListener('click', () => {
       iframe.src = previewUrl();
@@ -175,31 +246,47 @@ const PageEditor = (function () {
     setTimeout(resizePreviewFrame, 800);
   }
 
-  function mount(root, initialPageId) {
+  function mount(root, initialPageId, options = {}) {
+    const embed = !!options.embed;
     rootEl = root;
     if (initialPageId) {
       const p = PAGES.find((x) => x.id === initialPageId);
       if (p) currentPage = p;
     }
 
+    const navHtml = embed
+      ? ''
+      : `<aside class="cms-page-nav" aria-label="Pages">${pageNavHTML(currentPage.id)}</aside>`;
+
     root.innerHTML = `
-      <div class="cms-visual-editor cms-visual-editor--pages">
-        <aside class="cms-page-nav" aria-label="Pages">${pageNavHTML(currentPage.id)}</aside>
+      <div class="cms-visual-editor cms-visual-editor--pages${embed ? ' cms-visual-editor--embed' : ''}">
+        ${navHtml}
         <div class="cms-visual-editor__main">
           ${toolbarHTML()}
           <p class="cms-visual-editor__frame-scroll-hint">${t('pageEditor.scrollHint')}</p>
           <div class="cms-visual-editor__frame-wrap">
-            <iframe id="page-preview-frame" title="Page preview" src="${previewUrl()}"></iframe>
+            <div class="cms-visual-editor__frame-toolbar">
+              <span class="cms-visual-editor__frame-title">${t('pageEditor.fullscreenTitle')}</span>
+              ${fullscreenBtnHTML()}
+            </div>
+            <iframe id="page-preview-frame" title="${t('pageEditor.fullscreenTitle')}" src="${previewUrl()}"></iframe>
           </div>
         </div>
       </div>`;
 
     iframe = document.getElementById('page-preview-frame');
+    editorEl = root.querySelector('.cms-visual-editor--pages');
     bindIframeResize();
 
-    root.querySelectorAll('.cms-page-nav__item').forEach((btn) => {
-      btn.addEventListener('click', () => switchPage(btn.dataset.pageId));
-    });
+    document.getElementById('preview-fullscreen-toggle')?.addEventListener('click', toggleFullscreen);
+    window.addEventListener('keydown', onFullscreenKeydown);
+    window.addEventListener('resize', resizePreviewFrame);
+
+    if (!embed) {
+      root.querySelectorAll('.cms-page-nav__item').forEach((btn) => {
+        btn.addEventListener('click', () => switchPage(btn.dataset.pageId));
+      });
+    }
 
     bindToolbar(root);
 
@@ -226,6 +313,13 @@ const PageEditor = (function () {
     if (manageBtn) manageBtn.textContent = t('pageEditor.manageDoctors');
     const openLink = document.getElementById('preview-open-public');
     if (openLink) openLink.textContent = t('pageEditor.openLive');
+    const fsToolbar = document.getElementById('preview-fullscreen-toolbar');
+    if (fsToolbar) {
+      fsToolbar.title = isFullscreen ? t('pageEditor.minimize') : t('pageEditor.maximize');
+      const label = fsToolbar.querySelector('.cms-preview-fs-btn__label');
+      if (label) label.textContent = isFullscreen ? t('pageEditor.minimize') : t('pageEditor.maximize');
+    }
+    updateFullscreenButton();
     const scrollHint = rootEl.querySelector('.cms-visual-editor__frame-scroll-hint');
     if (scrollHint) scrollHint.textContent = t('pageEditor.scrollHint');
     const nav = rootEl.querySelector('.cms-page-nav');
@@ -240,7 +334,13 @@ const PageEditor = (function () {
   function onMessage(ev) {
     if (ev.data?.type === 'cms-preview-height' && iframe) {
       const height = Math.max(Number(ev.data.height) || 0, 720);
-      iframe.style.height = `${height + 24}px`;
+      if (isFullscreen) {
+        const wrap = rootEl?.querySelector('.cms-visual-editor__frame-wrap');
+        const wrapHeight = wrap?.clientHeight || window.innerHeight;
+        iframe.style.height = `${Math.max(height + 24, wrapHeight - 8)}px`;
+      } else {
+        iframe.style.height = `${height + 24}px`;
+      }
       return;
     }
     if (ev.data?.type === 'cms-pending-count') {
@@ -265,11 +365,21 @@ const PageEditor = (function () {
     }
   }
 
+  function mountEmbed(root, pageId) {
+    unmount();
+    mount(root, pageId, { embed: true });
+  }
+
   function unmount() {
+    exitFullscreen();
     window.removeEventListener('message', onMessage);
+    window.removeEventListener('keydown', onFullscreenKeydown);
+    window.removeEventListener('resize', resizePreviewFrame);
+    if (rootEl) rootEl.innerHTML = '';
     rootEl = null;
+    editorEl = null;
     iframe = null;
   }
 
-  return { mount, unmount, PAGES, previewUrl };
+  return { mount, mountEmbed, unmount, PAGES, previewUrl };
 })();

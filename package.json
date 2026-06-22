@@ -7,6 +7,7 @@
     "cms:seed": "node server/db/seed.js",
     "cms:init": "node -e \"require('./server/db').initDb(); require('./server/db/seed').seed()\"",
     "cms:staff-sync": "node scripts/sync-staff-users.js",
+    "cms:sync-lang": "node scripts/sync-lang-to-db.js",
     "seo:audit": "node scripts/seo-audit.js"
   },
   "dependencies": {

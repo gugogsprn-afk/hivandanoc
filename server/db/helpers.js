@@ -5,11 +5,8 @@ const LANGS = ['hy', 'ru', 'en'];
 
 function pick(row, field, lang) {
   if (!row) return '';
-  const v = row[`${field}_${lang}`];
-  if (v) return v;
-  for (const l of LANGS) {
-    if (row[`${field}_${l}`]) return row[`${field}_${l}`];
-  }
+  const direct = row[`${field}_${lang}`];
+  if (direct) return direct;
   return '';
 }
 
@@ -130,7 +127,7 @@ function buildPublicContent(lang = 'hy') {
         icon: s.icon || '🩺',
         description: pick(s, 'description', lang),
         services: items.map((item) =>
-          typeof item === 'string' ? item : pick(item, 'name', lang) || item.name_ru || item.name
+          typeof item === 'string' ? item : pick(item, 'name', lang) || (lang === 'hy' ? item.name || '' : '')
         ),
         price: s.price,
         duration: s.duration,

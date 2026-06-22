@@ -5,8 +5,27 @@
   let currentUser = null;
   let activeLang = 'hy';
   let currentView = 'dashboard';
+  let leadsTab = 'leads';
+  let highlightDoctorId = null;
+  let highlightServiceId = null;
 
   const t = (key, params) => (typeof AdminI18n !== 'undefined' ? AdminI18n.t(key, params) : key);
+
+  function teardownPageEditor() {
+    if (typeof PageEditor !== 'undefined') PageEditor.unmount();
+  }
+
+  function langField(row, field) {
+    const code = activeLang || 'hy';
+    return row[`${field}_${code}`] || row[`${field}_hy`] || row[`${field}_ru`] || row[`${field}_en`] || '—';
+  }
+
+  function previewPanel(title, hostId) {
+    return `<div class="cms-panel cms-panel--preview">
+      <h3>${title}</h3>
+      <div id="${hostId}"></div>
+    </div>`;
+  }
 
   function toast(msg, type = 'success') {
     AdminUI.toast(msg, type);
@@ -64,14 +83,18 @@
   }
 
   function showView(name) {
+    teardownPageEditor();
     currentView = name;
-    $$('.cms-view').forEach((v) => { v.hidden = true; });
+    $$('.cms-view').forEach((v) => {
+      v.hidden = true;
+    });
     const view = $(`#view-${name}`);
     if (view) view.hidden = false;
     $$('#main-nav button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
     AdminUI.setViewTitle(name);
     const sub = $('#view-subtitle');
     if (sub) sub.textContent = t(`view.subtitle.${name}`);
+    document.body.classList.remove('cms-page-editor-fullscreen');
     const loaders = {
       dashboard: renderDashboard,
       leads: renderLeads,
@@ -90,26 +113,45 @@
     try {
       const data = await AdminApi.get('/admin/dashboard/stats');
       const appts = data.recentLeads.filter((l) => l.type === 'appointment').slice(0, 6);
+      const messages = (data.recentContacts || []).slice(0, 5);
       root.innerHTML = `
         <div class="cms-grid cms-grid--4">
-          ${AdminUI.statCard(data.totalLeads, 'Total leads', 'teal', '📊')}
-          ${AdminUI.statCard(data.newAppointments, 'New appointments', 'blue', '📅')}
-          ${AdminUI.statCard(data.todayAppointments, "Today's appointments", 'green', '✓')}
-          ${AdminUI.statCard(data.newContacts, 'New messages', 'amber', '✉️')}
+          ${AdminUI.statCard(data.totalLeads, 'Total leads', 'teal', '📊', { action: 'leads' })}
+          ${AdminUI.statCard(data.newAppointments, 'New appointments', 'blue', '📅', { action: 'leads-new-appt' })}
+          ${AdminUI.statCard(data.todayAppointments, "Today's appointments", 'green', '✓', { action: 'leads' })}
+          ${AdminUI.statCard(data.newContacts, 'New messages', 'amber', '✉️', { action: 'leads-messages' })}
         </div>
         <div class="cms-grid cms-grid--2" style="margin-top:1.25rem">
           ${AdminUI.card('Recent appointments', appts.length
             ? AdminUI.tableResponsive(`<thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>
               ${appts.map((l) => `<tr>
-                <td>${esc(l.created_at?.slice(0, 16))}</td>
-                <td>${esc(l.name)}</td>
+                <td>${esc(l.created_at?.slice(0, 16).replace('T', ' '))}</td>
+                <td><strong>${esc(l.name)}</strong></td>
                 <td><a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></td>
                 <td>${AdminUI.statusBadge(l.status)}</td>
               </tr>`).join('')}
             </tbody>`)
             : AdminUI.emptyHTML('No appointments yet', 'New booking requests will appear here.', '<button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-go="leads">View leads</button>')
           )}
-          ${AdminUI.card('Quick actions', `
+          ${AdminUI.card(`Recent messages (${messages.length})`, messages.length
+            ? `<ul class="cms-message-list">
+              ${messages.map((m) => `<li class="cms-message-list__item">
+                <div class="cms-message-list__meta">
+                  <strong>${esc(m.name || 'Visitor')}</strong>
+                  <span>${esc(m.created_at?.slice(0, 16).replace('T', ' '))}</span>
+                  ${AdminUI.statusBadge(m.status || 'new')}
+                </div>
+                <p>${esc(m.message || '—')}</p>
+                ${m.email ? `<a href="mailto:${esc(m.email)}">${esc(m.email)}</a>` : ''}
+              </li>`).join('')}
+            </ul>
+            <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-go="leads-messages" style="margin-top:0.75rem">View all messages →</button>`
+            : AdminUI.emptyHTML('No messages yet', 'Contact form submissions from the website appear here.', '<button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-go="leads-messages">Open messages</button>')
+          )}
+        </div>
+        <div class="cms-card" style="margin-top:1.25rem">
+          <div class="cms-card__head"><h2>Quick actions</h2></div>
+          <div class="cms-card__body">
             <div class="cms-quick-actions">
               <button type="button" class="cms-btn cms-btn--ghost" data-go="pages">📄 Pages</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="doctors">👨‍⚕️ Doctors</button>
@@ -117,10 +159,37 @@
               <button type="button" class="cms-btn cms-btn--ghost" data-go="media">🖼️ Media</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="settings">⚙️ Settings</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="leads">📋 Leads</button>
-            </div>`)}
+            </div>
+          </div>
         </div>`;
       $$('[data-go]', root).forEach((btn) => {
-        btn.addEventListener('click', () => showView(btn.dataset.go));
+        btn.addEventListener('click', () => {
+          const go = btn.dataset.go;
+          if (go === 'leads-messages') {
+            leadsTab = 'messages';
+            showView('leads');
+          } else if (go === 'leads-new-appt') {
+            leadsTab = 'leads';
+            showView('leads');
+          } else {
+            showView(go);
+          }
+        });
+      });
+      $$('[data-stat-action]', root).forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.statAction;
+          if (action === 'leads-messages') {
+            leadsTab = 'messages';
+            showView('leads');
+          } else if (action === 'leads-new-appt') {
+            leadsTab = 'leads';
+            showView('leads');
+          } else if (action === 'leads') {
+            leadsTab = 'leads';
+            showView('leads');
+          }
+        });
       });
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-dashboard');
@@ -132,25 +201,55 @@
     const root = $('#view-leads');
     root.innerHTML = AdminUI.loadingHTML('Loading leads…');
     try {
-      const data = await AdminApi.get('/admin/leads');
-      const rows = data.leads.map(leadRow).join('');
-      root.innerHTML = AdminUI.card(
-        `All leads (${data.leads.length})`,
-        `${AdminUI.pageIntro('Update status and add internal notes. Changes are saved immediately.')}
-        <div class="cms-filters" id="lead-filters">
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm active" data-filter="">All</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="new">New</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="contacted">Contacted</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="booked">Booked</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="cancelled">Cancelled</button>
+      const [leadData, msgData] = await Promise.all([
+        AdminApi.get('/admin/leads'),
+        AdminApi.get('/admin/contacts/contacts')
+      ]);
+      const rows = leadData.leads.map(leadRow).join('');
+      const msgRows = (msgData.messages || []).map(messageRow).join('');
+
+      root.innerHTML = `
+        <div class="cms-leads-tabs" role="tablist">
+          <button type="button" class="cms-btn cms-btn--sm ${leadsTab === 'leads' ? 'cms-btn--primary' : 'cms-btn--ghost'}" data-leads-tab="leads">Appointments &amp; leads (${leadData.leads.length})</button>
+          <button type="button" class="cms-btn cms-btn--sm ${leadsTab === 'messages' ? 'cms-btn--primary' : 'cms-btn--ghost'}" data-leads-tab="messages">Contact messages (${(msgData.messages || []).length})</button>
         </div>
-        ${data.leads.length
-          ? AdminUI.tableResponsive(`<thead><tr>
-            <th>ID</th><th>Date</th><th>Type</th><th>Name</th><th>Phone</th><th>Email</th>
-            <th>Service</th><th>Preferred</th><th>Status</th><th>Notes</th><th></th>
-          </tr></thead><tbody id="leads-tbody">${rows}</tbody>`)
-          : AdminUI.emptyHTML('No leads yet', 'Appointment and contact form submissions will appear here.')}`
-      );
+        <div id="leads-panel-leads" ${leadsTab === 'messages' ? 'hidden' : ''}>
+          ${AdminUI.card(
+            `All leads (${leadData.leads.length})`,
+            `${AdminUI.pageIntro('Appointment requests from the website. Update status and add internal notes — changes save when you click Save.')}
+            <div class="cms-filters" id="lead-filters">
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm active" data-filter="">All</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="new">New</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="contacted">Contacted</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="booked">Booked</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="cancelled">Cancelled</button>
+            </div>
+            ${leadData.leads.length
+              ? AdminUI.tableResponsive(`<thead><tr>
+                <th>ID</th><th>Date</th><th>Type</th><th>Name</th><th>Phone</th><th>Email</th>
+                <th>Service</th><th>Preferred</th><th>Status</th><th>Notes</th><th></th>
+              </tr></thead><tbody id="leads-tbody" class="cms-table--readable">${rows}</tbody>`)
+              : AdminUI.emptyHTML('No leads yet', 'Appointment form submissions will appear here.')}`
+          )}
+        </div>
+        <div id="leads-panel-messages" ${leadsTab === 'leads' ? 'hidden' : ''}>
+          ${AdminUI.card(
+            `Contact messages (${(msgData.messages || []).length})`,
+            `${AdminUI.pageIntro('Messages sent via the contact form on the website. These are separate from appointment bookings.')}
+            ${msgData.messages?.length
+              ? AdminUI.tableResponsive(`<thead><tr>
+                <th>ID</th><th>Date</th><th>Name</th><th>Email</th><th>Message</th><th>Status</th><th>Notes</th><th></th>
+              </tr></thead><tbody id="messages-tbody" class="cms-table--readable">${msgRows}</tbody>`)
+              : AdminUI.emptyHTML('No messages yet', 'When someone uses the contact form on the website, their message appears here.')}`
+          )}
+        </div>`;
+
+      $$('[data-leads-tab]', root).forEach((btn) => {
+        btn.addEventListener('click', () => {
+          leadsTab = btn.dataset.leadsTab;
+          renderLeads();
+        });
+      });
 
       $$('#lead-filters button', root).forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -168,19 +267,58 @@
         });
       });
       bindLeadActions(root);
+      bindMessageActions(root);
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-leads');
       $('#retry-leads', root)?.addEventListener('click', renderLeads);
     }
   }
 
+  function messageRow(m) {
+    return `<tr data-msg-id="${m.id}">
+      <td><strong>#${m.id}</strong></td>
+      <td>${esc(m.created_at?.slice(0, 16).replace('T', ' '))}</td>
+      <td><strong>${esc(m.name || '—')}</strong></td>
+      <td>${m.email ? `<a href="mailto:${esc(m.email)}">${esc(m.email)}</a>` : '—'}</td>
+      <td class="cms-cell-message">${esc(m.message || '—')}</td>
+      <td><select class="msg-status" aria-label="Status">
+        ${['new', 'contacted', 'booked', 'cancelled'].map((s) =>
+          `<option value="${s}"${(m.status || 'new') === s ? ' selected' : ''}>${s}</option>`
+        ).join('')}
+      </select></td>
+      <td><input class="msg-notes" value="${esc(m.admin_notes || '')}" placeholder="Internal note…"></td>
+      <td><button type="button" class="cms-btn cms-btn--sm cms-btn--primary save-msg">Save</button></td>
+    </tr>`;
+  }
+
+  function bindMessageActions(root) {
+    $$('.save-msg', root).forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.msgId;
+        btn.disabled = true;
+        try {
+          await AdminApi.patch(`/admin/contacts/contacts/${id}`, {
+            status: $('.msg-status', tr).value,
+            admin_notes: $('.msg-notes', tr).value
+          });
+          toast('Message updated', 'success');
+        } catch (err) {
+          toast(err.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
   function leadRow(l) {
     return `<tr data-id="${l.id}">
       <td><strong>#${l.id}</strong></td>
       <td>${esc(l.created_at?.slice(0, 16).replace('T', ' '))}</td>
-      <td>${esc(l.type)}</td>
-      <td>${esc(l.name)}</td>
-      <td><a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></td>
+      <td>${AdminUI.typeBadge(l.type)}</td>
+      <td><strong>${esc(l.name)}</strong></td>
+      <td><a href="tel:${esc(l.phone)}">${esc(l.phone || '—')}</a></td>
       <td>${l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : '—'}</td>
       <td>${esc(l.service_id || l.department_id || '—')}</td>
       <td>${esc(l.preferred_date || '—')} ${esc(l.preferred_time || '')}</td>
@@ -240,7 +378,11 @@
     try {
       const data = await AdminApi.get('/admin/doctors');
       root.innerHTML = `
-        <div class="cms-split">
+        <div class="cms-admin-stack">
+          <div class="cms-panel" id="doctor-form-card" hidden>
+            <div class="cms-panel__head"><h2 id="doctor-form-title">Doctor</h2></div>
+            <div class="cms-panel__body"><form id="doctor-form" class="cms-form"></form></div>
+          </div>
           <div class="cms-panel">
             <div class="cms-panel__head">
               <h2>Doctors (${data.doctors.length})</h2>
@@ -249,20 +391,17 @@
             <div class="cms-panel__body">
               ${data.doctors.length
                 ? AdminUI.tableResponsive(`<thead><tr><th></th><th>Name</th><th>Specialty</th><th></th></tr></thead><tbody id="doctors-tbody">
-                  ${data.doctors.map((d) => `<tr>
+                  ${data.doctors.map((d) => `<tr class="${highlightDoctorId === d.id ? 'cms-row-highlight' : ''}" data-doctor-id="${d.id}">
                     <td>${d.image_url ? `<img src="${esc(d.image_url)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : '👤'}</td>
-                    <td><strong>${esc(d.name_ru || d.name_hy || d.id)}</strong>${d.published === 0 ? ' <span class="cms-muted">(draft)</span>' : ''}</td>
-                    <td>${esc(d.role_ru || d.role_hy || '—')}</td>
+                    <td><strong>${esc(langField(d, 'name'))}</strong>${d.published === 0 ? ' <span class="cms-muted">(draft)</span>' : ''}</td>
+                    <td>${esc(langField(d, 'role'))}</td>
                     <td><button type="button" class="cms-btn cms-btn--sm cms-btn--ghost" data-edit-doctor="${d.id}">Edit</button></td>
                   </tr>`).join('')}
                 </tbody>`)
                 : AdminUI.emptyHTML('No doctors yet', 'Add your first doctor to show on the public website.', '<button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="add-doctor-empty">+ Add doctor</button>')}
             </div>
           </div>
-          <div class="cms-panel" id="doctor-form-card" hidden>
-            <div class="cms-panel__head"><h2 id="doctor-form-title">Doctor</h2></div>
-            <div class="cms-panel__body"><form id="doctor-form" class="cms-form"></form></div>
-          </div>
+          ${previewPanel('Live preview — Find a Doctor page', 'doctors-preview-host')}
         </div>`;
 
       $('#add-doctor', root)?.addEventListener('click', () => openDoctorForm(null));
@@ -272,6 +411,17 @@
           openDoctorForm(data.doctors.find((d) => d.id === btn.dataset.editDoctor));
         });
       });
+
+      if (highlightDoctorId) {
+        const row = root.querySelector(`[data-doctor-id="${highlightDoctorId}"]`);
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        highlightDoctorId = null;
+      }
+
+      const host = $('#doctors-preview-host', root);
+      if (host && typeof PageEditor !== 'undefined') {
+        PageEditor.mountEmbed(host, 'doctors');
+      }
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-doctors');
       $('#retry-doctors', root)?.addEventListener('click', renderDoctors);
@@ -283,7 +433,7 @@
     const card = $('#doctor-form-card');
     card.hidden = false;
     $('#doctor-form-title').textContent = doc ? 'Edit doctor' : 'New doctor';
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const form = $('#doctor-form');
 
     const renderForm = () => {
@@ -335,9 +485,15 @@
         published: form.published.checked
       };
       try {
-        if (editingDoctorId) await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
-        else await AdminApi.post('/admin/doctors', body);
-        toast('Doctor saved', 'success');
+        if (editingDoctorId) {
+          await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
+          highlightDoctorId = editingDoctorId;
+        } else {
+          const res = await AdminApi.post('/admin/doctors', body);
+          highlightDoctorId = res.id;
+        }
+        toast('Doctor saved — see updated list below', 'success');
+        $('#doctor-form-card').hidden = true;
         renderDoctors();
       } catch (err) { toast(err.message, 'error'); }
       finally { btn.disabled = false; }
@@ -355,7 +511,11 @@
       let editingServiceId = null;
 
       root.innerHTML = `
-        <div class="cms-split">
+        <div class="cms-admin-stack">
+          <div class="cms-panel" id="service-form-card" hidden>
+            <div class="cms-panel__head"><h2 id="service-form-title">Service</h2></div>
+            <div class="cms-panel__body"><form id="service-form" class="cms-form"></form></div>
+          </div>
           <div class="cms-panel">
             <div class="cms-panel__head">
               <h2>Services (${svcData.services.length})</h2>
@@ -364,8 +524,8 @@
             <div class="cms-panel__body">
               ${svcData.services.length
                 ? AdminUI.tableResponsive(`<thead><tr><th>Title</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody>
-                  ${svcData.services.map((s) => `<tr>
-                    <td><strong>${esc(s.title_ru || s.title_hy || s.id)}</strong></td>
+                  ${svcData.services.map((s) => `<tr class="${highlightServiceId === s.id ? 'cms-row-highlight' : ''}" data-service-id="${s.id}">
+                    <td><strong>${esc(langField(s, 'title'))}</strong></td>
                     <td><span class="cms-badge">${esc(s.category_id)}</span></td>
                     <td>${s.published === 0 ? '<span class="cms-muted">Draft</span>' : '<span style="color:var(--cms-success)">Live</span>'}</td>
                     <td><button type="button" class="cms-btn cms-btn--sm cms-btn--ghost" data-edit-svc="${s.id}">Edit</button></td>
@@ -374,10 +534,7 @@
                 : AdminUI.emptyHTML('No services yet', 'Add services to display on the departments page.')}
             </div>
           </div>
-          <div class="cms-panel" id="service-form-card" hidden>
-            <div class="cms-panel__head"><h2 id="service-form-title">Service</h2></div>
-            <div class="cms-panel__body"><form id="service-form" class="cms-form"></form></div>
-          </div>
+          ${previewPanel('Live preview — Patient Care page', 'services-preview-host')}
         </div>`;
 
       $('#add-service', root).addEventListener('click', () => openServiceForm(null, catData.categories));
@@ -387,20 +544,32 @@
         });
       });
 
+      if (highlightServiceId) {
+        root.querySelector(`[data-service-id="${highlightServiceId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        highlightServiceId = null;
+      }
+
+      const host = $('#services-preview-host', root);
+      if (host && typeof PageEditor !== 'undefined') {
+        PageEditor.mountEmbed(host, 'patient-care');
+      }
+
       function openServiceForm(svc, categories) {
         editingServiceId = svc?.id || null;
         $('#service-form-card').hidden = false;
         $('#service-form-title').textContent = svc ? 'Edit service' : 'New service';
+        $('#service-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         const form = $('#service-form');
 
         const renderForm = () => {
           form.innerHTML = '';
           form.prepend(langTabs(renderForm));
           const catOpts = categories.map((c) =>
-            `<option value="${c.id}"${svc?.category_id === c.id ? ' selected' : ''}>${esc(c.name_ru || c.id)}</option>`
+            `<option value="${c.id}"${svc?.category_id === c.id ? ' selected' : ''}>${esc(langField(c, 'name'))}</option>`
           ).join('');
           let items = [];
           try { items = JSON.parse(svc?.items_json || '[]'); } catch { items = []; }
+          const itemLines = items.map((it) => (typeof it === 'string' ? it : it[`name_${activeLang}`] || it.name_hy || it.name_ru || '')).filter(Boolean);
           form.insertAdjacentHTML('beforeend', `
             ${triField('Service title', 'title', svc || {})}
             ${triField('Description', 'description', svc || {}, true)}
@@ -413,7 +582,7 @@
               <div class="cms-field"><label>Price (optional)<input name="price" value="${esc(svc?.price || '')}"></label></div>
               <div class="cms-field"><label>Duration (optional)<input name="duration" value="${esc(svc?.duration || '')}"></label></div>
             </div>
-            <div class="cms-field"><label>Sub-services <span class="cms-muted">(one per line)</span><textarea name="items" rows="4">${esc(items.join('\n'))}</textarea></label></div>
+            <div class="cms-field"><label>Sub-services <span class="cms-muted">(one per line)</span><textarea name="items" rows="4">${esc(itemLines.join('\n'))}</textarea></label></div>
             <label class="cms-toggle"><input type="checkbox" name="published" ${svc?.published !== 0 ? 'checked' : ''}> Published on website</label>
             <button type="submit" class="cms-btn cms-btn--primary">Save service</button>`);
         };
@@ -435,9 +604,15 @@
             published: form.published.checked
           };
           try {
-            if (editingServiceId) await AdminApi.put(`/admin/services/${editingServiceId}`, body);
-            else await AdminApi.post('/admin/services', body);
-            toast('Service saved', 'success');
+            if (editingServiceId) {
+              await AdminApi.put(`/admin/services/${editingServiceId}`, body);
+              highlightServiceId = editingServiceId;
+            } else {
+              const res = await AdminApi.post('/admin/services', body);
+              highlightServiceId = res.id || body.id;
+            }
+            toast('Service saved — see updated list below', 'success');
+            $('#service-form-card').hidden = true;
             renderServices();
           } catch (err) { toast(err.message, 'error'); }
           finally { btn.disabled = false; }
@@ -454,22 +629,31 @@
     root.innerHTML = AdminUI.loadingHTML('Loading media…');
 
     root.innerHTML = `
-      <div class="cms-grid cms-grid--2">
-        ${AdminUI.card('Upload file', `
-          <div class="cms-upload-zone">
-            <p>Images (JPG, PNG, WebP, GIF, SVG) and videos (MP4, WebM) up to 10 MB</p>
-            <form id="upload-form" class="cms-form">
-              <div class="cms-field"><label>Choose file<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required></label></div>
-              <div class="cms-field"><label>Folder<select name="folder">
-                <option value="general">General</option>
-                <option value="doctors">Doctors</option>
-                <option value="clinic">Clinic</option>
-                <option value="blog">Blog</option>
-              </select></label></div>
-              <button type="submit" class="cms-btn cms-btn--primary">Upload</button>
-            </form>
-          </div>`)}
-        ${AdminUI.card('Library', '<div id="media-grid" class="cms-media-grid">' + AdminUI.loadingHTML('Loading files…') + '</div>')}
+      <div class="cms-media-layout">
+        <div class="cms-card cms-media-upload-card">
+          <div class="cms-card__head"><h2>Upload file</h2></div>
+          <div class="cms-card__body">
+            <div class="cms-upload-zone">
+              <p>Images (JPG, PNG, WebP, GIF, SVG) and videos (MP4, WebM) up to 10 MB</p>
+              <form id="upload-form" class="cms-form cms-form--inline">
+                <div class="cms-field"><label>Choose file<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required></label></div>
+                <div class="cms-field"><label>Folder<select name="folder">
+                  <option value="general">General</option>
+                  <option value="doctors">Doctors</option>
+                  <option value="clinic">Clinic</option>
+                  <option value="blog">Blog</option>
+                </select></label></div>
+                <button type="submit" class="cms-btn cms-btn--primary">Upload</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="cms-card">
+          <div class="cms-card__head"><h2>Media library</h2></div>
+          <div class="cms-card__body">
+            <div id="media-grid" class="cms-media-grid cms-media-grid--full">${AdminUI.loadingHTML('Loading files…')}</div>
+          </div>
+        </div>
       </div>`;
 
     async function loadGrid() {
@@ -482,15 +666,16 @@
         }
         const base = AdminConfig.apiBase().replace('/api/v1', '');
         grid.innerHTML = data.media.map((m) => `
-          <figure class="cms-media-item">
+          <figure class="cms-media-item cms-media-item--large">
             ${m.mime_type?.startsWith('video/')
-              ? `<video src="${base}${m.url}" controls preload="metadata"></video>`
-              : `<img src="${base}${m.url}" alt="" loading="lazy" onerror="this.src='';this.alt='Failed to load'">`}
+              ? `<video src="${base}${m.url}" controls preload="metadata" playsinline></video>`
+              : `<img src="${base}${m.url}" alt="${esc(m.original_name || '')}" loading="lazy" onerror="this.closest('figure').classList.add('cms-media-item--broken')">`}
             <figcaption>
-              <span>${esc(m.original_name || m.filename)}</span>
+              <strong>${esc(m.original_name || m.filename)}</strong>
               <span class="cms-muted">${esc(m.folder)} · ${Math.round((m.size || 0) / 1024)} KB</span>
               <div class="cms-actions">
                 <button type="button" class="cms-btn cms-btn--sm cms-btn--ghost copy-url" data-url="${base}${m.url}">Copy URL</button>
+                <a href="${base}${m.url}" target="_blank" rel="noopener" class="cms-btn cms-btn--sm cms-btn--ghost">Open</a>
                 <button type="button" class="cms-btn cms-btn--sm cms-btn--danger del-media" data-id="${m.id}">Delete</button>
               </div>
             </figcaption>
