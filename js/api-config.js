@@ -11,10 +11,9 @@
     host === 'healthyspinedoc.com' ||
     host === 'www.healthyspinedoc.com';
 
-  // Полный API (Render / Contabo). Пусто = same-origin /api через nginx.
+  // Same-origin /api on Contabo (empty = nginx → Node). External API only for GitHub Pages mirror.
   const PRODUCTION_API = '';
 
-  // Куда приходят заявки с GitHub Pages (FormSubmit)
   const NOTIFY_EMAIL = 'gugogsprn@gmail.com';
 
   window.FORM_API_BASE = isLocal || isProduction ? '' : PRODUCTION_API.replace(/\/$/, '');

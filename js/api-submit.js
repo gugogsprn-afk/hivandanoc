@@ -15,10 +15,23 @@ const FormApi = (function () {
     return location.hostname.endsWith('github.io');
   }
 
+  function isProductionHost() {
+    const h = location.hostname;
+    return (
+      h === '173.212.240.38' ||
+      h === 'healthyspinedoc.com' ||
+      h === 'www.healthyspinedoc.com'
+    );
+  }
+
   function getApiBase() {
+    // Empty string = same-origin /api (production + local Node server)
+    if (typeof window.FORM_API_BASE === 'string') {
+      return window.FORM_API_BASE.replace(/\/$/, '');
+    }
+    if (isLocalHost() || isProductionHost()) return '';
     const base = (window.FORM_API_BASE || '').replace(/\/$/, '');
     if (base) return base;
-    if (isLocalHost()) return '';
     return null;
   }
 
@@ -140,7 +153,7 @@ const FormApi = (function () {
       needsApi: true,
       status: 0,
       error:
-        'Уведомления не настроены. Запустите СМОТРЕТЬ-С-УВЕДОМЛЕНИЯМИ.bat или настройте js/api-config.js.'
+        'Сервер уведомлений недоступен. Проверьте подключение к интернету или напишите на info@healthyspinedoc.com.'
     };
   }
 
