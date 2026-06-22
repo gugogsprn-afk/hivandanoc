@@ -55,9 +55,8 @@
     "linkArticles": "Read articles on Move Better Feel Better",
     "linkNewsletter": "Subscribe to newsletter",
     "linkSupport": "Support «Առողջ ողնաշար»",
-    "learnAbout": "About us",
-    "learnNews": "News",
     "learnAbout": "About «Առողջ ողնաշար»",
+    "learnNews": "News",
     "learnContact": "Contacts",
     "infoPatients": "Patients & visitors",
     "infoDoctors": "Medical professionals",
@@ -360,8 +359,8 @@
       "tagline": "Spine, joints and musculoskeletal care",
       "address": "Yerevan, 1 Example St.",
       "hours": "Mon–Fri: 8:00–20:00, Sat: 9:00–15:00, Sun: closed",
-      "about": "Healthy Spine rehabilitation center provides specialized care for spine, joint and musculoskeletal conditions using conservative treatment and individual recovery programs.",
-      "mission": "Restore mobility and quality of life through evidence-based rehabilitation and a multidisciplinary approach.",
+      "about": "«Առողջ ողնաշար» վերականգնողական կենտրոնը մատուցում է ողնաշարի, հոդերի և շարժական համակարգի կոնսերվատիվ բուժում՝ մանուալ թերապիա, ֆիզիոթերապիա, սկոլիոզի բուժում և վերականգնում:",
+      "mission": "Վերականգնել շարժունակությունը և կյանքի որակը՝ կիրառելով ապացուցված ռեաբիլիտացիոն մեթոդներ և մուլտիդիսցիպլինար մոտեցում:",
       "stats": [
         {
           "value": 30,
@@ -421,43 +420,43 @@
       },
       {
         "id": "consult-neuro",
-        "name": "Neurologist consultation",
-        "description": "Diagnosis of neurological symptoms in spinal conditions.",
+        "name": "Նյարդաբանական և նյարդավիրաբուժական խորհրդատվություն",
+        "description": "Նյարդաբանական ախտորոշում և խորհրդատվություն պոզանոցի և շարժական համակարգի խնդիրների դեպքում.",
         "services": [
-          "Neurological exam",
-          "Pain syndrome assessment",
-          "Test referrals"
+          "Նյարդաբանական զննում",
+          "Խորհրդատվություն",
+          "Հետազոտությունների նշանակում"
         ]
       },
       {
         "id": "manual-therapy",
-        "name": "Manual therapy",
-        "description": "Hands-on techniques to relieve pain and restore spine and joint mobility.",
+        "name": "Մանուալ թերապիա",
+        "description": "Պարանոցի, կրծքային, գոտկային և ողնաշարային խնդիրների բուժման նպատակով ձեռքի տեխնիկաներ.",
         "services": [
-          "Segmental mobilization",
-          "Gentle manual techniques",
-          "Treatment course"
+          "Սեգմենտար մոբիլիզացիա",
+          "Փափուկ մանուալ տեխնիկաներ",
+          "Բուժման կուրս"
         ]
       },
       {
         "id": "osteopathy",
-        "name": "Osteopathy",
-        "description": "Holistic approach to restoring musculoskeletal balance.",
+        "name": "Օստեոպաթիա",
+        "description": "Օստեոպաթիական և բիոդինամիկ մոտեցում շարժական համակարգի վերականգնման համար.",
         "services": [
-          "Osteopathic session",
-          "Dysfunction correction",
-          "Treatment course"
+          "Օստեոպատիկ ընդունելություն",
+          "Բիոդինամիկա",
+          "Բուժման կուրս"
         ]
       },
       {
         "id": "physiotherapy",
-        "name": "Physiotherapy",
-        "description": "Device-based methods to treat pain and inflammation in spine and joints.",
+        "name": "Ֆիզիոթերապևտիկ բազմապրոֆիլ բուժումներ",
+        "description": "Ապարատային ֆիզիոթերապիայի համակցված ծրագրեր ցավի, բորբոքման և շարժունակության վերականգնման համար.",
         "services": [
-          "Electrotherapy",
-          "Ultrasound therapy",
-          "Magnetotherapy",
-          "Laser therapy"
+          "Էլեկտրոթերապիա",
+          "Ուլտրաձայն",
+          "Մագնիսաթերապիա",
+          "Լազեր"
         ]
       },
       {
@@ -472,12 +471,12 @@
       },
       {
         "id": "massage",
-        "name": "Therapeutic massage",
-        "description": "Back, neck and joint massage to relieve tension and improve circulation.",
+        "name": "Բուժական մերսում",
+        "description": "Բուժական մերսում մկանա-կմախքային համակարգի և հոդերի համար.",
         "services": [
-          "Classic massage",
-          "Trigger point massage",
-          "Sports massage"
+          "Դասական մասաժ",
+          "Բուժական մերսում",
+          "Սպորտային մասաժ"
         ]
       },
       {
@@ -492,49 +491,50 @@
       },
       {
         "id": "electrotherapy",
-        "name": "Electrotherapy",
-        "description": "Treatment with currents of various frequencies for back and joint pain.",
+        "name": "Էլեկտրամկանային և էլեկտրոթերապիա",
+        "description": "Էլեկտրամկանային և էլեկտրոթերապևտիկ միջամտություններ, ինտերֆերենց հոսքեր.",
         "services": [
-          "Diadynamic currents",
-          "Interference currents",
-          "Muscle stimulation"
+          "Ինտերֆերենց հոսքեր",
+          "Էլեկտրամկանային ստիմուլյացիա",
+          "Էլեկտրոթերապիա"
         ]
       },
       {
         "id": "ultrasound-therapy",
-        "name": "Ultrasound therapy",
-        "description": "Ultrasound treatment of soft tissues and joints.",
+        "name": "Գերձայնային (ուլտրաձայնային) բուժում",
+        "description": "Ուլտրաձայնային թերապիա մկանա-կմախքային և հոդային խնդիրների համար.",
         "services": [
-          "Spine ultrasound therapy",
-          "Joint ultrasound therapy"
+          "Ուլտրաձայն պոզանոց",
+          "Ուլտրաձայն հոդեր"
         ]
       },
       {
         "id": "magnetotherapy",
-        "name": "Magnetotherapy",
-        "description": "Magnetic field therapy to reduce pain and speed tissue recovery.",
+        "name": "Մագնիտոթերապիա",
+        "description": "Մագնիսաթերապիա (4–7 տեսակ) ցավի նվազեցման և վերականգնման համար.",
         "services": [
-          "Local magnetotherapy",
-          "General magnetotherapy"
+          "Տեղային",
+          "Ընդհանուր",
+          "Բազմատեսակ մագնիսաթերապիա"
         ]
       },
       {
         "id": "laser-therapy",
-        "name": "Laser therapy",
-        "description": "Low-intensity laser for inflammation and pain.",
+        "name": "Լազերոթերապիա",
+        "description": "Բարձր և միջին ինտենսիվության լազերային թերապիա.",
         "services": [
-          "Back laser therapy",
-          "Joint laser therapy"
+          "Բարձր ինտենսիվություն",
+          "Միջին ինտենսիվություն"
         ]
       },
       {
         "id": "shockwave",
-        "name": "Shock wave therapy",
-        "description": "Shock wave therapy for chronic pain, heel spurs and joints.",
+        "name": "Հարվածալիքային թերապիա",
+        "description": "Շոկային ալիքի թերապիա քրոնիկական ցավերի և մկանա-կմախքային խնդիրների դեպքում.",
         "services": [
-          "Spine shock wave",
-          "Joint shock wave",
-          "Soft tissue shock wave"
+          "Ողնաշար",
+          "Հոդեր",
+          "Ներքին օրգաններ"
         ]
       },
       {
@@ -559,12 +559,12 @@
       },
       {
         "id": "hernia-treatment",
-        "name": "Spinal disc hernia treatment",
-        "description": "Conservative treatment of disc herniation without surgery.",
+        "name": "Ողնաշարի միջողնային սկավառակի ճողվածքի կոնսերվատիվ բուժում",
+        "description": "Գրիժայի (հերնիայի) կոնսերվատիվ բուժում առանց վիրահատության.",
         "services": [
-          "Combined therapy",
-          "Medication support",
-          "Rehabilitation"
+          "Կոնսերվատիվ թերապիա",
+          "Ֆիզիոթերապիա",
+          "Ռեաբիլիտացիա"
         ]
       },
       {
@@ -579,12 +579,12 @@
       },
       {
         "id": "scoliosis",
-        "name": "Scoliosis treatment",
-        "description": "Correction and treatment of spinal curvature in adults and children.",
+        "name": "SIAS սեղմումով մանկական սկոլիոզի բուժում",
+        "description": "Մանկական իդիոպատիկ սկոլիոզի կոնսերվատիվ բուժում՝ SIAS, Schroth և կորսետավորման մեթոդներով.",
         "services": [
-          "Conservative correction",
-          "Exercise therapy for scoliosis",
-          "Monitoring"
+          "SIAS մեթոդ",
+          "Schroth",
+          "Կորսետավորում"
         ]
       },
       {
@@ -609,22 +609,22 @@
       },
       {
         "id": "arthrosis",
-        "name": "Joint arthrosis treatment",
-        "description": "Conservative treatment of knee, hip and other joint arthrosis.",
+        "name": "Հոդերի շարժման ակտիվության վերականգնում",
+        "description": "Հոդերի լիգամենտային և հենաշարժողական խնդիրների վերականգնում.",
         "services": [
-          "Consultation",
-          "Physiotherapy",
-          "Exercise and massage"
+          "Լիգամենտներ",
+          "Շարժունակություն",
+          "ԼՖԿ"
         ]
       },
       {
         "id": "posture",
-        "name": "Posture correction",
-        "description": "Diagnosis and correction of posture disorders.",
+        "name": "Պարանոցային հիպերլորդոզի և հիպերկիֆոզի բուժում",
+        "description": "Կուզիկության (կիբոզ) և պարանոցի հիպերլորդոզի կոնսերվատիվ բուժում, կարգավորի ուղղում.",
         "services": [
-          "Posture assessment",
-          "Exercises",
-          "Progress monitoring"
+          "Կարգավորի գնահատում",
+          "ԼՖԿ",
+          "Մանուալ թերապիա"
         ]
       },
       {
@@ -638,42 +638,42 @@
       },
       {
         "id": "rehab-trauma",
-        "name": "Rehabilitation after injury",
-        "description": "Recovery after spine and joint injuries.",
+        "name": "Ողնաշարի սեգմենտների հետտրավմատիկ վերականգնում",
+        "description": "Պոզանոցի և հոդերի վնասվածքներից հետո փուլային վերականգնում.",
         "services": [
-          "Individual program",
-          "Gradual loading",
-          "Medical supervision"
+          "Անհատական ծրագիր",
+          "Փուլային բեռնում",
+          "Բժշկի վերահսկողություն"
         ]
       },
       {
         "id": "rehab-surgery",
-        "name": "Post-surgical rehabilitation",
-        "description": "Recovery after spine and joint surgery.",
+        "name": "Հետվիրահատական վերականգնում",
+        "description": "Վիրահատություններից հետո ողնաշարի և հոդերի վերականգնում.",
         "services": [
-          "Early stage",
-          "Late stage",
-          "Outpatient rehabilitation"
+          "Վաղ փուլ",
+          "Ուշ փուլ",
+          "Ամբուլատոր ռեաբիլիտացիա"
         ]
       },
       {
         "id": "sports-rehab",
-        "name": "Sports rehabilitation",
-        "description": "Return to training after musculoskeletal injuries.",
+        "name": "Սպորտային վնասվածքների բուժում",
+        "description": "Սպորտային վնասվածքներ, ջլաբորբ, մկանացավ, հոդաբորբի բուժում և վերականգնում.",
         "services": [
-          "Readiness assessment",
-          "Recovery program",
-          "Prevention"
+          "Սպորտային վնասվածք",
+          "Ջլաբորբ",
+          "Հոդաբորբ"
         ]
       },
       {
         "id": "pediatric-spine",
-        "name": "Pediatric orthopedics and scoliosis",
-        "description": "Monitoring and treatment of posture disorders and scoliosis in children.",
+        "name": "Մանկական սկոլիոզ և կորսետավորում",
+        "description": "Մանկական սկոլիոզի դիտարկում, կորսետավորում (օրթեզավորում) և կինեզոթերապիա.",
         "services": [
-          "Examination",
-          "Therapeutic exercise",
-          "Brace correction"
+          "Զննում",
+          "Կորսետ",
+          "ԼՖԿ"
         ]
       },
       {
@@ -704,50 +704,57 @@
           "MRI referral",
           "Results consultation"
         ]
+      },
+      {
+        "id": "infrared-laser",
+        "name": "Ինֆրակարմիր լազերային թերապիա",
+        "description": "Ինֆրակարմիր լազերային թերապիա ցավի և բորբոքման բուժման համար.",
+        "services": [
+          "Ինֆրակարմիր լազեր",
+          "Տեղային ազդեցություն"
+        ]
+      },
+      {
+        "id": "compression-therapy",
+        "name": "Բազմաֆունկցիոնալ սեղմող թերապիա",
+        "description": "Բազմաֆունկցիոնալ սեղմող թերապիա լիմֆայի և մկանների վերականգնման համար.",
+        "services": [
+          "Սեղմող թերապիա",
+          "Բազմաֆունկցիոնալ ռեժիմներ"
+        ]
+      },
+      {
+        "id": "high-frequency",
+        "name": "Գերբարձր հաճախականությամբ թերապևտիկ միջամտություն",
+        "description": "ԳԲՀ թերապիա ցավի և բորբոքման դեպքում.",
+        "services": [
+          "ԳԲՀ թերապիա"
+        ]
+      },
+      {
+        "id": "pain-inflammation",
+        "name": "Ցավային երևույթների և բորբոքման բուժում",
+        "description": "Ցավի և բորբոքման համակցված բուժում ֆիզիոթերապևտիկ մեթոդներով.",
+        "services": [
+          "Ցավի կառավարում",
+          "Հակաբորբոքային թերապիա"
+        ]
       }
     ],
     "doctors": [
       {
-        "id": "doc-1",
-        "name": "Elena Ivanova",
-        "role": "Manual therapist",
-        "experience": "22 years",
-        "bio": "Specialist in manual therapy and spinal conditions."
+        "id": "doc-gohar",
+        "name": "Gohar",
+        "role": "Manual therapist, scoliosis and spine specialist",
+        "experience": "10+ տարի",
+        "bio": "Yerevan State Medical University (diploma), residency in manual therapy; residency in progress in physical rehabilitation and physiotherapy; international training (USA, Germany). ISICO Institute (Milan); SOSORT member. Specializations: conservative spine and joint treatment, pediatric scoliosis and bracing, manual therapy, osteopathy, kinesiotherapy."
       },
       {
-        "id": "doc-2",
-        "name": "Andrey Petrov",
-        "role": "Orthopedic traumatologist",
-        "experience": "15 years",
-        "bio": "Consultation and treatment of spine and joint disorders."
-      },
-      {
-        "id": "doc-3",
-        "name": "Olga Smirnova",
-        "role": "Kinesiotherapy physician",
-        "experience": "12 years",
-        "bio": "Designs individual exercise and rehabilitation programs."
-      },
-      {
-        "id": "doc-4",
-        "name": "Dmitry Kozlov",
-        "role": "Physiotherapist",
-        "experience": "18 years",
-        "bio": "Expert in device-based physiotherapy for back and joint pain."
-      },
-      {
-        "id": "doc-5",
-        "name": "Anna Morozova",
-        "role": "Neurologist",
-        "experience": "10 years",
-        "bio": "Diagnosis and treatment of neurological symptoms in spinal disease."
-      },
-      {
-        "id": "doc-6",
-        "name": "Sergey Volkov",
-        "role": "Ultrasound specialist",
-        "experience": "14 years",
-        "bio": "Ultrasound diagnostics of joints and soft tissues."
+        "id": "doc-elya",
+        "name": "Elya Simoni Tarkhanyan",
+        "role": "Social psychologist",
+        "experience": "15+ տարի",
+        "bio": "YSU social psychology (diploma). Experience at Armenian State Pedagogical University. Interests: social, developmental and educational psychology. Languages: Armenian, Russian, English."
       }
     ],
     "serviceCategories": [

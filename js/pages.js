@@ -132,7 +132,9 @@ function renderDoctors(data, surgeonOnly) {
       <div class="hss-doctor-item__main">
         <div class="hss-doctor-item__name">${doc.name}</div>
         <div class="hss-doctor-item__role">${doc.role}</div>
+        ${doc.experience ? `<div class="hss-doctor-item__exp">${doc.experience}</div>` : ''}
         <div class="hss-doctor-item__loc">${doc.location || h.address || ''}</div>
+        ${doc.bio ? `<p class="hss-doctor-item__bio">${doc.bio}</p>` : ''}
       </div>
       <div class="hss-doctor-item__actions">
         <a href="appointment.html?doctor=${doc.id}" class="hss-btn hss-btn--primary">${t('common.bookOnline')}</a>

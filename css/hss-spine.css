@@ -642,6 +642,20 @@ body.hss-page {
   color: var(--text-muted);
 }
 
+.hss-doctor-item__exp {
+  font-size: 0.8125rem;
+  color: var(--blue);
+  margin-bottom: 0.15rem;
+}
+
+.hss-doctor-item__bio {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 52rem;
+}
+
 .hss-doctor-item__actions {
   display: flex;
   flex-direction: column;
