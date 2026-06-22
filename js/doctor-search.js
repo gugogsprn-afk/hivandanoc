@@ -4,20 +4,44 @@ function initDoctorSearchBand(data) {
   const categorySelect = document.getElementById('doctor-search-category');
   if (!datalist) return;
 
+  const lang = typeof I18n !== 'undefined' ? I18n.getLang() : 'hy';
+  const loc = typeof I18n !== 'undefined' ? I18n.getContent() : null;
+  let departments = data.departments || [];
+  let doctors = data.doctors || [];
+  let categories = data.serviceCategories || [];
+  let conditions = data.conditions || [];
+
+  if (loc) {
+    if (loc.departments?.length) {
+      const map = new Map(loc.departments.map((d) => [d.id, d]));
+      departments = departments.map((d) => ({ ...d, ...map.get(d.id) }));
+    }
+    if (loc.doctors?.length) {
+      const map = new Map(loc.doctors.map((d) => [d.id, d]));
+      doctors = doctors.map((d) => ({ ...d, ...map.get(d.id) }));
+    }
+    if (loc.serviceCategories?.length) {
+      const map = new Map(loc.serviceCategories.map((c) => [c.id, c]));
+      categories = categories.map((c) => ({ ...c, ...map.get(c.id) }));
+    }
+    if (loc.conditions?.length) conditions = loc.conditions;
+  }
+
   const terms = new Set();
-  (data.conditions || []).forEach((c) => terms.add(c));
-  (data.departments || []).forEach((d) => {
-    terms.add(d.name);
+  conditions.forEach((c) => terms.add(c));
+  departments.forEach((d) => {
+    if (d.name) terms.add(d.name);
     (d.services || []).forEach((s) => terms.add(s));
   });
-  (data.doctors || []).forEach((d) => {
-    terms.add(d.name);
-    terms.add(d.role);
+  doctors.forEach((d) => {
+    if (d.name) terms.add(d.name);
+    if (d.role) terms.add(d.role);
   });
 
   datalist.innerHTML = [...terms]
-    .sort()
-    .map((t) => `<option value="${t.replace(/"/g, '&quot;')}"></option>`)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, lang))
+    .map((term) => `<option value="${String(term).replace(/"/g, '&quot;')}"></option>`)
     .join('');
 
   if (categorySelect) {
@@ -25,9 +49,7 @@ function initDoctorSearchBand(data) {
     const saved = categorySelect.value;
     categorySelect.innerHTML =
       `<option value="">${t('pages.home.searchCategoryAll')}</option>` +
-      (data.serviceCategories || [])
-        .map((c) => `<option value="${c.id}">${c.name}</option>`)
-        .join('');
+      categories.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
     if (saved) categorySelect.value = saved;
   }
 

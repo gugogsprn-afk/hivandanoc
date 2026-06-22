@@ -205,6 +205,21 @@ const HospitalApp = (function () {
     });
   }
 
+  function overlayLocaleFields(data, loc) {
+    if (!loc || !data) return data;
+    return {
+      ...data,
+      departments: loc.departments?.length
+        ? mergeById(data.departments || [], loc.departments)
+        : data.departments,
+      doctors: loc.doctors?.length ? mergeById(data.doctors || [], loc.doctors) : data.doctors,
+      serviceCategories: loc.serviceCategories?.length
+        ? mergeById(data.serviceCategories || [], loc.serviceCategories)
+        : data.serviceCategories,
+      conditions: loc.conditions?.length ? loc.conditions : data.conditions
+    };
+  }
+
   function phoneTelUri(phone) {
     if (!phone) return '';
     let digits = String(phone).replace(/[^\d+]/g, '');
@@ -704,6 +719,8 @@ const HospitalApp = (function () {
         data = CmsContent.mergeIntoHospital(data, cms);
       }
     }
+
+    data = overlayLocaleFields(data, loc);
 
     baseData = data;
     return baseData;

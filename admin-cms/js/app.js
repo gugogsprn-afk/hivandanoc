@@ -5,8 +5,27 @@
   let currentUser = null;
   let activeLang = 'hy';
   let currentView = 'dashboard';
+  let leadsTab = 'leads';
+  let highlightDoctorId = null;
+  let highlightServiceId = null;
 
   const t = (key, params) => (typeof AdminI18n !== 'undefined' ? AdminI18n.t(key, params) : key);
+
+  function teardownPageEditor() {
+    if (typeof PageEditor !== 'undefined') PageEditor.unmount();
+  }
+
+  function langField(row, field) {
+    const code = activeLang || 'hy';
+    return row[`${field}_${code}`] || row[`${field}_hy`] || row[`${field}_ru`] || row[`${field}_en`] || '—';
+  }
+
+  function previewPanel(title, hostId) {
+    return `<div class="cms-panel cms-panel--preview">
+      <h3>${title}</h3>
+      <div id="${hostId}"></div>
+    </div>`;
+  }
 
   function toast(msg, type = 'success') {
     AdminUI.toast(msg, type);
@@ -47,11 +66,96 @@
   }
 
   function triField(label, prefix, values = {}, multiline = false) {
-    const val = esc(values[activeLang] || values[`${prefix}_${activeLang}`] || '');
-    const input = multiline
-      ? `<textarea name="${prefix}_${activeLang}" rows="4">${val}</textarea>`
-      : `<input name="${prefix}_${activeLang}" value="${val}">`;
-    return `<div class="cms-field"><label>${label} <span class="cms-muted">(${activeLang.toUpperCase()})</span>${input}</label></div>`;
+    const inputs = AdminConfig.langs
+      .map((l) => {
+        const val = esc(values[l.code] || values[`${prefix}_${l.code}`] || '');
+        const hidden = l.code !== activeLang ? ' style="display:none"' : '';
+        return multiline
+          ? `<textarea name="${prefix}_${l.code}" rows="4" data-tri="${prefix}" data-lang="${l.code}"${hidden}>${val}</textarea>`
+          : `<input name="${prefix}_${l.code}" value="${val}" data-tri="${prefix}" data-lang="${l.code}"${hidden}>`;
+      })
+      .join('');
+    return `<div class="cms-field cms-tri-field" data-tri="${prefix}">
+      <label>${label} <span class="cms-muted cms-tri-lang">(${activeLang.toUpperCase()})</span></label>
+      ${inputs}
+    </div>`;
+  }
+
+  function triItemsField(label, prefix, linesByLang = {}) {
+    const areas = AdminConfig.langs
+      .map((l) => {
+        const lines = (linesByLang[l.code] || []).join('\n');
+        const hidden = l.code !== activeLang ? ' style="display:none"' : '';
+        return `<textarea name="${prefix}_${l.code}" rows="4" data-tri="${prefix}" data-lang="${l.code}"${hidden}>${esc(lines)}</textarea>`;
+      })
+      .join('');
+    return `<div class="cms-field cms-tri-field" data-tri="${prefix}">
+      <label>${label} <span class="cms-muted cms-tri-lang">(${activeLang.toUpperCase()})</span>
+        <span class="cms-muted"> — one per line</span></label>
+      ${areas}
+    </div>`;
+  }
+
+  function updateTriFieldVisibility(root) {
+    $$('.cms-tri-field', root).forEach((wrap) => {
+      const prefix = wrap.dataset.tri;
+      const langEl = $('.cms-tri-lang', wrap);
+      if (langEl) langEl.textContent = `(${activeLang.toUpperCase()})`;
+      $$(`[data-tri="${prefix}"][data-lang]`, wrap).forEach((el) => {
+        el.style.display = el.dataset.lang === activeLang ? '' : 'none';
+      });
+    });
+  }
+
+  function collectTripletItems(form, prefix, existing = []) {
+    const byLang = {};
+    AdminConfig.langs.forEach((l) => {
+      const el = form.querySelector(`[name="${prefix}_${l.code}"]`);
+      byLang[l.code] = (el?.value || '')
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    });
+    const max = Math.max(
+      existing.length,
+      ...AdminConfig.langs.map((l) => byLang[l.code].length),
+      0
+    );
+    const items = [];
+    for (let i = 0; i < max; i++) {
+      const prev = existing[i];
+      const row = typeof prev === 'object' && prev !== null ? { ...prev } : {};
+      AdminConfig.langs.forEach((l) => {
+        row[`name_${l.code}`] = byLang[l.code][i] ?? row[`name_${l.code}`] ?? '';
+      });
+      items.push(row);
+    }
+    return items;
+  }
+
+  function parseServiceItems(raw) {
+    try {
+      return JSON.parse(raw || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function serviceItemsForLang(items, lang) {
+    return items
+      .map((it) => {
+        if (typeof it === 'string') return it;
+        return it[`name_${lang}`] || it.name_hy || it.name_ru || it.name_en || '';
+      })
+      .filter(Boolean);
+  }
+
+  function mediaSrc(url, base) {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('/api/')) return `${base}${url}`;
+    if (url.startsWith('/')) return url;
+    return `${base.replace(/\/api\/v1$/, '')}/${url.replace(/^\//, '')}`;
   }
 
   function collectTriplet(form, prefix) {
@@ -64,14 +168,18 @@
   }
 
   function showView(name) {
+    teardownPageEditor();
     currentView = name;
-    $$('.cms-view').forEach((v) => { v.hidden = true; });
+    $$('.cms-view').forEach((v) => {
+      v.hidden = true;
+    });
     const view = $(`#view-${name}`);
     if (view) view.hidden = false;
     $$('#main-nav button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
     AdminUI.setViewTitle(name);
     const sub = $('#view-subtitle');
     if (sub) sub.textContent = t(`view.subtitle.${name}`);
+    document.body.classList.remove('cms-page-editor-fullscreen');
     const loaders = {
       dashboard: renderDashboard,
       leads: renderLeads,
@@ -90,26 +198,45 @@
     try {
       const data = await AdminApi.get('/admin/dashboard/stats');
       const appts = data.recentLeads.filter((l) => l.type === 'appointment').slice(0, 6);
+      const messages = (data.recentContacts || []).slice(0, 5);
       root.innerHTML = `
         <div class="cms-grid cms-grid--4">
-          ${AdminUI.statCard(data.totalLeads, 'Total leads', 'teal', '📊')}
-          ${AdminUI.statCard(data.newAppointments, 'New appointments', 'blue', '📅')}
-          ${AdminUI.statCard(data.todayAppointments, "Today's appointments", 'green', '✓')}
-          ${AdminUI.statCard(data.newContacts, 'New messages', 'amber', '✉️')}
+          ${AdminUI.statCard(data.totalLeads, 'Total leads', 'teal', '📊', { action: 'leads' })}
+          ${AdminUI.statCard(data.newAppointments, 'New appointments', 'blue', '📅', { action: 'leads-new-appt' })}
+          ${AdminUI.statCard(data.todayAppointments, "Today's appointments", 'green', '✓', { action: 'leads' })}
+          ${AdminUI.statCard(data.newContacts, 'New messages', 'amber', '✉️', { action: 'leads-messages' })}
         </div>
         <div class="cms-grid cms-grid--2" style="margin-top:1.25rem">
           ${AdminUI.card('Recent appointments', appts.length
             ? AdminUI.tableResponsive(`<thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>
               ${appts.map((l) => `<tr>
-                <td>${esc(l.created_at?.slice(0, 16))}</td>
-                <td>${esc(l.name)}</td>
+                <td>${esc(l.created_at?.slice(0, 16).replace('T', ' '))}</td>
+                <td><strong>${esc(l.name)}</strong></td>
                 <td><a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></td>
                 <td>${AdminUI.statusBadge(l.status)}</td>
               </tr>`).join('')}
             </tbody>`)
             : AdminUI.emptyHTML('No appointments yet', 'New booking requests will appear here.', '<button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-go="leads">View leads</button>')
           )}
-          ${AdminUI.card('Quick actions', `
+          ${AdminUI.card(`Recent messages (${messages.length})`, messages.length
+            ? `<ul class="cms-message-list">
+              ${messages.map((m) => `<li class="cms-message-list__item">
+                <div class="cms-message-list__meta">
+                  <strong>${esc(m.name || 'Visitor')}</strong>
+                  <span>${esc(m.created_at?.slice(0, 16).replace('T', ' '))}</span>
+                  ${AdminUI.statusBadge(m.status || 'new')}
+                </div>
+                <p>${esc(m.message || '—')}</p>
+                ${m.email ? `<a href="mailto:${esc(m.email)}">${esc(m.email)}</a>` : ''}
+              </li>`).join('')}
+            </ul>
+            <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-go="leads-messages" style="margin-top:0.75rem">View all messages →</button>`
+            : AdminUI.emptyHTML('No messages yet', 'Contact form submissions from the website appear here.', '<button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-go="leads-messages">Open messages</button>')
+          )}
+        </div>
+        <div class="cms-card" style="margin-top:1.25rem">
+          <div class="cms-card__head"><h2>Quick actions</h2></div>
+          <div class="cms-card__body">
             <div class="cms-quick-actions">
               <button type="button" class="cms-btn cms-btn--ghost" data-go="pages">📄 Pages</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="doctors">👨‍⚕️ Doctors</button>
@@ -117,10 +244,37 @@
               <button type="button" class="cms-btn cms-btn--ghost" data-go="media">🖼️ Media</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="settings">⚙️ Settings</button>
               <button type="button" class="cms-btn cms-btn--ghost" data-go="leads">📋 Leads</button>
-            </div>`)}
+            </div>
+          </div>
         </div>`;
       $$('[data-go]', root).forEach((btn) => {
-        btn.addEventListener('click', () => showView(btn.dataset.go));
+        btn.addEventListener('click', () => {
+          const go = btn.dataset.go;
+          if (go === 'leads-messages') {
+            leadsTab = 'messages';
+            showView('leads');
+          } else if (go === 'leads-new-appt') {
+            leadsTab = 'leads';
+            showView('leads');
+          } else {
+            showView(go);
+          }
+        });
+      });
+      $$('[data-stat-action]', root).forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.statAction;
+          if (action === 'leads-messages') {
+            leadsTab = 'messages';
+            showView('leads');
+          } else if (action === 'leads-new-appt') {
+            leadsTab = 'leads';
+            showView('leads');
+          } else if (action === 'leads') {
+            leadsTab = 'leads';
+            showView('leads');
+          }
+        });
       });
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-dashboard');
@@ -132,25 +286,55 @@
     const root = $('#view-leads');
     root.innerHTML = AdminUI.loadingHTML('Loading leads…');
     try {
-      const data = await AdminApi.get('/admin/leads');
-      const rows = data.leads.map(leadRow).join('');
-      root.innerHTML = AdminUI.card(
-        `All leads (${data.leads.length})`,
-        `${AdminUI.pageIntro('Update status and add internal notes. Changes are saved immediately.')}
-        <div class="cms-filters" id="lead-filters">
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm active" data-filter="">All</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="new">New</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="contacted">Contacted</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="booked">Booked</button>
-          <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="cancelled">Cancelled</button>
+      const [leadData, msgData] = await Promise.all([
+        AdminApi.get('/admin/leads'),
+        AdminApi.get('/admin/contacts/contacts')
+      ]);
+      const rows = leadData.leads.map(leadRow).join('');
+      const msgRows = (msgData.messages || []).map(messageRow).join('');
+
+      root.innerHTML = `
+        <div class="cms-leads-tabs" role="tablist">
+          <button type="button" class="cms-btn cms-btn--sm ${leadsTab === 'leads' ? 'cms-btn--primary' : 'cms-btn--ghost'}" data-leads-tab="leads">Appointments &amp; leads (${leadData.leads.length})</button>
+          <button type="button" class="cms-btn cms-btn--sm ${leadsTab === 'messages' ? 'cms-btn--primary' : 'cms-btn--ghost'}" data-leads-tab="messages">Contact messages (${(msgData.messages || []).length})</button>
         </div>
-        ${data.leads.length
-          ? AdminUI.tableResponsive(`<thead><tr>
-            <th>ID</th><th>Date</th><th>Type</th><th>Name</th><th>Phone</th><th>Email</th>
-            <th>Service</th><th>Preferred</th><th>Status</th><th>Notes</th><th></th>
-          </tr></thead><tbody id="leads-tbody">${rows}</tbody>`)
-          : AdminUI.emptyHTML('No leads yet', 'Appointment and contact form submissions will appear here.')}`
-      );
+        <div id="leads-panel-leads" ${leadsTab === 'messages' ? 'hidden' : ''}>
+          ${AdminUI.card(
+            `All leads (${leadData.leads.length})`,
+            `${AdminUI.pageIntro('Appointment requests from the website. Update status and add internal notes — changes save when you click Save.')}
+            <div class="cms-filters" id="lead-filters">
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm active" data-filter="">All</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="new">New</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="contacted">Contacted</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="booked">Booked</button>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" data-filter="cancelled">Cancelled</button>
+            </div>
+            ${leadData.leads.length
+              ? AdminUI.tableResponsive(`<thead><tr>
+                <th>ID</th><th>Date</th><th>Type</th><th>Name</th><th>Phone</th><th>Email</th>
+                <th>Service</th><th>Preferred</th><th>Status</th><th>Notes</th><th></th>
+              </tr></thead><tbody id="leads-tbody" class="cms-table--readable">${rows}</tbody>`)
+              : AdminUI.emptyHTML('No leads yet', 'Appointment form submissions will appear here.')}`
+          )}
+        </div>
+        <div id="leads-panel-messages" ${leadsTab === 'leads' ? 'hidden' : ''}>
+          ${AdminUI.card(
+            `Contact messages (${(msgData.messages || []).length})`,
+            `${AdminUI.pageIntro('Messages sent via the contact form on the website. These are separate from appointment bookings.')}
+            ${msgData.messages?.length
+              ? AdminUI.tableResponsive(`<thead><tr>
+                <th>ID</th><th>Date</th><th>Name</th><th>Email</th><th>Message</th><th>Status</th><th>Notes</th><th></th>
+              </tr></thead><tbody id="messages-tbody" class="cms-table--readable">${msgRows}</tbody>`)
+              : AdminUI.emptyHTML('No messages yet', 'When someone uses the contact form on the website, their message appears here.')}`
+          )}
+        </div>`;
+
+      $$('[data-leads-tab]', root).forEach((btn) => {
+        btn.addEventListener('click', () => {
+          leadsTab = btn.dataset.leadsTab;
+          renderLeads();
+        });
+      });
 
       $$('#lead-filters button', root).forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -168,19 +352,58 @@
         });
       });
       bindLeadActions(root);
+      bindMessageActions(root);
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-leads');
       $('#retry-leads', root)?.addEventListener('click', renderLeads);
     }
   }
 
+  function messageRow(m) {
+    return `<tr data-msg-id="${m.id}">
+      <td><strong>#${m.id}</strong></td>
+      <td>${esc(m.created_at?.slice(0, 16).replace('T', ' '))}</td>
+      <td><strong>${esc(m.name || '—')}</strong></td>
+      <td>${m.email ? `<a href="mailto:${esc(m.email)}">${esc(m.email)}</a>` : '—'}</td>
+      <td class="cms-cell-message">${esc(m.message || '—')}</td>
+      <td><select class="msg-status" aria-label="Status">
+        ${['new', 'contacted', 'booked', 'cancelled'].map((s) =>
+          `<option value="${s}"${(m.status || 'new') === s ? ' selected' : ''}>${s}</option>`
+        ).join('')}
+      </select></td>
+      <td><input class="msg-notes" value="${esc(m.admin_notes || '')}" placeholder="Internal note…"></td>
+      <td><button type="button" class="cms-btn cms-btn--sm cms-btn--primary save-msg">Save</button></td>
+    </tr>`;
+  }
+
+  function bindMessageActions(root) {
+    $$('.save-msg', root).forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.msgId;
+        btn.disabled = true;
+        try {
+          await AdminApi.patch(`/admin/contacts/contacts/${id}`, {
+            status: $('.msg-status', tr).value,
+            admin_notes: $('.msg-notes', tr).value
+          });
+          toast('Message updated', 'success');
+        } catch (err) {
+          toast(err.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
   function leadRow(l) {
     return `<tr data-id="${l.id}">
       <td><strong>#${l.id}</strong></td>
       <td>${esc(l.created_at?.slice(0, 16).replace('T', ' '))}</td>
-      <td>${esc(l.type)}</td>
-      <td>${esc(l.name)}</td>
-      <td><a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></td>
+      <td>${AdminUI.typeBadge(l.type)}</td>
+      <td><strong>${esc(l.name)}</strong></td>
+      <td><a href="tel:${esc(l.phone)}">${esc(l.phone || '—')}</a></td>
       <td>${l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : '—'}</td>
       <td>${esc(l.service_id || l.department_id || '—')}</td>
       <td>${esc(l.preferred_date || '—')} ${esc(l.preferred_time || '')}</td>
@@ -240,7 +463,11 @@
     try {
       const data = await AdminApi.get('/admin/doctors');
       root.innerHTML = `
-        <div class="cms-split">
+        <div class="cms-admin-stack">
+          <div class="cms-panel" id="doctor-form-card" hidden>
+            <div class="cms-panel__head"><h2 id="doctor-form-title">Doctor</h2></div>
+            <div class="cms-panel__body"><form id="doctor-form" class="cms-form"></form></div>
+          </div>
           <div class="cms-panel">
             <div class="cms-panel__head">
               <h2>Doctors (${data.doctors.length})</h2>
@@ -249,20 +476,17 @@
             <div class="cms-panel__body">
               ${data.doctors.length
                 ? AdminUI.tableResponsive(`<thead><tr><th></th><th>Name</th><th>Specialty</th><th></th></tr></thead><tbody id="doctors-tbody">
-                  ${data.doctors.map((d) => `<tr>
+                  ${data.doctors.map((d) => `<tr class="${highlightDoctorId === d.id ? 'cms-row-highlight' : ''}" data-doctor-id="${d.id}">
                     <td>${d.image_url ? `<img src="${esc(d.image_url)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : '👤'}</td>
-                    <td><strong>${esc(d.name_ru || d.name_hy || d.id)}</strong>${d.published === 0 ? ' <span class="cms-muted">(draft)</span>' : ''}</td>
-                    <td>${esc(d.role_ru || d.role_hy || '—')}</td>
+                    <td><strong>${esc(langField(d, 'name'))}</strong>${d.published === 0 ? ' <span class="cms-muted">(draft)</span>' : ''}</td>
+                    <td>${esc(langField(d, 'role'))}</td>
                     <td><button type="button" class="cms-btn cms-btn--sm cms-btn--ghost" data-edit-doctor="${d.id}">Edit</button></td>
                   </tr>`).join('')}
                 </tbody>`)
                 : AdminUI.emptyHTML('No doctors yet', 'Add your first doctor to show on the public website.', '<button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="add-doctor-empty">+ Add doctor</button>')}
             </div>
           </div>
-          <div class="cms-panel" id="doctor-form-card" hidden>
-            <div class="cms-panel__head"><h2 id="doctor-form-title">Doctor</h2></div>
-            <div class="cms-panel__body"><form id="doctor-form" class="cms-form"></form></div>
-          </div>
+          ${previewPanel('Live preview — Find a Doctor page', 'doctors-preview-host')}
         </div>`;
 
       $('#add-doctor', root)?.addEventListener('click', () => openDoctorForm(null));
@@ -272,6 +496,17 @@
           openDoctorForm(data.doctors.find((d) => d.id === btn.dataset.editDoctor));
         });
       });
+
+      if (highlightDoctorId) {
+        const row = root.querySelector(`[data-doctor-id="${highlightDoctorId}"]`);
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        highlightDoctorId = null;
+      }
+
+      const host = $('#doctors-preview-host', root);
+      if (host && typeof PageEditor !== 'undefined') {
+        PageEditor.mountEmbed(host, 'doctors');
+      }
     } catch (err) {
       root.innerHTML = AdminUI.errorHTML(esc(err.message), 'retry-doctors');
       $('#retry-doctors', root)?.addEventListener('click', renderDoctors);
@@ -283,17 +518,18 @@
     const card = $('#doctor-form-card');
     card.hidden = false;
     $('#doctor-form-title').textContent = doc ? 'Edit doctor' : 'New doctor';
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const form = $('#doctor-form');
 
     const renderForm = () => {
       form.innerHTML = '';
-      form.prepend(langTabs(renderForm));
+      form.prepend(langTabs(() => updateTriFieldVisibility(form)));
       form.insertAdjacentHTML('beforeend', `
         <div class="cms-form__section">
           <h3>Basic information</h3>
           ${triField('Full name', 'name', doc || {})}
           ${triField('Role / Specialty', 'role', doc || {})}
+          ${triField('Location', 'location', doc || {})}
           ${triField('Short bio', 'bio', doc || {}, true)}
         </div>
         <div class="cms-form__section">
@@ -327,6 +563,7 @@
       const body = {
         ...collectTriplet(form, 'name'),
         ...collectTriplet(form, 'role'),
+        ...collectTriplet(form, 'location'),
         ...collectTriplet(form, 'bio'),
         department_id: form.department_id.value,
         image_url: form.image_url.value,
@@ -335,9 +572,15 @@
         published: form.published.checked
       };
       try {
-        if (editingDoctorId) await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
-        else await AdminApi.post('/admin/doctors', body);
-        toast('Doctor saved', 'success');
+        if (editingDoctorId) {
+          await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
+          highlightDoctorId = editingDoctorId;
+        } else {
+          const res = await AdminApi.post('/admin/doctors', body);
+          highlightDoctorId = res.id;
+        }
+        toast('Doctor saved — see updated list below', 'success');
+        $('#doctor-form-card').hidden = true;
         renderDoctors();
       } catch (err) { toast(err.message, 'error'); }
       finally { btn.disabled = false; }
@@ -355,7 +598,11 @@
       let editingServiceId = null;
 
       root.innerHTML = `
-        <div class="cms-split">
+        <div class="cms-admin-stack">
+          <div class="cms-panel" id="service-form-card" hidden>
+            <div class="cms-panel__head"><h2 id="service-form-title">Service</h2></div>
+            <div class="cms-panel__body"><form id="service-form" class="cms-form"></form></div>
+          </div>
           <div class="cms-panel">
             <div class="cms-panel__head">
               <h2>Services (${svcData.services.length})</h2>
@@ -364,8 +611,8 @@
             <div class="cms-panel__body">
               ${svcData.services.length
                 ? AdminUI.tableResponsive(`<thead><tr><th>Title</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody>
-                  ${svcData.services.map((s) => `<tr>
-                    <td><strong>${esc(s.title_ru || s.title_hy || s.id)}</strong></td>
+                  ${svcData.services.map((s) => `<tr class="${highlightServiceId === s.id ? 'cms-row-highlight' : ''}" data-service-id="${s.id}">
+                    <td><strong>${esc(langField(s, 'title'))}</strong></td>
                     <td><span class="cms-badge">${esc(s.category_id)}</span></td>
                     <td>${s.published === 0 ? '<span class="cms-muted">Draft</span>' : '<span style="color:var(--cms-success)">Live</span>'}</td>
                     <td><button type="button" class="cms-btn cms-btn--sm cms-btn--ghost" data-edit-svc="${s.id}">Edit</button></td>
@@ -374,10 +621,7 @@
                 : AdminUI.emptyHTML('No services yet', 'Add services to display on the departments page.')}
             </div>
           </div>
-          <div class="cms-panel" id="service-form-card" hidden>
-            <div class="cms-panel__head"><h2 id="service-form-title">Service</h2></div>
-            <div class="cms-panel__body"><form id="service-form" class="cms-form"></form></div>
-          </div>
+          ${previewPanel('Live preview — Patient Care page', 'services-preview-host')}
         </div>`;
 
       $('#add-service', root).addEventListener('click', () => openServiceForm(null, catData.categories));
@@ -387,20 +631,34 @@
         });
       });
 
+      if (highlightServiceId) {
+        root.querySelector(`[data-service-id="${highlightServiceId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        highlightServiceId = null;
+      }
+
+      const host = $('#services-preview-host', root);
+      if (host && typeof PageEditor !== 'undefined') {
+        PageEditor.mountEmbed(host, 'patient-care');
+      }
+
       function openServiceForm(svc, categories) {
         editingServiceId = svc?.id || null;
         $('#service-form-card').hidden = false;
         $('#service-form-title').textContent = svc ? 'Edit service' : 'New service';
+        $('#service-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         const form = $('#service-form');
 
         const renderForm = () => {
           form.innerHTML = '';
-          form.prepend(langTabs(renderForm));
+          form.prepend(langTabs(() => updateTriFieldVisibility(form)));
           const catOpts = categories.map((c) =>
-            `<option value="${c.id}"${svc?.category_id === c.id ? ' selected' : ''}>${esc(c.name_ru || c.id)}</option>`
+            `<option value="${c.id}"${svc?.category_id === c.id ? ' selected' : ''}>${esc(langField(c, 'name'))}</option>`
           ).join('');
-          let items = [];
-          try { items = JSON.parse(svc?.items_json || '[]'); } catch { items = []; }
+          const existingItems = parseServiceItems(svc?.items_json);
+          const itemsByLang = {};
+          AdminConfig.langs.forEach((l) => {
+            itemsByLang[l.code] = serviceItemsForLang(existingItems, l.code);
+          });
           form.insertAdjacentHTML('beforeend', `
             ${triField('Service title', 'title', svc || {})}
             ${triField('Description', 'description', svc || {}, true)}
@@ -413,7 +671,7 @@
               <div class="cms-field"><label>Price (optional)<input name="price" value="${esc(svc?.price || '')}"></label></div>
               <div class="cms-field"><label>Duration (optional)<input name="duration" value="${esc(svc?.duration || '')}"></label></div>
             </div>
-            <div class="cms-field"><label>Sub-services <span class="cms-muted">(one per line)</span><textarea name="items" rows="4">${esc(items.join('\n'))}</textarea></label></div>
+            ${triItemsField('Sub-services', 'items', itemsByLang)}
             <label class="cms-toggle"><input type="checkbox" name="published" ${svc?.published !== 0 ? 'checked' : ''}> Published on website</label>
             <button type="submit" class="cms-btn cms-btn--primary">Save service</button>`);
         };
@@ -423,6 +681,7 @@
           e.preventDefault();
           const btn = form.querySelector('[type="submit"]');
           btn.disabled = true;
+          const existingItems = parseServiceItems(svc?.items_json);
           const body = {
             ...collectTriplet(form, 'title'),
             ...collectTriplet(form, 'description'),
@@ -431,13 +690,19 @@
             image_url: form.image_url.value,
             price: form.price.value,
             duration: form.duration.value,
-            items: form.items.value.split('\n').map((s) => s.trim()).filter(Boolean),
+            items: collectTripletItems(form, 'items', existingItems),
             published: form.published.checked
           };
           try {
-            if (editingServiceId) await AdminApi.put(`/admin/services/${editingServiceId}`, body);
-            else await AdminApi.post('/admin/services', body);
-            toast('Service saved', 'success');
+            if (editingServiceId) {
+              await AdminApi.put(`/admin/services/${editingServiceId}`, body);
+              highlightServiceId = editingServiceId;
+            } else {
+              const res = await AdminApi.post('/admin/services', body);
+              highlightServiceId = res.id || body.id;
+            }
+            toast('Service saved — see updated list below', 'success');
+            $('#service-form-card').hidden = true;
             renderServices();
           } catch (err) { toast(err.message, 'error'); }
           finally { btn.disabled = false; }
@@ -454,43 +719,125 @@
     root.innerHTML = AdminUI.loadingHTML('Loading media…');
 
     root.innerHTML = `
-      <div class="cms-grid cms-grid--2">
-        ${AdminUI.card('Upload file', `
-          <div class="cms-upload-zone">
-            <p>Images (JPG, PNG, WebP, GIF, SVG) and videos (MP4, WebM) up to 10 MB</p>
-            <form id="upload-form" class="cms-form">
-              <div class="cms-field"><label>Choose file<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required></label></div>
-              <div class="cms-field"><label>Folder<select name="folder">
-                <option value="general">General</option>
-                <option value="doctors">Doctors</option>
-                <option value="clinic">Clinic</option>
-                <option value="blog">Blog</option>
-              </select></label></div>
-              <button type="submit" class="cms-btn cms-btn--primary">Upload</button>
-            </form>
-          </div>`)}
-        ${AdminUI.card('Library', '<div id="media-grid" class="cms-media-grid">' + AdminUI.loadingHTML('Loading files…') + '</div>')}
+      <div class="cms-media-layout">
+        <div class="cms-card cms-media-upload-card">
+          <div class="cms-card__head"><h2>Upload file</h2></div>
+          <div class="cms-card__body">
+            <div class="cms-upload-zone">
+              <p>Images (JPG, PNG, WebP, GIF, SVG) and videos (MP4, WebM) up to 10 MB</p>
+              <form id="upload-form" class="cms-form cms-form--inline">
+                <div class="cms-field"><label>Choose file<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required></label></div>
+                <div class="cms-field"><label>Folder<select name="folder">
+                  <option value="general">General</option>
+                  <option value="doctors">Doctors</option>
+                  <option value="clinic">Clinic</option>
+                  <option value="blog">Blog</option>
+                </select></label></div>
+                <button type="submit" class="cms-btn cms-btn--primary">Upload</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="cms-card">
+          <div class="cms-card__head"><h2>Website images <span class="cms-muted">(live on public pages)</span></h2></div>
+          <div class="cms-card__body">
+            <div id="site-media-grid" class="cms-media-grid cms-media-grid--full">${AdminUI.loadingHTML('Loading site images…')}</div>
+          </div>
+        </div>
+        <div class="cms-card">
+          <div class="cms-card__head"><h2>Uploaded files</h2></div>
+          <div class="cms-card__body">
+            <div id="media-grid" class="cms-media-grid cms-media-grid--full">${AdminUI.loadingHTML('Loading files…')}</div>
+          </div>
+        </div>
       </div>`;
 
     async function loadGrid() {
       const grid = $('#media-grid', root);
+      const siteGrid = $('#site-media-grid', root);
+      const base = AdminConfig.apiBase().replace('/api/v1', '');
+      const siteBase = base.replace(/\/api\/v1$/, '') || '';
+
       try {
         const data = await AdminApi.get('/admin/media');
+      const siteAssets = data.siteAssets || [];
+      let siteAssetsCache = siteAssets;
+
+        if (!siteAssets.length) {
+          siteGrid.innerHTML = AdminUI.emptyHTML('No site images found', 'Images from pages, doctors, and settings will appear here.');
+        } else {
+          siteGrid.innerHTML = siteAssets.map((a, i) => {
+            const src = mediaSrc(a.url, siteBase);
+            const editable = a.editable !== false && a.source !== 'upload' && a.source !== 'static';
+            const copyUrl = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : `${siteBase}/${a.url}`;
+            return `
+            <figure class="cms-media-item cms-media-item--large" data-site-idx="${i}">
+              ${/\.(mp4|webm)(\?|$)/i.test(a.url)
+                ? `<video src="${esc(src)}" controls preload="metadata" playsinline></video>`
+                : `<img src="${esc(src)}" alt="${esc(a.label || '')}" loading="lazy" onerror="this.closest('figure').classList.add('cms-media-item--broken')">`}
+              <figcaption>
+                <strong>${esc(a.label || 'Image')}</strong>
+                <span class="cms-muted">${esc(a.page || '')} · ${esc(a.source || '')}</span>
+                ${editable
+                  ? `<div class="cms-field cms-field--compact"><input class="site-media-url" type="text" value="${esc(a.url)}"></div>
+                     <div class="cms-actions">
+                       <button type="button" class="cms-btn cms-btn--sm cms-btn--primary save-site-media">Save URL</button>
+                       <button type="button" class="cms-btn cms-btn--sm cms-btn--ghost copy-url" data-url="${esc(copyUrl)}">Copy URL</button>
+                       <a href="${esc(src)}" target="_blank" rel="noopener" class="cms-btn cms-btn--sm cms-btn--ghost">Open</a>
+                     </div>`
+                  : `<div class="cms-actions">
+                       <button type="button" class="cms-btn cms-btn--sm cms-btn--ghost copy-url" data-url="${esc(copyUrl)}">Copy URL</button>
+                       <a href="${esc(src)}" target="_blank" rel="noopener" class="cms-btn cms-btn--sm cms-btn--ghost">Open</a>
+                     </div>`}
+              </figcaption>
+            </figure>`;
+          }).join('');
+
+          $$('.save-site-media', siteGrid).forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const fig = btn.closest('figure');
+              const input = $('.site-media-url', fig);
+              const a = siteAssetsCache[Number(fig.dataset.siteIdx)];
+              if (!a) return;
+              try {
+                await AdminApi.patch('/admin/media/site', {
+                  source: a.source,
+                  id: a.id,
+                  field: a.field,
+                  path: a.path,
+                  page_key: a.page_key,
+                  section_key: a.section_key,
+                  field_key: a.field_key,
+                  url: input.value.trim()
+                });
+                toast('Image URL updated on website', 'success');
+                loadGrid();
+              } catch (err) { toast(err.message, 'error'); }
+            });
+          });
+          $$('.copy-url', siteGrid).forEach((btn) => {
+            btn.addEventListener('click', () => {
+              navigator.clipboard.writeText(btn.dataset.url);
+              toast('URL copied to clipboard');
+            });
+          });
+        }
+
         if (!data.media.length) {
-          grid.innerHTML = AdminUI.emptyHTML('No files yet', 'Upload photos for doctors, clinic, or blog covers.');
+          grid.innerHTML = AdminUI.emptyHTML('No uploads yet', 'Upload photos for doctors, clinic, or blog covers.');
           return;
         }
-        const base = AdminConfig.apiBase().replace('/api/v1', '');
         grid.innerHTML = data.media.map((m) => `
-          <figure class="cms-media-item">
+          <figure class="cms-media-item cms-media-item--large">
             ${m.mime_type?.startsWith('video/')
-              ? `<video src="${base}${m.url}" controls preload="metadata"></video>`
-              : `<img src="${base}${m.url}" alt="" loading="lazy" onerror="this.src='';this.alt='Failed to load'">`}
+              ? `<video src="${base}${m.url}" controls preload="metadata" playsinline></video>`
+              : `<img src="${base}${m.url}" alt="${esc(m.original_name || '')}" loading="lazy" onerror="this.closest('figure').classList.add('cms-media-item--broken')">`}
             <figcaption>
-              <span>${esc(m.original_name || m.filename)}</span>
+              <strong>${esc(m.original_name || m.filename)}</strong>
               <span class="cms-muted">${esc(m.folder)} · ${Math.round((m.size || 0) / 1024)} KB</span>
               <div class="cms-actions">
                 <button type="button" class="cms-btn cms-btn--sm cms-btn--ghost copy-url" data-url="${base}${m.url}">Copy URL</button>
+                <a href="${base}${m.url}" target="_blank" rel="noopener" class="cms-btn cms-btn--sm cms-btn--ghost">Open</a>
                 <button type="button" class="cms-btn cms-btn--sm cms-btn--danger del-media" data-id="${m.id}">Delete</button>
               </div>
             </figcaption>
@@ -543,15 +890,18 @@
 
       const renderForm = () => {
         form.innerHTML = '';
-        form.prepend(langTabs(renderForm));
+        form.prepend(langTabs(() => updateTriFieldVisibility(form)));
         const pick = (field) => ({ hy: g[field]?.hy || '', ru: g[field]?.ru || '', en: g[field]?.en || '' });
         form.insertAdjacentHTML('beforeend', `
           <div class="cms-form__section">
             <h3>Clinic identity (multilingual)</h3>
             ${triField('Clinic name', 'name', pick('name'))}
             ${triField('Tagline', 'tagline', pick('tagline'))}
+            ${triField('Hero tagline', 'heroTagline', pick('heroTagline'))}
             ${triField('Address', 'address', pick('address'))}
             ${triField('Working hours', 'hours', pick('hours'))}
+            ${triField('About text', 'about', pick('about'), true)}
+            ${triField('Mission', 'mission', pick('mission'), true)}
           </div>
           <div class="cms-form__section">
             <h3>Contact</h3>
@@ -564,6 +914,7 @@
             <h3>Branding images</h3>
             <div class="cms-field"><label>Logo URL<input name="logo" value="${esc(g.logo || '')}"></label></div>
             <div class="cms-field"><label>Hero image URL<input name="heroImage" value="${esc(g.heroImage || '')}"></label></div>
+            <div class="cms-field"><label>About image URL<input name="aboutImage" value="${esc(g.aboutImage || '')}"></label></div>
           </div>
           <div class="cms-form__section">
             <h3>Social media</h3>
@@ -580,19 +931,23 @@
         const btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
         const hospital = {
-          name: {}, tagline: {}, address: {}, hours: {},
+          name: {}, shortName: {}, tagline: {}, heroTagline: {}, address: {}, hours: {}, about: {}, mission: {},
           phone: form.phone.value, email: form.email.value,
-          logo: form.logo.value, heroImage: form.heroImage.value,
+          logo: form.logo.value, heroImage: form.heroImage.value, aboutImage: form.aboutImage.value,
           social: { facebook: form.facebook.value, instagram: form.instagram.value, linkedin: form.linkedin.value }
         };
         AdminConfig.langs.forEach((l) => {
           hospital.name[l.code] = form.querySelector(`[name="name_${l.code}"]`)?.value || '';
+          hospital.shortName[l.code] = hospital.name[l.code];
           hospital.tagline[l.code] = form.querySelector(`[name="tagline_${l.code}"]`)?.value || '';
+          hospital.heroTagline[l.code] = form.querySelector(`[name="heroTagline_${l.code}"]`)?.value || '';
           hospital.address[l.code] = form.querySelector(`[name="address_${l.code}"]`)?.value || '';
           hospital.hours[l.code] = form.querySelector(`[name="hours_${l.code}"]`)?.value || '';
+          hospital.about[l.code] = form.querySelector(`[name="about_${l.code}"]`)?.value || '';
+          hospital.mission[l.code] = form.querySelector(`[name="mission_${l.code}"]`)?.value || '';
         });
         try {
-          await AdminApi.put('/admin/settings/global', { hospital });
+          await AdminApi.put('/admin/settings/global', { merge: true, hospital });
           toast('Settings saved', 'success');
         } catch (err) { toast(err.message, 'error'); }
         finally { btn.disabled = false; }

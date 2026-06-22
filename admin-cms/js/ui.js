@@ -50,14 +50,28 @@ const AdminUI = (function () {
     </div>`;
   }
 
-  function statCard(value, label, variant = 'teal', icon = '') {
-    return `<article class="cms-stat-card cms-stat-card--${variant}">
+  function statCard(value, label, variant = 'teal', icon = '', opts = {}) {
+    const action = opts.action || '';
+    const tag = action ? 'button' : 'article';
+    const actionAttr = action ? ` type="button" data-stat-action="${action}"` : '';
+    const clickable = action ? ' cms-stat-card--clickable' : '';
+    return `<${tag} class="cms-stat-card cms-stat-card--${variant}${clickable}"${actionAttr}>
       <div class="cms-stat-card__icon" aria-hidden="true">${icon}</div>
       <div class="cms-stat-card__body">
         <strong>${value}</strong>
         <span>${label}</span>
       </div>
-    </article>`;
+    </${tag}>`;
+  }
+
+  function typeBadge(type) {
+    const labels = {
+      appointment: 'Appointment',
+      contact: 'Contact form',
+      story: 'Patient story'
+    };
+    const cls = type === 'appointment' ? 'blue' : type === 'contact' ? 'amber' : 'teal';
+    return `<span class="cms-type cms-type--${cls}">${labels[type] || type}</span>`;
   }
 
   function statusBadge(status) {
@@ -139,6 +153,7 @@ const AdminUI = (function () {
     emptyHTML,
     errorHTML,
     statCard,
+    typeBadge,
     statusBadge,
     pageIntro,
     card,
