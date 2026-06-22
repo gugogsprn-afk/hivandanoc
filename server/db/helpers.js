@@ -83,19 +83,61 @@ function getPageFieldsForPage(pageKey) {
   return out;
 }
 
+function inferPageFieldValueType(value, valueType = 'text') {
+  let type = valueType === 'image' || valueType === 'video' ? valueType : 'text';
+  if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(value || '')) return 'video';
+  if (type === 'text' && /\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i.test(value || '')) return 'image';
+  return type;
+}
+
+function isSharedMediaFieldValue(value, valueType) {
+  const type = inferPageFieldValueType(value, valueType);
+  if (type === 'video' || type === 'image') return true;
+  return /^(\/api\/v1\/media\/|https?:\/\/|images\/)/i.test(value || '');
+}
+
 function getPageFieldsMap(lang = 'hy') {
   const rows = getDb()
-    .prepare('SELECT page_key, field_key, value, value_type FROM page_fields WHERE lang = ?')
-    .all(lang);
-  const out = {};
+    .prepare('SELECT page_key, field_key, lang, value, value_type FROM page_fields')
+    .all();
+  const grouped = {};
   for (const r of rows) {
-    if (!out[r.page_key]) out[r.page_key] = {};
-    out[r.page_key][r.field_key] = r.value;
-    let valueType = r.value_type;
-    if (valueType === 'image' && /\.(mp4|webm|ogg)(\?|#|$)/i.test(r.value || '')) {
-      valueType = 'video';
+    const k = `${r.page_key}\0${r.field_key}`;
+    if (!grouped[k]) {
+      grouped[k] = { page_key: r.page_key, field_key: r.field_key, langs: {}, types: {} };
     }
-    if (valueType && valueType !== 'text') out[r.page_key][`${r.field_key}__type`] = valueType;
+    grouped[k].langs[r.lang] = r.value;
+    grouped[k].types[r.lang] = r.value_type;
+  }
+
+  const langOrder = [lang, 'hy', 'ru', 'en'].filter((code, i, arr) => arr.indexOf(code) === i);
+  const out = {};
+
+  for (const entry of Object.values(grouped)) {
+    const { page_key, field_key, langs, types } = entry;
+    let value = langs[lang] || '';
+    let valueType = types[lang] || 'text';
+    const sharedMedia = Object.keys(langs).some((code) =>
+      isSharedMediaFieldValue(langs[code], types[code])
+    );
+
+    if (!value) {
+      for (const code of langOrder) {
+        if (langs[code]) {
+          value = langs[code];
+          valueType = types[code] || valueType;
+          break;
+        }
+      }
+    }
+
+    if (!value) continue;
+    if (!out[page_key]) out[page_key] = {};
+    out[page_key][field_key] = value;
+    valueType = inferPageFieldValueType(value, valueType);
+    if (sharedMedia || valueType !== 'text') {
+      out[page_key][`${field_key}__type`] = valueType;
+    }
   }
   return out;
 }

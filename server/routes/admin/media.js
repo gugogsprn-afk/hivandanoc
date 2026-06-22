@@ -102,11 +102,24 @@ module.exports = router;
 // Public file serving — exported separately
 function mediaFilesRouter() {
   const filesRouter = express.Router();
+  const MIME = {
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml'
+  };
   filesRouter.get('/:filename', (req, res) => {
     const filename = path.basename(req.params.filename);
     const full = path.join(uploadsDir(), filename);
     if (!fs.existsSync(full)) return res.status(404).send('Not found');
+    const ext = path.extname(filename).toLowerCase();
+    if (MIME[ext]) res.type(MIME[ext]);
     res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.setHeader('Accept-Ranges', 'bytes');
     res.sendFile(full);
   });
   return filesRouter;

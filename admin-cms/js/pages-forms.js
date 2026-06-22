@@ -15,10 +15,10 @@ const PagesForms = (function () {
     { key: 'hero-title', label: 'Hero title', type: 'text' },
     { key: 'hero-subtitle', label: 'Hero subtitle', type: 'text' },
     { key: 'home-intro-prose', label: 'Intro text', type: 'textarea' },
-    { key: 'patient-hero-image', label: 'Patient story image', type: 'image' },
+    { key: 'patient-hero-image', label: 'Patient story image / video', type: 'image' },
     { key: 'patient-hero-quote', label: 'Patient quote', type: 'textarea' },
     { key: 'patient-hero-cta', label: 'Patient story button', type: 'text' },
-    { key: 'home-feature-image', label: 'Feature image', type: 'image' },
+    { key: 'home-feature-image', label: 'Feature image / video', type: 'image' },
     { key: 'home-feature-title', label: 'Feature title', type: 'text' },
     { key: 'home-feature-desc', label: 'Feature description', type: 'textarea' },
     { key: 'back-in-game-image', label: 'Brand story image', type: 'image' },
@@ -95,18 +95,38 @@ const PagesForms = (function () {
     return url;
   }
 
+  function inferValueType(value, fallback = 'text') {
+    if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(value || '')) return 'video';
+    if (fallback === 'image' || /\.(jpe?g|png|webp|gif|svg)(\?|#|$)/i.test(value || '')) return 'image';
+    return fallback;
+  }
+
+  function isSharedMediaField(key, valueType, value) {
+    if (key.startsWith('i18n_')) return false;
+    if (valueType !== 'image') return false;
+    return !!value;
+  }
+
+  function mediaPreviewHTML(url) {
+    if (!url) return '';
+    const src = esc(mediaUrl(url));
+    if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(url)) {
+      return `<video src="${src}" class="cms-pages-preview cms-pages-preview--video" controls preload="metadata" playsinline></video>`;
+    }
+    return `<img src="${src}" alt="" class="cms-pages-preview" onerror="this.style.display='none'">`;
+  }
+
   function fieldHTML(field) {
     const fk = field.i18nKey ? `i18n_${field.i18nKey}` : field.key;
     const val = fieldValue(field.key, field.i18nKey);
     const id = `pf-${fk.replace(/[^a-z0-9_-]/gi, '_')}`;
 
     if (field.type === 'image') {
-      const preview = val
-        ? `<img src="${esc(mediaUrl(val))}" alt="" class="cms-pages-preview" onerror="this.style.display='none'">`
-        : '';
+      const preview = val ? mediaPreviewHTML(val) : '';
       return `
         <div class="cms-field cms-field--image" data-field-key="${esc(fk)}" data-value-type="image">
           <label>${esc(field.label)}</label>
+          <p class="cms-muted cms-field-hint">Photos and MP4/WebM videos apply to all languages on the public site.</p>
           ${preview}
           <input type="url" id="${id}" value="${esc(val)}" placeholder="/api/v1/media/files/… or https://…">
           <div class="cms-pages-upload-row">
@@ -218,7 +238,6 @@ const PagesForms = (function () {
       const pickBtn = wrap.querySelector('.cms-pages-pick');
       const urlInput = wrap.querySelector('input[type="url"]');
       const statusEl = wrap.querySelector('.cms-pages-upload-status');
-      let preview = wrap.querySelector('.cms-pages-preview');
 
       pickBtn?.addEventListener('click', () => fileInput?.click());
 
@@ -229,14 +248,9 @@ const PagesForms = (function () {
         try {
           const url = await uploadFile(file, statusEl);
           urlInput.value = url;
-          if (!preview) {
-            preview = document.createElement('img');
-            preview.className = 'cms-pages-preview';
-            preview.alt = '';
-            wrap.querySelector('label')?.after(preview);
-          }
-          preview.src = mediaUrl(url);
-          preview.style.display = '';
+          const existingPreview = wrap.querySelector('.cms-pages-preview, .cms-pages-preview--video');
+          if (existingPreview) existingPreview.remove();
+          wrap.querySelector('label')?.insertAdjacentHTML('afterend', mediaPreviewHTML(url));
           AdminUI.toast('File uploaded — click Save to publish on public site', 'success');
         } catch (err) {
           AdminUI.toast(err.message, 'error');
@@ -266,13 +280,18 @@ const PagesForms = (function () {
         const input = wrap.querySelector('input, textarea');
         if (!input) return;
         const value = input.value.trim();
+        const resolvedType = inferValueType(value, valueType);
         if (key.startsWith('i18n_')) {
           const i18nKey = key.slice(5);
           if (!i18nMerge[currentLang]) i18nMerge[currentLang] = {};
           i18nMerge[currentLang][i18nKey] = value;
           pageItems.push({ field_key: key, lang: currentLang, value, value_type: 'text' });
+        } else if (isSharedMediaField(key, valueType, value)) {
+          AdminConfig.langs.forEach((l) => {
+            pageItems.push({ field_key: key, lang: l.code, value, value_type: resolvedType });
+          });
         } else {
-          pageItems.push({ field_key: key, lang: currentLang, value, value_type: valueType });
+          pageItems.push({ field_key: key, lang: currentLang, value, value_type: resolvedType });
         }
       });
 

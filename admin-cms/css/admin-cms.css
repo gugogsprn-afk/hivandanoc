@@ -1501,6 +1501,18 @@ body.cms-page-editor-fullscreen .cms-preview-fs-btn:hover {
   border: 1px solid #e2e8f0;
 }
 
+.cms-pages-preview--video {
+  width: 100%;
+  max-width: 360px;
+  max-height: 200px;
+  background: #0f172a;
+}
+
+.cms-field-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+}
+
 .cms-pages-upload-row {
   display: flex;
   flex-wrap: wrap;
