@@ -7,13 +7,27 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { initDb, getDb } = require('../server/db');
+const { getSetting, setSetting } = require('../server/db/helpers');
 const { schedulePublish } = require('../server/services/content-publish');
 
 const ROOT = path.join(__dirname, '..');
+const LANGS = ['hy', 'ru', 'en'];
 
 function loadContent(lang) {
   const file = path.join(ROOT, 'lang', `${lang}.json`);
   return JSON.parse(fs.readFileSync(file, 'utf8')).content || {};
+}
+
+function loadLang(lang) {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, 'lang', `${lang}.json`), 'utf8'));
+}
+
+function fromLangs(getter) {
+  const out = {};
+  for (const code of LANGS) {
+    out[code] = getter(loadLang(code)) || '';
+  }
+  return out;
 }
 
 function zipServiceItems(hyList, ruList, enList) {
@@ -111,9 +125,54 @@ function run() {
     if (res.changes) docsUpdated++;
   }
 
+  const global = getSetting('global', {});
+  const h = global.hospital || {};
+  global.hospital = {
+    ...h,
+    name: fromLangs((j) => j.content?.hospital?.name),
+    shortName: fromLangs((j) => j.content?.hospital?.shortName || j.content?.hospital?.name),
+    tagline: fromLangs((j) => j.content?.hospital?.tagline),
+    heroTagline: fromLangs(
+      (j) => j.content?.hospital?.heroTagline || j.pages?.home?.heroSubtitle
+    ),
+    address: fromLangs((j) => j.content?.hospital?.address),
+    hours: fromLangs((j) => j.content?.hospital?.hours),
+    about: fromLangs((j) => j.content?.hospital?.about),
+    mission: fromLangs((j) => j.content?.hospital?.mission)
+  };
+  setSetting('global', global);
+
+  const heroRow = db
+    .prepare('SELECT content_json FROM page_sections WHERE page_key = ? AND section_key = ?')
+    .get('home', 'hero');
+  let hero = {};
+  try {
+    hero = JSON.parse(heroRow?.content_json || '{}');
+  } catch {
+    hero = {};
+  }
+  hero.title = fromLangs((j) => j.content?.hospital?.name);
+  hero.subtitle = fromLangs(
+    (j) => j.pages?.home?.heroSubtitle || j.content?.hospital?.heroTagline || j.content?.hospital?.tagline
+  );
+  hero.ctaText = fromLangs((j) => j.common?.bookAppointment);
+  if (!hero.image) {
+    hero.image =
+      h.heroImage ||
+      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&q=85';
+  }
+  if (!hero.ctaLink) hero.ctaLink = 'appointment.html';
+  db.prepare(
+    `INSERT INTO page_sections (page_key, section_key, enabled, sort_order, content_json, updated_at)
+     VALUES ('home', 'hero', 1, 0, ?, datetime('now'))
+     ON CONFLICT(page_key, section_key) DO UPDATE SET
+       content_json = excluded.content_json,
+       updated_at = datetime('now')`
+  ).run(JSON.stringify(hero));
+
   schedulePublish(500);
   console.log(
-    `[cms:sync-lang] Updated ${servicesUpdated} services, ${catsUpdated} categories, ${docsUpdated} doctors`
+    `[cms:sync-lang] Updated ${servicesUpdated} services, ${catsUpdated} categories, ${docsUpdated} doctors, global settings + hero`
   );
 }
 

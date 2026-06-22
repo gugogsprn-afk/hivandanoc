@@ -6,6 +6,7 @@ const { authRequired, requireRole } = require('../../middleware/auth');
 const { upload, mediaPublicUrl, safeDeleteFile } = require('../../middleware/upload');
 const { logActivity } = require('../../db/helpers');
 const { sanitizeString } = require('../../middleware/validate');
+const { collectSiteMedia, updateSiteAsset } = require('../../services/site-media-catalog');
 
 const router = express.Router();
 
@@ -15,7 +16,20 @@ router.get('/', authRequired, (req, res) => {
   const rows = folder
     ? db.prepare('SELECT * FROM media WHERE folder = ? ORDER BY created_at DESC').all(folder)
     : db.prepare('SELECT * FROM media ORDER BY created_at DESC LIMIT 200').all();
-  res.json({ ok: true, media: rows });
+  const siteAssets = collectSiteMedia();
+  res.json({ ok: true, media: rows, siteAssets });
+});
+
+router.patch('/site', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
+  try {
+    updateSiteAsset(req.body || {}, req.body?.url);
+    logActivity(req.user.sub, 'update', 'site_media', req.body?.path || req.body?.field || '', null, req.ip);
+    const { schedulePublish } = require('../../services/content-publish');
+    const publish = schedulePublish(2500);
+    res.json({ ok: true, publish });
+  } catch (err) {
+    res.status(400).json({ ok: false, error: err.message || 'Update failed' });
+  }
 });
 
 router.post(

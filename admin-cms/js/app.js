@@ -66,11 +66,96 @@
   }
 
   function triField(label, prefix, values = {}, multiline = false) {
-    const val = esc(values[activeLang] || values[`${prefix}_${activeLang}`] || '');
-    const input = multiline
-      ? `<textarea name="${prefix}_${activeLang}" rows="4">${val}</textarea>`
-      : `<input name="${prefix}_${activeLang}" value="${val}">`;
-    return `<div class="cms-field"><label>${label} <span class="cms-muted">(${activeLang.toUpperCase()})</span>${input}</label></div>`;
+    const inputs = AdminConfig.langs
+      .map((l) => {
+        const val = esc(values[l.code] || values[`${prefix}_${l.code}`] || '');
+        const hidden = l.code !== activeLang ? ' style="display:none"' : '';
+        return multiline
+          ? `<textarea name="${prefix}_${l.code}" rows="4" data-tri="${prefix}" data-lang="${l.code}"${hidden}>${val}</textarea>`
+          : `<input name="${prefix}_${l.code}" value="${val}" data-tri="${prefix}" data-lang="${l.code}"${hidden}>`;
+      })
+      .join('');
+    return `<div class="cms-field cms-tri-field" data-tri="${prefix}">
+      <label>${label} <span class="cms-muted cms-tri-lang">(${activeLang.toUpperCase()})</span></label>
+      ${inputs}
+    </div>`;
+  }
+
+  function triItemsField(label, prefix, linesByLang = {}) {
+    const areas = AdminConfig.langs
+      .map((l) => {
+        const lines = (linesByLang[l.code] || []).join('\n');
+        const hidden = l.code !== activeLang ? ' style="display:none"' : '';
+        return `<textarea name="${prefix}_${l.code}" rows="4" data-tri="${prefix}" data-lang="${l.code}"${hidden}>${esc(lines)}</textarea>`;
+      })
+      .join('');
+    return `<div class="cms-field cms-tri-field" data-tri="${prefix}">
+      <label>${label} <span class="cms-muted cms-tri-lang">(${activeLang.toUpperCase()})</span>
+        <span class="cms-muted"> — one per line</span></label>
+      ${areas}
+    </div>`;
+  }
+
+  function updateTriFieldVisibility(root) {
+    $$('.cms-tri-field', root).forEach((wrap) => {
+      const prefix = wrap.dataset.tri;
+      const langEl = $('.cms-tri-lang', wrap);
+      if (langEl) langEl.textContent = `(${activeLang.toUpperCase()})`;
+      $$(`[data-tri="${prefix}"][data-lang]`, wrap).forEach((el) => {
+        el.style.display = el.dataset.lang === activeLang ? '' : 'none';
+      });
+    });
+  }
+
+  function collectTripletItems(form, prefix, existing = []) {
+    const byLang = {};
+    AdminConfig.langs.forEach((l) => {
+      const el = form.querySelector(`[name="${prefix}_${l.code}"]`);
+      byLang[l.code] = (el?.value || '')
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    });
+    const max = Math.max(
+      existing.length,
+      ...AdminConfig.langs.map((l) => byLang[l.code].length),
+      0
+    );
+    const items = [];
+    for (let i = 0; i < max; i++) {
+      const prev = existing[i];
+      const row = typeof prev === 'object' && prev !== null ? { ...prev } : {};
+      AdminConfig.langs.forEach((l) => {
+        row[`name_${l.code}`] = byLang[l.code][i] ?? row[`name_${l.code}`] ?? '';
+      });
+      items.push(row);
+    }
+    return items;
+  }
+
+  function parseServiceItems(raw) {
+    try {
+      return JSON.parse(raw || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function serviceItemsForLang(items, lang) {
+    return items
+      .map((it) => {
+        if (typeof it === 'string') return it;
+        return it[`name_${lang}`] || it.name_hy || it.name_ru || it.name_en || '';
+      })
+      .filter(Boolean);
+  }
+
+  function mediaSrc(url, base) {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('/api/')) return `${base}${url}`;
+    if (url.startsWith('/')) return url;
+    return `${base.replace(/\/api\/v1$/, '')}/${url.replace(/^\//, '')}`;
   }
 
   function collectTriplet(form, prefix) {
@@ -438,12 +523,13 @@
 
     const renderForm = () => {
       form.innerHTML = '';
-      form.prepend(langTabs(renderForm));
+      form.prepend(langTabs(() => updateTriFieldVisibility(form)));
       form.insertAdjacentHTML('beforeend', `
         <div class="cms-form__section">
           <h3>Basic information</h3>
           ${triField('Full name', 'name', doc || {})}
           ${triField('Role / Specialty', 'role', doc || {})}
+          ${triField('Location', 'location', doc || {})}
           ${triField('Short bio', 'bio', doc || {}, true)}
         </div>
         <div class="cms-form__section">
@@ -477,6 +563,7 @@
       const body = {
         ...collectTriplet(form, 'name'),
         ...collectTriplet(form, 'role'),
+        ...collectTriplet(form, 'location'),
         ...collectTriplet(form, 'bio'),
         department_id: form.department_id.value,
         image_url: form.image_url.value,
@@ -563,13 +650,15 @@
 
         const renderForm = () => {
           form.innerHTML = '';
-          form.prepend(langTabs(renderForm));
+          form.prepend(langTabs(() => updateTriFieldVisibility(form)));
           const catOpts = categories.map((c) =>
             `<option value="${c.id}"${svc?.category_id === c.id ? ' selected' : ''}>${esc(langField(c, 'name'))}</option>`
           ).join('');
-          let items = [];
-          try { items = JSON.parse(svc?.items_json || '[]'); } catch { items = []; }
-          const itemLines = items.map((it) => (typeof it === 'string' ? it : it[`name_${activeLang}`] || it.name_hy || it.name_ru || '')).filter(Boolean);
+          const existingItems = parseServiceItems(svc?.items_json);
+          const itemsByLang = {};
+          AdminConfig.langs.forEach((l) => {
+            itemsByLang[l.code] = serviceItemsForLang(existingItems, l.code);
+          });
           form.insertAdjacentHTML('beforeend', `
             ${triField('Service title', 'title', svc || {})}
             ${triField('Description', 'description', svc || {}, true)}
@@ -582,7 +671,7 @@
               <div class="cms-field"><label>Price (optional)<input name="price" value="${esc(svc?.price || '')}"></label></div>
               <div class="cms-field"><label>Duration (optional)<input name="duration" value="${esc(svc?.duration || '')}"></label></div>
             </div>
-            <div class="cms-field"><label>Sub-services <span class="cms-muted">(one per line)</span><textarea name="items" rows="4">${esc(itemLines.join('\n'))}</textarea></label></div>
+            ${triItemsField('Sub-services', 'items', itemsByLang)}
             <label class="cms-toggle"><input type="checkbox" name="published" ${svc?.published !== 0 ? 'checked' : ''}> Published on website</label>
             <button type="submit" class="cms-btn cms-btn--primary">Save service</button>`);
         };
@@ -592,6 +681,7 @@
           e.preventDefault();
           const btn = form.querySelector('[type="submit"]');
           btn.disabled = true;
+          const existingItems = parseServiceItems(svc?.items_json);
           const body = {
             ...collectTriplet(form, 'title'),
             ...collectTriplet(form, 'description'),
@@ -600,7 +690,7 @@
             image_url: form.image_url.value,
             price: form.price.value,
             duration: form.duration.value,
-            items: form.items.value.split('\n').map((s) => s.trim()).filter(Boolean),
+            items: collectTripletItems(form, 'items', existingItems),
             published: form.published.checked
           };
           try {
@@ -649,7 +739,13 @@
           </div>
         </div>
         <div class="cms-card">
-          <div class="cms-card__head"><h2>Media library</h2></div>
+          <div class="cms-card__head"><h2>Website images <span class="cms-muted">(live on public pages)</span></h2></div>
+          <div class="cms-card__body">
+            <div id="site-media-grid" class="cms-media-grid cms-media-grid--full">${AdminUI.loadingHTML('Loading site images…')}</div>
+          </div>
+        </div>
+        <div class="cms-card">
+          <div class="cms-card__head"><h2>Uploaded files</h2></div>
           <div class="cms-card__body">
             <div id="media-grid" class="cms-media-grid cms-media-grid--full">${AdminUI.loadingHTML('Loading files…')}</div>
           </div>
@@ -658,13 +754,79 @@
 
     async function loadGrid() {
       const grid = $('#media-grid', root);
+      const siteGrid = $('#site-media-grid', root);
+      const base = AdminConfig.apiBase().replace('/api/v1', '');
+      const siteBase = base.replace(/\/api\/v1$/, '') || '';
+
       try {
         const data = await AdminApi.get('/admin/media');
+      const siteAssets = data.siteAssets || [];
+      let siteAssetsCache = siteAssets;
+
+        if (!siteAssets.length) {
+          siteGrid.innerHTML = AdminUI.emptyHTML('No site images found', 'Images from pages, doctors, and settings will appear here.');
+        } else {
+          siteGrid.innerHTML = siteAssets.map((a, i) => {
+            const src = mediaSrc(a.url, siteBase);
+            const editable = a.editable !== false && a.source !== 'upload' && a.source !== 'static';
+            const copyUrl = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : `${siteBase}/${a.url}`;
+            return `
+            <figure class="cms-media-item cms-media-item--large" data-site-idx="${i}">
+              ${/\.(mp4|webm)(\?|$)/i.test(a.url)
+                ? `<video src="${esc(src)}" controls preload="metadata" playsinline></video>`
+                : `<img src="${esc(src)}" alt="${esc(a.label || '')}" loading="lazy" onerror="this.closest('figure').classList.add('cms-media-item--broken')">`}
+              <figcaption>
+                <strong>${esc(a.label || 'Image')}</strong>
+                <span class="cms-muted">${esc(a.page || '')} · ${esc(a.source || '')}</span>
+                ${editable
+                  ? `<div class="cms-field cms-field--compact"><input class="site-media-url" type="text" value="${esc(a.url)}"></div>
+                     <div class="cms-actions">
+                       <button type="button" class="cms-btn cms-btn--sm cms-btn--primary save-site-media">Save URL</button>
+                       <button type="button" class="cms-btn cms-btn--sm cms-btn--ghost copy-url" data-url="${esc(copyUrl)}">Copy URL</button>
+                       <a href="${esc(src)}" target="_blank" rel="noopener" class="cms-btn cms-btn--sm cms-btn--ghost">Open</a>
+                     </div>`
+                  : `<div class="cms-actions">
+                       <button type="button" class="cms-btn cms-btn--sm cms-btn--ghost copy-url" data-url="${esc(copyUrl)}">Copy URL</button>
+                       <a href="${esc(src)}" target="_blank" rel="noopener" class="cms-btn cms-btn--sm cms-btn--ghost">Open</a>
+                     </div>`}
+              </figcaption>
+            </figure>`;
+          }).join('');
+
+          $$('.save-site-media', siteGrid).forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const fig = btn.closest('figure');
+              const input = $('.site-media-url', fig);
+              const a = siteAssetsCache[Number(fig.dataset.siteIdx)];
+              if (!a) return;
+              try {
+                await AdminApi.patch('/admin/media/site', {
+                  source: a.source,
+                  id: a.id,
+                  field: a.field,
+                  path: a.path,
+                  page_key: a.page_key,
+                  section_key: a.section_key,
+                  field_key: a.field_key,
+                  url: input.value.trim()
+                });
+                toast('Image URL updated on website', 'success');
+                loadGrid();
+              } catch (err) { toast(err.message, 'error'); }
+            });
+          });
+          $$('.copy-url', siteGrid).forEach((btn) => {
+            btn.addEventListener('click', () => {
+              navigator.clipboard.writeText(btn.dataset.url);
+              toast('URL copied to clipboard');
+            });
+          });
+        }
+
         if (!data.media.length) {
-          grid.innerHTML = AdminUI.emptyHTML('No files yet', 'Upload photos for doctors, clinic, or blog covers.');
+          grid.innerHTML = AdminUI.emptyHTML('No uploads yet', 'Upload photos for doctors, clinic, or blog covers.');
           return;
         }
-        const base = AdminConfig.apiBase().replace('/api/v1', '');
         grid.innerHTML = data.media.map((m) => `
           <figure class="cms-media-item cms-media-item--large">
             ${m.mime_type?.startsWith('video/')
@@ -728,15 +890,18 @@
 
       const renderForm = () => {
         form.innerHTML = '';
-        form.prepend(langTabs(renderForm));
+        form.prepend(langTabs(() => updateTriFieldVisibility(form)));
         const pick = (field) => ({ hy: g[field]?.hy || '', ru: g[field]?.ru || '', en: g[field]?.en || '' });
         form.insertAdjacentHTML('beforeend', `
           <div class="cms-form__section">
             <h3>Clinic identity (multilingual)</h3>
             ${triField('Clinic name', 'name', pick('name'))}
             ${triField('Tagline', 'tagline', pick('tagline'))}
+            ${triField('Hero tagline', 'heroTagline', pick('heroTagline'))}
             ${triField('Address', 'address', pick('address'))}
             ${triField('Working hours', 'hours', pick('hours'))}
+            ${triField('About text', 'about', pick('about'), true)}
+            ${triField('Mission', 'mission', pick('mission'), true)}
           </div>
           <div class="cms-form__section">
             <h3>Contact</h3>
@@ -749,6 +914,7 @@
             <h3>Branding images</h3>
             <div class="cms-field"><label>Logo URL<input name="logo" value="${esc(g.logo || '')}"></label></div>
             <div class="cms-field"><label>Hero image URL<input name="heroImage" value="${esc(g.heroImage || '')}"></label></div>
+            <div class="cms-field"><label>About image URL<input name="aboutImage" value="${esc(g.aboutImage || '')}"></label></div>
           </div>
           <div class="cms-form__section">
             <h3>Social media</h3>
@@ -765,19 +931,23 @@
         const btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
         const hospital = {
-          name: {}, tagline: {}, address: {}, hours: {},
+          name: {}, shortName: {}, tagline: {}, heroTagline: {}, address: {}, hours: {}, about: {}, mission: {},
           phone: form.phone.value, email: form.email.value,
-          logo: form.logo.value, heroImage: form.heroImage.value,
+          logo: form.logo.value, heroImage: form.heroImage.value, aboutImage: form.aboutImage.value,
           social: { facebook: form.facebook.value, instagram: form.instagram.value, linkedin: form.linkedin.value }
         };
         AdminConfig.langs.forEach((l) => {
           hospital.name[l.code] = form.querySelector(`[name="name_${l.code}"]`)?.value || '';
+          hospital.shortName[l.code] = hospital.name[l.code];
           hospital.tagline[l.code] = form.querySelector(`[name="tagline_${l.code}"]`)?.value || '';
+          hospital.heroTagline[l.code] = form.querySelector(`[name="heroTagline_${l.code}"]`)?.value || '';
           hospital.address[l.code] = form.querySelector(`[name="address_${l.code}"]`)?.value || '';
           hospital.hours[l.code] = form.querySelector(`[name="hours_${l.code}"]`)?.value || '';
+          hospital.about[l.code] = form.querySelector(`[name="about_${l.code}"]`)?.value || '';
+          hospital.mission[l.code] = form.querySelector(`[name="mission_${l.code}"]`)?.value || '';
         });
         try {
-          await AdminApi.put('/admin/settings/global', { hospital });
+          await AdminApi.put('/admin/settings/global', { merge: true, hospital });
           toast('Settings saved', 'success');
         } catch (err) { toast(err.message, 'error'); }
         finally { btn.disabled = false; }
