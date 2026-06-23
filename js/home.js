@@ -18,13 +18,27 @@ function renderPatientHero(ph, pf = {}) {
   const mediaType = pf['patient-hero-image__type'] || inferMediaType(url);
   const el = HospitalApp.applyPatientHeroMedia(url, mediaType);
   if (el?.tagName === 'IMG' && !url) {
-    el.alt = ph?.quote ? ph.quote.slice(0, 120) : I18n.t('pages.home.reviewsTitle');
+    el.alt = I18n.t('pages.home.reviewsTitle');
   }
-  const quote = document.getElementById('patient-hero-quote');
-  const cta = document.getElementById('patient-hero-cta');
-  if (quote) quote.textContent = pf['patient-hero-quote'] || ph?.quote || '';
-  if (cta) cta.textContent = pf['patient-hero-cta'] || ph?.ctaText || I18n.t('pages.home.patientHeroCta');
-  HospitalApp.initVideoHeroPlayers();
+}
+
+function applyHomeMedia({ pf, fieldKey, containerSelector, elementId, fallback, alt = '', className = '' }) {
+  const url = pf[fieldKey] || fallback || '';
+  const type = pf[`${fieldKey}__type`] || inferMediaType(url);
+  const el = HospitalApp.applyBlockMedia({
+    containerSelector,
+    elementId,
+    url,
+    type,
+    className,
+    defaultImage: fallback
+  });
+  if (el?.tagName === 'IMG' && alt) {
+    el.alt = alt;
+    el.loading = 'lazy';
+    el.decoding = 'async';
+  }
+  return el;
 }
 
 function inferMediaType(url, explicitType) {
@@ -36,11 +50,16 @@ function inferMediaType(url, explicitType) {
 
 function renderBackInGame(big, pf = {}) {
   if (!big && !pf['back-in-game-image']) return;
-  const img = document.getElementById('back-in-game-image');
+  applyHomeMedia({
+    pf,
+    fieldKey: 'back-in-game-image',
+    containerSelector: '#brand-story .hss-split__media',
+    elementId: 'back-in-game-image',
+    fallback: big?.image || ''
+  });
   const title = document.getElementById('back-in-game-title');
   const text = document.getElementById('back-in-game-text');
   const link = document.getElementById('back-in-game-link');
-  if (img) img.src = pf['back-in-game-image'] || big?.image || '';
   if (title) title.textContent = pf['back-in-game-title'] || big?.title || '';
   if (text) text.innerHTML = `<p>${pf['back-in-game-text'] || big?.text || ''}</p>`;
   if (link) link.textContent = pf['back-in-game-link'] || big?.linkText || '';
@@ -48,11 +67,17 @@ function renderBackInGame(big, pf = {}) {
 
 function renderExpertise(ex, pf = {}) {
   if (!ex && !pf['expertise-image']) return;
-  const img = document.getElementById('expertise-image');
+  applyHomeMedia({
+    pf,
+    fieldKey: 'expertise-image',
+    containerSelector: '#expertise',
+    elementId: 'expertise-image',
+    fallback: ex?.image || '',
+    className: 'hss-expertise__bg'
+  });
   const title = document.getElementById('expertise-title');
   const text = document.getElementById('expertise-text');
   const links = document.getElementById('expertise-links');
-  if (img) img.src = pf['expertise-image'] || ex?.image || '';
   if (title) title.textContent = pf['expertise-title'] || ex?.title || '';
   if (text) text.textContent = pf['expertise-text'] || ex?.text || '';
   if (links) {
@@ -183,15 +208,6 @@ function renderHomePage() {
   const featDesc = document.getElementById('home-feature-desc');
   if (featDesc) featDesc.textContent = pf['home-feature-desc'] || feature.description || '';
 
-  const approachImg = document.getElementById('home-approach-image');
-  if (approachImg) {
-    approachImg.src = pf['home-approach-image'] || data.approachImage || SPLIT_IMAGES.approach;
-    approachImg.alt = t('pages.home.approachTitle');
-    approachImg.loading = 'lazy';
-    approachImg.decoding = 'async';
-    approachImg.width = 800;
-    approachImg.height = 533;
-  }
   const approachText = document.getElementById('home-approach-text');
   if (approachText) {
     const ap = pf['home-approach-text'];
@@ -200,15 +216,15 @@ function renderHomePage() {
       : proseHtml(data.approachParagraphs);
   }
 
-  const expertsImg = document.getElementById('home-experts-image');
-  if (expertsImg) {
-    expertsImg.src = pf['home-experts-image'] || data.expertsImage || SPLIT_IMAGES.experts;
-    expertsImg.alt = t('pages.home.expertsTitle');
-    expertsImg.loading = 'lazy';
-    expertsImg.decoding = 'async';
-    expertsImg.width = 800;
-    expertsImg.height = 533;
-  }
+  applyHomeMedia({
+    pf,
+    fieldKey: 'home-approach-image',
+    containerSelector: '#approach .hss-split__media',
+    elementId: 'home-approach-image',
+    fallback: data.approachImage || SPLIT_IMAGES.approach,
+    alt: t('pages.home.approachTitle')
+  });
+
   const expertsText = document.getElementById('home-experts-text');
   if (expertsText) {
     const ep = pf['home-experts-text'];
@@ -217,15 +233,15 @@ function renderHomePage() {
       : proseHtml(data.expertsParagraphs);
   }
 
-  const imagingImg = document.getElementById('home-imaging-image');
-  if (imagingImg) {
-    imagingImg.src = pf['home-imaging-image'] || data.imagingImage || data.equipment?.[0]?.image || SPLIT_IMAGES.imaging;
-    imagingImg.alt = t('pages.home.equipmentTitle');
-    imagingImg.loading = 'lazy';
-    imagingImg.decoding = 'async';
-    imagingImg.width = 800;
-    imagingImg.height = 533;
-  }
+  applyHomeMedia({
+    pf,
+    fieldKey: 'home-experts-image',
+    containerSelector: '#experts .hss-split__media',
+    elementId: 'home-experts-image',
+    fallback: data.expertsImage || SPLIT_IMAGES.experts,
+    alt: t('pages.home.expertsTitle')
+  });
+
   const imagingText = document.getElementById('home-imaging-text');
   if (imagingText) {
     const ip = pf['home-imaging-text'];
@@ -233,6 +249,15 @@ function renderHomePage() {
       ? ip.split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('')
       : proseHtml(data.imagingParagraphs);
   }
+
+  applyHomeMedia({
+    pf,
+    fieldKey: 'home-imaging-image',
+    containerSelector: '#imaging .hss-split__media',
+    elementId: 'home-imaging-image',
+    fallback: data.imagingImage || data.equipment?.[0]?.image || SPLIT_IMAGES.imaging,
+    alt: t('pages.home.equipmentTitle')
+  });
 
   const imagingList = document.getElementById('home-imaging-list');
   if (imagingList) {

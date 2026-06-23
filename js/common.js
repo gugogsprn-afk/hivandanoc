@@ -44,14 +44,16 @@ const HospitalApp = (function () {
         if (className) el.className = className;
         el.muted = true;
         el.loop = true;
+        el.autoplay = true;
+        el.controls = true;
         el.playsInline = true;
         el.setAttribute('playsinline', '');
         el.preload = 'metadata';
         container.insertBefore(el, container.firstChild);
       }
       el.src = mediaUrl;
-      container.closest('.hss-video-hero')?.classList.add('has-video');
-      container.closest('.hss-feature')?.classList.add('has-video');
+      container.classList.add('has-video');
+      el.play().catch(() => {});
     } else {
       if (!el || el.tagName !== 'IMG') {
         if (el) el.remove();
@@ -64,10 +66,21 @@ const HospitalApp = (function () {
         container.insertBefore(el, container.firstChild);
       }
       el.src = mediaUrl;
-      container.closest('.hss-video-hero')?.classList.remove('has-video');
-      container.closest('.hss-feature')?.classList.remove('has-video');
+      container.classList.remove('has-video');
     }
     return el;
+  }
+
+  function applyBlockMedia({ containerSelector, elementId, url, type, className = '', defaultImage = '' }) {
+    const container = document.querySelector(containerSelector);
+    return applyMediaElement({
+      container,
+      elementId,
+      url,
+      type,
+      className,
+      defaultImage
+    });
   }
 
   function applyPatientHeroMedia(url, type) {
@@ -101,18 +114,7 @@ const HospitalApp = (function () {
   }
 
   function initVideoHeroPlayers() {
-    document.querySelectorAll('.hss-video-hero__play').forEach((btn) => {
-      if (btn.dataset.bound) return;
-      btn.dataset.bound = '1';
-      btn.addEventListener('click', () => {
-        const media = document.getElementById('patient-hero-image');
-        if (media?.tagName !== 'VIDEO') return;
-        media.muted = false;
-        media.controls = true;
-        media.play().catch(() => {});
-        btn.hidden = true;
-      });
-    });
+    /* Native video controls only — no overlay play button */
   }
 
   function pathPrefix() {
@@ -1009,7 +1011,46 @@ const HospitalApp = (function () {
     if (!fields || typeof fields !== 'object') return;
     const MEDIA_FIELDS = {
       'patient-hero-image': applyPatientHeroMedia,
-      'home-feature-image': applyFeatureMedia
+      'home-feature-image': applyFeatureMedia,
+      'back-in-game-image': (url, type) =>
+        applyBlockMedia({
+          containerSelector: '#brand-story .hss-split__media',
+          elementId: 'back-in-game-image',
+          url,
+          type
+        }),
+      'home-approach-image': (url, type) =>
+        applyBlockMedia({
+          containerSelector: '#approach .hss-split__media',
+          elementId: 'home-approach-image',
+          url,
+          type,
+          defaultImage: 'images/about-image-01.jpg'
+        }),
+      'home-experts-image': (url, type) =>
+        applyBlockMedia({
+          containerSelector: '#experts .hss-split__media',
+          elementId: 'home-experts-image',
+          url,
+          type,
+          defaultImage: 'images/team-member-01.jpg'
+        }),
+      'home-imaging-image': (url, type) =>
+        applyBlockMedia({
+          containerSelector: '#imaging .hss-split__media',
+          elementId: 'home-imaging-image',
+          url,
+          type,
+          defaultImage: 'images/team-member-02.jpg'
+        }),
+      'expertise-image': (url, type) =>
+        applyBlockMedia({
+          containerSelector: '#expertise',
+          elementId: 'expertise-image',
+          url,
+          type,
+          className: 'hss-expertise__bg'
+        })
     };
     Object.entries(fields).forEach(([key, val]) => {
       if (key.endsWith('__type') || val == null || val === '') return;
@@ -1151,6 +1192,7 @@ const HospitalApp = (function () {
     inferMediaType,
     applyPatientHeroMedia,
     applyFeatureMedia,
+    applyBlockMedia,
     initVideoHeroPlayers
   };
 })();

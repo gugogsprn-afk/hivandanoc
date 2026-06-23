@@ -387,7 +387,7 @@
     { sel: '#hero-subtitle', label: 'Hero subtitle', type: 'text',
       async get() { return getCachedField('hero-subtitle') || (await loadHeroSection()).subtitle?.[lang] || getText(document.querySelector('#hero-subtitle')); },
       async save(val, el) { await persistField(el || document.querySelector('#hero-subtitle'), val); } },
-    { sel: '#patient-hero-image', label: 'Patient story photo / video', type: 'image',
+    { sel: '#patient-hero-image', label: 'Homepage hero photo / video', type: 'image',
       async get() {
         const el = document.getElementById('patient-hero-image');
         return getCachedField('patient-hero-image') || contentExtra.patientHero?.image || el?.src || el?.currentSrc || '';
@@ -399,12 +399,6 @@
           valueType: inferFieldValueType(val, target)
         });
       } },
-    { sel: '#patient-hero-quote', label: 'Patient quote', type: 'textarea',
-      async get() { return getCachedField('patient-hero-quote') || contentExtra.patientHero?.quote || getText(document.querySelector('#patient-hero-quote')); },
-      async save(val, el) { await persistField(el || document.querySelector('#patient-hero-quote'), val); } },
-    { sel: '#patient-hero-cta', label: 'Patient story button', type: 'text',
-      async get() { return getCachedField('patient-hero-cta') || contentExtra.patientHero?.ctaText || getText(document.querySelector('#patient-hero-cta')); },
-      async save(val, el) { await persistField(el || document.querySelector('#patient-hero-cta'), val); } },
     { sel: '#home-feature-image', label: 'Feature photo / video', type: 'image',
       async get() {
         const el = document.getElementById('home-feature-image');
