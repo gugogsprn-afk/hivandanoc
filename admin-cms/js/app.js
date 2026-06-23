@@ -1021,7 +1021,10 @@
         await bootApp(res.user);
       } catch (err) {
         errEl.hidden = false;
-        errEl.textContent = err.message;
+        errEl.textContent =
+          err.message === 'Invalid credentials'
+            ? 'Invalid email or password. Use the CMS_SMM_PASSWORD from server .env (reset after each deploy if .env changes).'
+            : err.message;
       } finally {
         AdminUI.setLoginLoading(false);
       }

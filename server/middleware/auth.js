@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-change-me-in-production';
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '12h';
+const JWT_EXPIRES = process.env.JWT_EXPIRES || '30d';
 
 const ROLES = {
   super_admin: 3,

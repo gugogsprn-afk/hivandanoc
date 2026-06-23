@@ -47,11 +47,17 @@ function ensureStaffUsers() {
     if (!acc.email || !acc.password) continue;
     const email = String(acc.email).trim().toLowerCase();
     const hash = bcrypt.hashSync(acc.password, 12);
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    const existing = db.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(email);
     if (existing) {
-      db.prepare(
-        `UPDATE users SET password_hash = ?, name = ?, role = ? WHERE email = ?`
-      ).run(hash, acc.name, acc.role, email);
+      const passwordMatches = bcrypt.compareSync(acc.password, existing.password_hash);
+      if (passwordMatches) {
+        db.prepare('UPDATE users SET name = ?, role = ? WHERE email = ?').run(acc.name, acc.role, email);
+      } else {
+        db.prepare(
+          'UPDATE users SET password_hash = ?, name = ?, role = ? WHERE email = ?'
+        ).run(hash, acc.name, acc.role, email);
+        console.log(`[cms] Staff password updated from .env: ${email}`);
+      }
       console.log(`[cms] Staff user updated: ${email} (${acc.role})`);
     } else {
       db.prepare(
