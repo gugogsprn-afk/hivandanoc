@@ -63,6 +63,11 @@ async function publishAll() {
 
     const status = { version, published_at, pending: false };
     setSetting('publish_status', status);
+
+    const { persistAfterChange, checkpointWal } = require('./cms-persistence');
+    checkpointWal();
+    persistAfterChange('publish');
+
     console.log(`[cms:publish] live version ${version}`);
     return status;
   } catch (err) {

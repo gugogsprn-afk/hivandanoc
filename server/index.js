@@ -72,3 +72,16 @@ app.listen(PORT, HOST, () => {
   console.log('  Telegram:', isTelegramConfigured() ? 'включён' : 'НЕ настроен (.env)');
   console.log('');
 });
+
+function shutdown() {
+  try {
+    const { checkpointWal } = require('./services/cms-persistence');
+    checkpointWal();
+  } catch {
+    /* ignore */
+  }
+  process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

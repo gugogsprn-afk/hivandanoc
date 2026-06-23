@@ -71,6 +71,8 @@ router.post(
 
       logActivity(req.user.sub, 'upload', 'media', String(result.lastInsertRowid), { url }, req.ip);
       const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
+      const { persistAfterChange } = require('../../services/cms-persistence');
+      persistAfterChange('media-upload');
       const publish = schedulePublish(2500);
       res.status(201).json({
         ok: true,

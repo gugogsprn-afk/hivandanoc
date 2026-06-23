@@ -7,6 +7,7 @@ const {
 } = require('../../db/helpers');
 const { syncPageFieldsToStores } = require('../../db/page-sync');
 const { publishAll, getPublishStatus } = require('../../services/content-publish');
+const { persistAfterChange } = require('../../services/cms-persistence');
 
 const router = express.Router();
 
@@ -38,6 +39,7 @@ function normalizeFieldItems(items) {
 function saveFieldsForPage(pageKey, items, req) {
   upsertPageFields(pageKey, items);
   syncPageFieldsToStores(pageKey, items);
+  persistAfterChange('page-fields');
   logActivity(req.user.sub, 'update', 'page_fields', pageKey, { count: items.length }, req.ip);
   for (const row of items) {
     console.log('[cms] Saved field', pageKey, row.field_key, row.lang);

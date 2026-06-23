@@ -14,12 +14,15 @@ rsync -avz --delete \
   --exclude '*.bat' \
   --exclude '*.vbs' \
   --exclude 'legacy/' \
-  --exclude 'data/cms/cms.db' \
-  --exclude 'data/cms/cms.db-wal' \
-  --exclude 'data/cms/cms.db-shm' \
-  --exclude 'data/cms/uploads/' \
-  --exclude 'data/cms/published/' \
+  --exclude 'data/' \
   "$ROOT/" "$SERVER:$REMOTE_DIR/"
+
+echo "==> Backup CMS data and reconcile uploads on server"
+ssh "$SERVER" "export PATH=/usr/bin:\$PATH; cd $REMOTE_DIR \
+  && bash deploy/setup-persistent-cms.sh 2>/dev/null || true \
+  && node scripts/cms-backup.js pre-deploy \
+  && node scripts/cms-reconcile-uploads.js \
+  && node scripts/cms-restore-hero-video.js 2>/dev/null || true"
 
 echo "==> Installing API dependencies and restarting PM2"
 ssh "$SERVER" "export PATH=/usr/bin:\$PATH; cd $REMOTE_DIR \
@@ -29,6 +32,8 @@ ssh "$SERVER" "export PATH=/usr/bin:\$PATH; cd $REMOTE_DIR \
   && HOST=127.0.0.1 PORT=8765 NODE_ENV=production pm2 start server/index.js --name hivandanoc-api \
   && pm2 save \
   && node scripts/sync-staff-users.js \
+  && node scripts/cms-backup.js post-deploy \
+  && node scripts/cms-reconcile-uploads.js \
   && node scripts/sync-lang-to-db.js \
   && (pm2 startup systemd -u root --hp /root 2>/dev/null | tail -1 | bash || true)"
 
