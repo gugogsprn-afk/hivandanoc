@@ -918,9 +918,10 @@
           </div>
           <div class="cms-form__section">
             <h3>Social media</h3>
+            <p class="cms-form__hint">Or set in server <code>.env</code>: <code>SOCIAL_FACEBOOK</code>, <code>SOCIAL_INSTAGRAM</code>, <code>SOCIAL_TIKTOK</code>, and <code>CONTACT_EMAIL</code> for mail — then <code>npm run cms:sync-contact</code>.</p>
             <div class="cms-field"><label>Facebook<input name="facebook" value="${esc(g.social?.facebook || '')}"></label></div>
             <div class="cms-field"><label>Instagram<input name="instagram" value="${esc(g.social?.instagram || '')}"></label></div>
-            <div class="cms-field"><label>LinkedIn<input name="linkedin" value="${esc(g.social?.linkedin || '')}"></label></div>
+            <div class="cms-field"><label>TikTok<input name="tiktok" value="${esc(g.social?.tiktok || '')}"></label></div>
           </div>
           <button type="submit" class="cms-btn cms-btn--primary">Save all settings</button>`);
       };
@@ -934,7 +935,12 @@
           name: {}, shortName: {}, tagline: {}, heroTagline: {}, address: {}, hours: {}, about: {}, mission: {},
           phone: form.phone.value, email: form.email.value,
           logo: form.logo.value, heroImage: form.heroImage.value, aboutImage: form.aboutImage.value,
-          social: { facebook: form.facebook.value, instagram: form.instagram.value, linkedin: form.linkedin.value }
+          social: {
+            ...(g.social || {}),
+            facebook: form.facebook.value,
+            instagram: form.instagram.value,
+            tiktok: form.tiktok.value
+          }
         };
         AdminConfig.langs.forEach((l) => {
           hospital.name[l.code] = form.querySelector(`[name="name_${l.code}"]`)?.value || '';

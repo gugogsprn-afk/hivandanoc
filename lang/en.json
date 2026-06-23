@@ -68,7 +68,8 @@
     "policyTerms": "Terms of use",
     "policyPatient": "Patient information",
     "legalAddress": "Address",
-    "legalDisclaimer": "All rights reserved. Site content does not replace medical advice."
+    "legalDisclaimer": "All rights reserved. Site content does not replace medical advice.",
+    "developedBy": "Developed by"
   },
   "pages": {
     "home": {
@@ -357,7 +358,7 @@
       "name": "Healthy Spine",
       "shortName": "Healthy Spine",
       "tagline": "Spine, joints and musculoskeletal care",
-      "address": "Yerevan, 1 Example St.",
+      "address": "Yerevan, Margaryan 6/2",
       "hours": "Mon–Fri: 8:00–20:00, Sat: 9:00–15:00, Sun: closed",
       "about": "Healthy Spine Rehabilitation Center provides conservative treatment for spine, joint, and musculoskeletal conditions: manual therapy, physiotherapy, scoliosis treatment, and rehabilitation.",
       "mission": "Restore mobility and quality of life through evidence-based rehabilitation and a multidisciplinary approach.",

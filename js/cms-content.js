@@ -115,6 +115,7 @@ const CmsContent = (function () {
     const locContent = typeof I18n !== 'undefined' ? I18n.getContent() : null;
     if (locContent?.conditions?.length) merged.conditions = locContent.conditions;
     if (cms.pageFields) merged.pageFields = cms.pageFields;
+    if (cms.site) merged.site = { ...(merged.site || {}), ...cms.site };
 
     merged._cms = {
       homeSections: cms.homeSections || {},

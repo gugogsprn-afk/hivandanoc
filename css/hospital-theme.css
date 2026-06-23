@@ -2510,6 +2510,13 @@ body.hss-page {
   min-width: 280px;
 }
 
+/* Sticky social sidebar (all pages including home) */
+.hss-utilities__btn--fb { background: #3b5998 !important; }
+.hss-utilities__btn--ig { background: #e4405f !important; }
+.hss-utilities__btn--tt { background: #000 !important; }
+.hss-utilities__btn--tt:hover { background: #111 !important; }
+.hss-utilities__btn--mail { background: var(--navy, #1A4F4F) !important; }
+
 /* Inner pages offset */
 body:not(.hss-page):not(.admin-body) { padding-top: 118px; }
 

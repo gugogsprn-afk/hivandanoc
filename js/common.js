@@ -343,6 +343,8 @@ const HospitalApp = (function () {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>',
       instagram:
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+      tiktok:
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>',
       linkedin:
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>',
       print:
@@ -361,6 +363,22 @@ const HospitalApp = (function () {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.5 4.5h3.2l4.1 7.1-2.6 4.5H5.8l2.6-4.5L4.5 4.5zm14.3 0h-3.2l-6.4 11.1 2.6 4.5h3.2l-2.6-4.5 6.4-11.1z"/></svg>'
     };
     return icons[name] || '';
+  }
+
+  function publicContactLinks(social, email) {
+    const s = social || {};
+    const links = [];
+    [
+      { key: 'facebook', label: 'Facebook' },
+      { key: 'instagram', label: 'Instagram' },
+      { key: 'tiktok', label: 'TikTok' }
+    ].forEach(({ key, label }) => {
+      const href = (s[key] || '').trim();
+      if (href && href !== '#') links.push({ href, label, icon: key, external: true });
+    });
+    const mail = (email || '').trim();
+    if (mail) links.push({ href: `mailto:${mail}`, label: 'Email', icon: 'mail', external: false });
+    return links;
   }
 
   function getSharePageMeta() {
@@ -518,15 +536,19 @@ const HospitalApp = (function () {
     const name = brandName();
     const t = (k, params) => I18n.t(k, params);
 
-    const socialRow = ['facebook', 'instagram', 'linkedin']
-      .map(
-        (net) =>
-          `<a href="${social[net] || '#'}" class="hss-footer__social" target="_blank" rel="noopener noreferrer" aria-label="${net}">${socialIconSvg(net)}</a>`
-      )
-      .join('') +
-      (h.email
-        ? `<a href="mailto:${h.email}" class="hss-footer__social" aria-label="Email">${socialIconSvg('mail')}</a>`
-        : '');
+    const socialRow = publicContactLinks(social, h.email)
+      .map((link) => {
+        const ext = link.external ? ' target="_blank" rel="noopener noreferrer"' : '';
+        return `<a href="${link.href}" class="hss-footer__social"${ext} aria-label="${link.label}">${socialIconSvg(link.icon)}</a>`;
+      })
+      .join('');
+
+    const site = getData()?.site || {};
+    const devName = (site.developerName || '').trim() || 'DEWEBAM.COM';
+    const devUrl = (site.developerUrl || '').trim();
+    const developerHtml = devUrl
+      ? `<p class="hss-footer__developer"><span data-i18n="footer.developedBy">${t('footer.developedBy')}</span> <a href="${devUrl}" target="_blank" rel="noopener noreferrer">${devName}</a></p>`
+      : '';
 
     mount.innerHTML = `
       <footer class="site-footer hss-footer">
@@ -542,19 +564,11 @@ const HospitalApp = (function () {
                 ${logoMarkup(prefix, 'footer')}
               </a>
               <div class="hss-footer__socials">${socialRow}</div>
-              <nav class="hss-footer__brand-links" aria-label="Footer">
-                <a href="${prefix}contact" data-i18n="footer.linkContact">${t('footer.linkContact')}</a>
-                <a href="${prefix}submit-story.html" data-i18n="footer.linkStory">${t('footer.linkStory')}</a>
-                <a href="${prefix}move-better.html" data-i18n="footer.linkArticles">${t('footer.linkArticles')}</a>
-                <a href="${prefix}locations" data-i18n="footer.linkNewsletter">${t('footer.linkNewsletter')}</a>
-              </nav>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.learnTitle">${t('footer.learnTitle')}</h4>
               <a href="${prefix}about" data-footer-brand="aboutOrg">${t('nav.aboutOrg')}</a>
-              <a href="${prefix}index.html#news" data-i18n="footer.learnNews">${t('footer.learnNews')}</a>
               <a href="${prefix}contact" data-footer-brand="linkSupport">${t('footer.linkSupport', { name })}</a>
-              <a href="${prefix}contact" data-i18n="footer.learnContact">${t('footer.learnContact')}</a>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.infoTitle">${t('footer.infoTitle')}</h4>
@@ -574,10 +588,13 @@ const HospitalApp = (function () {
           </div>
         </div>
         <div class="hss-footer__legal">
-          <div class="hss-wrap">
-            <p id="footer-copy">${t('footer.copyright', { year, name })}</p>
-            <p><span data-i18n="footer.legalAddress">${t('footer.legalAddress')}</span>: <span id="footer-address">${h.address || ''}</span></p>
-            <p data-i18n="footer.legalDisclaimer">${t('footer.legalDisclaimer')}</p>
+          <div class="hss-wrap hss-footer__legal-inner">
+            <div class="hss-footer__legal-copy">
+              <p id="footer-copy">${t('footer.copyright', { year, name })}</p>
+              <p><span data-i18n="footer.legalAddress">${t('footer.legalAddress')}</span>: <span id="footer-address">${h.address || ''}</span></p>
+              <p data-i18n="footer.legalDisclaimer">${t('footer.legalDisclaimer')}</p>
+            </div>
+            ${developerHtml}
           </div>
         </div>
       </footer>`;
@@ -870,14 +887,24 @@ const HospitalApp = (function () {
   }
 
   function utilityBarHtml(social, email) {
-    const s = social || {};
-    const ext = 'target="_blank" rel="noopener noreferrer"';
-    const mail = email || '';
-    return `
-        <a href="${s.facebook || '#'}" class="hss-utilities__btn hss-utilities__btn--fb" ${ext} aria-label="Facebook">${socialIconSvg('facebook')}</a>
-        <a href="${s.instagram || '#'}" class="hss-utilities__btn hss-utilities__btn--ig" ${ext} aria-label="Instagram">${socialIconSvg('instagram')}</a>
-        <a href="${s.linkedin || '#'}" class="hss-utilities__btn hss-utilities__btn--in" ${ext} aria-label="LinkedIn">${socialIconSvg('linkedin')}</a>
-        <a href="${mail ? `mailto:${mail}` : '#'}" class="hss-utilities__btn hss-utilities__btn--mail" aria-label="Email">${socialIconSvg('mail')}</a>`;
+    return publicContactLinks(social, email)
+      .map((link) => {
+        const cls =
+          link.icon === 'facebook'
+            ? 'hss-utilities__btn--fb'
+            : link.icon === 'instagram'
+              ? 'hss-utilities__btn--ig'
+              : link.icon === 'tiktok'
+                ? 'hss-utilities__btn--tt'
+                : 'hss-utilities__btn--mail';
+        const ext = link.external ? ' target="_blank" rel="noopener noreferrer"' : '';
+        const bg =
+          link.icon === 'tiktok'
+            ? ' style="background-color:#000"'
+            : '';
+        return `<a href="${link.href}" class="hss-utilities__btn ${cls}"${bg}${ext} aria-label="${link.label}">${socialIconSvg(link.icon)}</a>`;
+      })
+      .join('');
   }
 
   function initPageUtilities() {
@@ -1126,6 +1153,7 @@ const HospitalApp = (function () {
     const pk = pageKeyMap[page] || page;
     applyPageFields(data.pageFields?.[pk]);
     applyCmsVisuals(data);
+    initPageUtilities();
     window.dispatchEvent(new Event('hospital:refresh'));
   }
 
