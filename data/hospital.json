@@ -8,7 +8,11 @@
     "phone": "+374 (10) 00-00-00",
     "emergency": "103",
     "email": "info@healthyspine.am",
-    "address": "Yerevan, Margaryan 6/2",
+    "address": "6 Margaryan St, Yerevan 0078",
+    "mapsQuery": "6 Margaryan St, Yerevan 0078, Armenia",
+    "mapsEmbed": "https://maps.google.com/maps?q=40.2074194,44.4782661&z=17&hl=ru&output=embed",
+    "mapLat": 40.2074194,
+    "mapLng": 44.4782661,
     "hours": "Пн–Пт: 8:00–20:00, Сб: 9:00–15:00, Вс: выходной",
     "social": {
       "facebook": "https://www.facebook.com/HealthySpineCHIC",

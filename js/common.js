@@ -178,9 +178,8 @@ const HospitalApp = (function () {
         </span>`;
     }
     return `
-      <span class="logo-brand">
+      <span class="logo-brand logo-brand--header">
         <img src="${mark}" alt="" id="header-logo" class="logo-img logo-img--mark" width="48" height="48" loading="eager" aria-hidden="true" />
-        <span class="logo-brand__name" id="header-brand-name">${name}</span>
       </span>`;
   }
 
@@ -318,7 +317,7 @@ const HospitalApp = (function () {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 <span id="header-phone-text">${h.phone || '+7 (495) 123-45-67'}</span>
               </a>
-              <a href="${prefix}appointment.html" class="nav-cta hss-btn hss-btn--primary" id="header-book-btn" data-i18n="common.bookAppointment">${I18n.t('common.bookAppointment')}</a>
+              <a href="${prefix}reviews.html" class="nav-cta hss-btn hss-btn--primary" id="header-rate-btn" data-i18n="common.rateUs">${I18n.t('common.rateUs')}</a>
             </div>
             <div class="mobile-menu" aria-label="${I18n.t('nav.menuAria')}">
               <span></span><span></span><span></span>
@@ -526,6 +525,95 @@ const HospitalApp = (function () {
     });
   }
 
+  function escHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function mapEmbedUrl(h) {
+    if (!h) h = {};
+    if (h.mapsEmbed) return h.mapsEmbed;
+    const q = h.mapsQuery || h.address || brandName() + ', Yerevan, Armenia';
+    const params = new URLSearchParams({ q, z: '17', hl: 'ru', output: 'embed' });
+    const lat = h.mapLat ?? h.latitude;
+    const lng = h.mapLng ?? h.longitude;
+    if (lat != null && lng != null && String(lat) !== '' && String(lng) !== '') {
+      params.set('ll', `${lat},${lng}`);
+    }
+    return `https://maps.google.com/maps?${params.toString()}`;
+  }
+
+  function mapDirectionsUrl(h) {
+    if (!h) h = {};
+    if (h.mapsDirections) return h.mapsDirections;
+    const lat = h.mapLat ?? h.latitude;
+    const lng = h.mapLng ?? h.longitude;
+    if (lat != null && lng != null && String(lat) !== '' && String(lng) !== '') {
+      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
+    }
+    const q = h.mapsQuery || h.address || brandName() + ', Yerevan, Armenia';
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+  }
+
+  function renderHospitalMap(container, h) {
+    if (!container) return;
+    const hospital = h || getData()?.hospital || {};
+    const address = hospital.address || '';
+    const name = brandName();
+    const title = typeof I18n !== 'undefined' ? I18n.t('footer.mapTitle') : 'Our location';
+    const directionsLabel =
+      typeof I18n !== 'undefined' ? I18n.t('footer.mapDirections') : 'Open in Google Maps';
+    const embed = mapEmbedUrl(hospital);
+    const directions = mapDirectionsUrl(hospital);
+    const openSvg =
+      '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6h-2v6H5V5z"/></svg>';
+    const isFooter = container.id === 'footer-map';
+
+    container.className = container.classList.contains('hss-map')
+      ? `${container.className} hss-map--embed${isFooter ? ' hss-map--footer' : ''}`.trim()
+      : `hss-map hss-map--embed${isFooter ? ' hss-map--footer' : ''}`;
+    container.innerHTML = `
+      <div class="hss-map__wrap">
+        <iframe
+          class="hss-map__iframe"
+          title="${escHtml(title)}"
+          src="${embed}"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+        <a
+          class="hss-map__place-card"
+          href="${directions}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="${escHtml(directionsLabel)}"
+        >
+          <span class="hss-map__place-card-title">${escHtml(name)}</span>
+          <span class="hss-map__place-card-address">${escHtml(address)}</span>
+          <span class="hss-map__place-card-open">${openSvg}</span>
+        </a>
+      </div>`;
+
+    const addrEl = document.getElementById('footer-map-address');
+    if (addrEl) addrEl.textContent = address;
+
+    const dirEl = document.getElementById('footer-map-directions');
+    if (dirEl) {
+      dirEl.href = directions;
+      dirEl.setAttribute('aria-label', directionsLabel);
+    }
+
+    const contactsAddr = document.getElementById('contact-map-address');
+    if (contactsAddr) contactsAddr.textContent = address;
+    const contactsDir = document.getElementById('contact-map-directions');
+    if (contactsDir) contactsDir.href = directions;
+  }
+
   function renderFooter() {
     const mount = document.getElementById('site-footer');
     if (!mount) return;
@@ -557,6 +645,25 @@ const HospitalApp = (function () {
             <a href="${prefix}appointment.html" class="hss-footer__cta-link" data-footer-brand="ctaLink">${t('footer.ctaLink', { name })}</a>
           </div>
         </div>
+        <section class="hss-footer-map" aria-labelledby="footer-map-title">
+          <div class="hss-footer-map__bar">
+            <div class="hss-wrap hss-footer-map__bar-inner">
+              <div class="hss-footer-map__info">
+                <h2 id="footer-map-title" data-i18n="footer.mapTitle">${t('footer.mapTitle')}</h2>
+                <p class="hss-footer-map__address" id="footer-map-address">${h.address || ''}</p>
+              </div>
+              <a
+                href="${mapDirectionsUrl(h)}"
+                class="hss-btn hss-btn--outline hss-footer-map__directions"
+                id="footer-map-directions"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-i18n="footer.mapDirections"
+              >${t('footer.mapDirections')}</a>
+            </div>
+          </div>
+          <div class="hss-footer-map__frame" id="footer-map" role="region" aria-label="${t('footer.mapTitle')}"></div>
+        </section>
         <div class="hss-footer__body">
           <div class="hss-wrap hss-footer__grid">
             <div class="hss-footer__brand">
@@ -598,6 +705,8 @@ const HospitalApp = (function () {
           </div>
         </div>
       </footer>`;
+
+    renderHospitalMap(document.getElementById('footer-map'), h);
   }
 
   function syncHeaderOffset() {
@@ -770,7 +879,7 @@ const HospitalApp = (function () {
     });
 
     const displayName = h.shortName || h.name || brandName();
-    document.querySelectorAll('.logo-brand__name').forEach((el) => {
+    document.querySelectorAll('.logo-brand--footer .logo-brand__name').forEach((el) => {
       el.textContent = displayName;
     });
 
@@ -812,6 +921,14 @@ const HospitalApp = (function () {
 
     const addr = document.getElementById('footer-address');
     if (addr) addr.textContent = h.address;
+
+    renderHospitalMap(document.getElementById('footer-map'), h);
+    const contactMap = document.getElementById('map-placeholder');
+    if (contactMap && typeof ContactMap !== 'undefined') {
+      ContactMap.render(contactMap, h);
+    } else if (contactMap) {
+      renderHospitalMap(contactMap, h);
+    }
 
     const titleKey = document.body.getAttribute('data-i18n-title');
     if (titleKey) document.title = I18n.t(titleKey);
@@ -1216,6 +1333,9 @@ const HospitalApp = (function () {
     reloadFromCms,
     phoneTelUri,
     updatePhoneLinks,
+    mapEmbedUrl,
+    mapDirectionsUrl,
+    renderHospitalMap,
     isVideoUrl,
     inferMediaType,
     applyPatientHeroMedia,

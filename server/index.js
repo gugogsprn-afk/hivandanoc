@@ -55,6 +55,9 @@ app.post('/api/contact', (req, res) =>
 app.post('/api/story', (req, res) =>
   handleLegacyForm(req, res, 'story', 'Новая история пациента')
 );
+app.post('/api/review', (req, res) =>
+  handleLegacyForm(req, res, 'review', 'Новый отзыв с сайта')
+);
 
 app.use(express.static(root, { index: 'index.html' }));
 

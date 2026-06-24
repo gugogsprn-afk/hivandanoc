@@ -474,13 +474,6 @@
   ];
 
   const HEADER_FIELDS = [
-    { sel: '#header-brand-name', label: 'Clinic name (header)', type: 'text',
-      async get() {
-        return hospitalField('name', lang) || hospitalField('shortName', lang) || getText(document.querySelector('#header-brand-name'));
-      },
-      async save(val, el) {
-        queueGlobalHospitalChange('name', val, { lang });
-      } },
     { sel: '#header-logo', label: 'Logo image', type: 'image',
       async get() {
         const el = document.querySelector('#header-logo');
@@ -503,14 +496,14 @@
       async save(val, el) {
         queueGlobalHospitalChange('email', val);
       } },
-    { sel: '#header-book-btn', label: 'Book appointment button', type: 'text',
-      i18nKey: 'common.bookAppointment',
+    { sel: '#header-rate-btn', label: 'Rate us button', type: 'text',
+      i18nKey: 'common.rateUs',
       async get() {
-        return getCachedField('i18n_common.bookAppointment') || i18nOverrides[lang]?.['common.bookAppointment'] ||
-          (typeof I18n !== 'undefined' ? I18n.t('common.bookAppointment') : getText(document.querySelector('#header-book-btn')));
+        return getCachedField('i18n_common.rateUs') || i18nOverrides[lang]?.['common.rateUs'] ||
+          (typeof I18n !== 'undefined' ? I18n.t('common.rateUs') : getText(document.querySelector('#header-rate-btn')));
       },
       async save(val, el) {
-        await persistField(el, val, { fieldKey: 'i18n_common.bookAppointment', i18nKey: 'common.bookAppointment' });
+        await persistField(el, val, { fieldKey: 'i18n_common.rateUs', i18nKey: 'common.rateUs' });
       } }
   ];
 
@@ -958,8 +951,8 @@
 
     document.querySelectorAll('.hss-btn, button.hss-btn, a.hss-btn, button[type="submit"]').forEach((btn) => {
       if (isInsideChrome(btn) || isNonEditableChrome(btn)) return;
-      if (btn.closest('#site-header') && btn.id !== 'header-book-btn') return;
-      if (btn.id === 'header-book-btn') return;
+      if (btn.closest('#site-header') && btn.id !== 'header-rate-btn') return;
+      if (btn.id === 'header-rate-btn') return;
       addResizeHandles(btn);
     });
 

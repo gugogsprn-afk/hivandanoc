@@ -78,10 +78,19 @@ const CmsContent = (function () {
         if (val == null || val === '') continue;
         if (!HOSPITAL_TEXT.includes(key)) merged.hospital[key] = val;
       }
+      const MAP_KEYS = ['mapsQuery', 'mapLat', 'mapLng', 'mapsEmbed', 'mapsDirections'];
       for (const key of HOSPITAL_TEXT) {
         const cmsVal = cms.hospital[key];
         const locVal = locH[key];
-        merged.hospital[key] = cmsVal || locVal || merged.hospital[key] || '';
+        if (key === 'address') {
+          merged.hospital.address = locVal || merged.hospital.address || cmsVal || '';
+        } else {
+          merged.hospital[key] = cmsVal || locVal || merged.hospital[key] || '';
+        }
+      }
+      for (const key of MAP_KEYS) {
+        const cmsVal = cms.hospital[key];
+        if (cmsVal != null && cmsVal !== '') merged.hospital[key] = cmsVal;
       }
     }
     if (cms.departments?.length) {

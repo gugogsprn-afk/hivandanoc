@@ -10,7 +10,8 @@ const CORE_ROUTES = [
   { path: '/patient-care', file: 'departments.html', priority: '0.9', changefreq: 'weekly' },
   { path: '/about', file: 'about.html', priority: '0.8', changefreq: 'monthly' },
   { path: '/contact', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
-  { path: '/locations', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' }
+  { path: '/locations', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
+  { path: '/reviews.html', file: 'reviews.html', priority: '0.8', changefreq: 'weekly' }
 ];
 
 function siteBase() {

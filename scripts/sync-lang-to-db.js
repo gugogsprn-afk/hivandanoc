@@ -125,10 +125,18 @@ function run() {
     if (res.changes) docsUpdated++;
   }
 
+  const hospitalBase = JSON.parse(
+    fs.readFileSync(path.join(ROOT, 'data', 'hospital.json'), 'utf8')
+  ).hospital || {};
+
   const global = getSetting('global', {});
   const h = global.hospital || {};
   global.hospital = {
     ...h,
+    mapsQuery: hospitalBase.mapsQuery || h.mapsQuery || '',
+    mapsEmbed: hospitalBase.mapsEmbed || h.mapsEmbed || '',
+    mapLat: hospitalBase.mapLat ?? h.mapLat ?? null,
+    mapLng: hospitalBase.mapLng ?? h.mapLng ?? null,
     name: fromLangs((j) => j.content?.hospital?.name),
     shortName: fromLangs((j) => j.content?.hospital?.shortName || j.content?.hospital?.name),
     tagline: fromLangs((j) => j.content?.hospital?.tagline),

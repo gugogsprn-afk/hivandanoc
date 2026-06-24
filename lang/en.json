@@ -36,7 +36,25 @@
     "callUs": "Call",
     "getConsultation": "Get a consultation",
     "bookOnline": "Book Online",
+    "rateUs": "Rate us",
     "skipToContent": "Skip to main content"
+  },
+  "rating": {
+    "modalTitle": "Rate us",
+    "modalDesc": "Your feedback helps us serve patients better.",
+    "starsLabel": "Your rating",
+    "starAria": "{n} stars",
+    "pickStars": "Please select a star rating",
+    "starSelected": "Your rating: {n} of 5",
+    "yourName": "Name",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "emailOptional": "Email (optional)",
+    "yourReview": "Your review",
+    "submit": "Submit",
+    "success": "Thank you! Your review has been received.",
+    "error": "Could not send. Please try again later.",
+    "rateLimit": "Please wait a moment before submitting again."
   },
   "footer": {
     "tagline": "Modern medical care with compassion for every patient.",
@@ -69,7 +87,8 @@
     "policyPatient": "Patient information",
     "legalAddress": "Address",
     "legalDisclaimer": "All rights reserved. Site content does not replace medical advice.",
-    "developedBy": "Developed by"
+    "mapTitle": "Our location",
+    "mapDirections": "Open in Google Maps"
   },
   "pages": {
     "home": {
@@ -240,6 +259,20 @@
       "feedbackThanks": "Thank you! Message received (demo mode).",
       "feedbackDesc": "Have questions? Send us a message — we respond within 1–2 business days."
     },
+    "reviews": {
+      "title": "Reviews — Healthy Spine",
+      "heroTitle": "Rate us",
+      "heroEyebrow": "Patient reviews",
+      "heroDesc": "Share your experience and read what other patients say",
+      "formTitle": "Leave your rating",
+      "formDesc": "Choose stars, enter your first and last name, and write your review",
+      "listTitle": "Patient reviews",
+      "listSub": "Real ratings from our patients",
+      "avgLabel": "Average rating",
+      "countLabel": "Total reviews",
+      "emptyList": "No reviews yet. Be the first to rate us.",
+      "seoDescription": "Patient reviews and ratings for Healthy Spine rehabilitation center in Yerevan."
+    },
     "patientStory": {
       "title": "Patient Story — Healthy Spine",
       "titleShort": "Patient Story",
@@ -358,7 +391,7 @@
       "name": "Healthy Spine",
       "shortName": "Healthy Spine",
       "tagline": "Spine, joints and musculoskeletal care",
-      "address": "Yerevan, Margaryan 6/2",
+      "address": "6 Margaryan St, Yerevan 0078",
       "hours": "Mon–Fri: 8:00–20:00, Sat: 9:00–15:00, Sun: closed",
       "about": "Healthy Spine Rehabilitation Center provides conservative treatment for spine, joint, and musculoskeletal conditions: manual therapy, physiotherapy, scoliosis treatment, and rehabilitation.",
       "mission": "Restore mobility and quality of life through evidence-based rehabilitation and a multidisciplinary approach.",

@@ -2,15 +2,15 @@
 module.exports = {
   hospital: {
     hy: {
-      address: 'Երևան, Օրինակի փող., 1',
+      address: '6 Մարգարյան փ., Երևան 0078',
       hours: 'Երկ–Ուրբ 8:00–20:00, Շբ 9:00–15:00, Կիր՝ տոնական'
     },
     ru: {
-      address: 'г. Ереван, ул. Примерная, д. 1',
+      address: 'ул. Маргарян, 6, Ереван 0078',
       hours: 'Пн–Пт: 8:00–20:00, Сб: 9:00–15:00, Вс: выходной'
     },
     en: {
-      address: 'Yerevan, 1 Example St.',
+      address: '6 Margaryan St, Yerevan 0078',
       hours: 'Mon–Fri: 8:00–20:00, Sat: 9:00–15:00, Sun: closed'
     }
   },

@@ -130,6 +130,76 @@ router.post('/leads/contact', publicFormLimiter, async (req, res) => {
   res.status(201).json({ ok: true, id: result.lastInsertRowid });
 });
 
+router.post('/leads/review', publicFormLimiter, async (req, res) => {
+  const rating = Math.min(5, Math.max(1, parseInt(req.body.rating, 10) || 0));
+  const firstName = sanitizeString(req.body.firstName, 100);
+  const lastName = sanitizeString(req.body.lastName, 100);
+  const name =
+    [firstName, lastName].filter(Boolean).join(' ').trim() || sanitizeString(req.body.name, 200);
+  const text = sanitizeString(req.body.text || req.body.comment || req.body.description, 5000);
+  const email = sanitizeEmail(req.body.email) || '';
+  const lang = ['hy', 'ru', 'en'].includes(req.body.lang) ? req.body.lang : 'hy';
+
+  if (!rating || !name || !text) {
+    return res.status(400).json({ ok: false, error: 'Rating, name, and review text required' });
+  }
+
+  const db = getDb();
+  const testimonial = db
+    .prepare(
+      `INSERT INTO testimonials (
+        name_hy, name_ru, name_en, text_hy, text_ru, text_en, rating, published, sort_order
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 9999)`
+    )
+    .run(
+      lang === 'hy' ? name : '',
+      lang === 'ru' ? name : '',
+      lang === 'en' ? name : '',
+      lang === 'hy' ? text : '',
+      lang === 'ru' ? text : '',
+      lang === 'en' ? text : '',
+      rating
+    );
+
+  db.prepare(
+    `INSERT INTO leads (type, name, email, message, status, payload_json)
+     VALUES ('review', ?, ?, ?, 'new', ?)`
+  ).run(name, email, `★${rating} ${text}`, JSON.stringify({ ...req.body, rating, testimonial_id: testimonial.lastInsertRowid }));
+
+  try {
+    await notifyForm({
+      type: 'review',
+      title: 'Новый отзыв с сайта',
+      payload: { name, rating, text, email, lang }
+    });
+  } catch (err) {
+    console.error('[cms] review notify', err.message);
+  }
+
+  res.status(201).json({ ok: true, id: testimonial.lastInsertRowid });
+});
+
+router.get('/reviews', (req, res) => {
+  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const nameCol = lang === 'ru' ? 'name_ru' : lang === 'en' ? 'name_en' : 'name_hy';
+  const textCol = lang === 'ru' ? 'text_ru' : lang === 'en' ? 'text_en' : 'text_hy';
+  const rows = getDb()
+    .prepare(
+      `SELECT id, rating, created_at,
+        COALESCE(NULLIF(${nameCol}, ''), NULLIF(name_hy, ''), name_ru, name_en, '') AS name,
+        COALESCE(NULLIF(${textCol}, ''), NULLIF(text_hy, ''), text_ru, text_en, '') AS text
+       FROM testimonials
+       WHERE published = 1
+         AND (
+           COALESCE(NULLIF(${textCol}, ''), NULLIF(text_hy, ''), text_ru, text_en, '') != ''
+         )
+       ORDER BY datetime(created_at) DESC, id DESC`
+    )
+    .all();
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.json({ ok: true, lang, reviews: rows });
+});
+
 router.get('/sitemap.xml', (_req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600');
   res.type('application/xml').send(buildSitemapXml());

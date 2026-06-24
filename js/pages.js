@@ -101,8 +101,11 @@ function renderPageContent(page) {
     document.getElementById('contact-address').textContent = h.address;
     document.getElementById('contact-hours').textContent = h.hours;
     HospitalApp.updatePhoneLinks(h);
-    const map = document.getElementById('map-placeholder');
-    if (map) map.textContent = h.address;
+    if (typeof ContactMap !== 'undefined') {
+      ContactMap.render(document.getElementById('map-placeholder'), h);
+    } else if (typeof HospitalApp.renderHospitalMap === 'function') {
+      HospitalApp.renderHospitalMap(document.getElementById('map-placeholder'), h);
+    }
   }
 }
 

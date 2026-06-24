@@ -45,6 +45,11 @@ const SiteSEO = (function () {
       fallbackDescription: 'Contact Healthy Spine — phone, email, working hours, and online appointment booking in Yerevan.',
       canonical: '/contact'
     },
+    reviews: {
+      descriptionKey: 'pages.reviews.seoDescription',
+      fallbackDescription: 'Patient reviews and ratings for Healthy Spine rehabilitation center in Yerevan.',
+      canonical: '/reviews.html'
+    },
     locations: {
       descriptionKey: 'pages.contacts.seoDescription',
       fallbackDescription: 'Healthy Spine clinic location in Yerevan — address, directions, phone, and opening hours.',

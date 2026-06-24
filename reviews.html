@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Patient reviews and ratings for Healthy Spine rehabilitation center in Yerevan.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://healthyspinedoc.com/reviews.html">
+    <title>Reviews — Healthy Spine</title>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260630">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260630">
+</head>
+<body class="hss-page hss-reviews-page" data-page="reviews" data-i18n-title="pages.reviews.title">
+    <div id="site-nav"></div>
+
+    <header class="hss-reviews-hero">
+        <div class="hss-wrap hss-reviews-hero__inner">
+            <div class="hss-reviews-hero__copy">
+                <p class="hss-reviews-hero__eyebrow" data-i18n="pages.reviews.heroEyebrow">—</p>
+                <h1 data-i18n="pages.reviews.heroTitle">—</h1>
+                <p class="hss-reviews-hero__tagline" data-i18n="pages.reviews.heroDesc">—</p>
+            </div>
+            <div class="hss-reviews-hero__stats" id="reviews-hero-stats" aria-live="polite">
+                <div class="hss-reviews-stat hss-reviews-stat--main">
+                    <span class="hss-reviews-stat__value" id="reviews-avg-value">—</span>
+                    <span class="hss-reviews-stat__stars" id="reviews-avg-stars" aria-hidden="true"></span>
+                    <span class="hss-reviews-stat__label" data-i18n="pages.reviews.avgLabel">—</span>
+                </div>
+                <div class="hss-reviews-stat">
+                    <span class="hss-reviews-stat__value" id="reviews-count-value">0</span>
+                    <span class="hss-reviews-stat__label" data-i18n="pages.reviews.countLabel">—</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hss-section hss-section--alt hss-reviews-main">
+        <div class="hss-wrap hss-reviews-layout">
+            <aside class="hss-reviews-form-card reveal">
+                <div class="hss-reviews-form-card__head">
+                    <span class="hss-reviews-form-card__icon" aria-hidden="true">★</span>
+                    <div>
+                        <h2 data-i18n="pages.reviews.formTitle">—</h2>
+                        <p class="hss-reviews-form-card__intro" data-i18n="pages.reviews.formDesc">—</p>
+                    </div>
+                </div>
+                <div id="review-success" class="hss-alert hss-reviews-alert" hidden data-i18n="rating.success">—</div>
+                <form class="hss-form hss-rating-form hss-rating-form--page" id="review-form">
+                    <div class="hss-rating-stars-box">
+                        <fieldset class="hss-rating-stars">
+                            <legend data-i18n="rating.starsLabel">—</legend>
+                            <div class="hss-rating-stars__row" id="review-stars" role="radiogroup" aria-label="Rating"></div>
+                            <p class="hss-rating-stars__hint" id="review-stars-hint" data-i18n="rating.pickStars">—</p>
+                        </fieldset>
+                    </div>
+                    <div class="hss-form__row">
+                        <label class="hss-field">
+                            <span data-i18n="rating.firstName">—</span>
+                            <input type="text" name="firstName" required maxlength="80" autocomplete="given-name">
+                        </label>
+                        <label class="hss-field">
+                            <span data-i18n="rating.lastName">—</span>
+                            <input type="text" name="lastName" required maxlength="80" autocomplete="family-name">
+                        </label>
+                    </div>
+                    <label class="hss-field hss-field--flush">
+                        <span data-i18n="rating.yourReview">—</span>
+                        <textarea name="text" rows="5" required maxlength="2000"></textarea>
+                    </label>
+                    <p class="hss-rating-form__msg" id="review-form-msg" hidden></p>
+                    <button type="submit" class="hss-btn hss-btn--primary hss-btn--lg hss-reviews-submit" data-i18n="rating.submit">—</button>
+                </form>
+            </aside>
+
+            <div class="hss-reviews-list reveal">
+                <div class="hss-reviews-list__head">
+                    <h2 data-i18n="pages.reviews.listTitle">—</h2>
+                    <p class="hss-reviews-list__sub" data-i18n="pages.reviews.listSub">—</p>
+                </div>
+                <div class="hss-reviews-grid" id="reviews-list">
+                    <div class="hss-reviews-empty">
+                        <span class="hss-reviews-empty__icon" aria-hidden="true">☆</span>
+                        <p data-i18n="pages.reviews.emptyList">—</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="site-footer"></div>
+    <script src="lang/hy.embed.js?v=20260627"></script>
+    <script src="lang/ru.embed.js?v=20260627"></script>
+    <script src="lang/en.embed.js?v=20260627"></script>
+    <script src="js/i18n.js?v=20260630"></script>
+    <script src="js/cms-config.js?v=20260706"></script>
+    <script src="js/cms-content.js?v=20260706"></script>
+    <script src="js/common.js?v=20260630"></script>
+    <script src="js/reviews.js?v=20260626"></script>
+</body>
+</html>

@@ -18,4 +18,6 @@
 
   window.FORM_API_BASE = isLocal || isProduction ? '' : PRODUCTION_API.replace(/\/$/, '');
   window.NOTIFY_EMAIL = NOTIFY_EMAIL;
+  // Google Maps JavaScript API key (optional). Leave empty to use iframe embed on contacts page.
+  window.GOOGLE_MAPS_API_KEY = '';
 })();
