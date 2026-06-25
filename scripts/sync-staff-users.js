@@ -4,6 +4,9 @@
  * Safe to run on every deploy: updates password hashes when env values change.
  */
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+if (process.env.STAFF_ENV_FILE) {
+  require('dotenv').config({ path: process.env.STAFF_ENV_FILE, override: true });
+}
 
 const { initDb } = require('../server/db');
 const { ensureStaffUsers } = require('../server/db/seed');
