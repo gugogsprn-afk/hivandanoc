@@ -206,9 +206,16 @@ const HospitalApp = (function () {
 
   function mergeById(baseList, locList) {
     if (!locList?.length) return baseList;
-    return baseList.map((item) => {
+    const TEXT = ['name', 'role', 'bio', 'experience', 'location', 'description', 'title', 'text'];
+    return (baseList || []).map((item) => {
       const tr = locList.find((x) => x.id === item.id);
-      return tr ? { ...item, ...tr } : item;
+      if (!tr) return item;
+      const out = { ...item };
+      for (const key of TEXT) {
+        if (tr[key]) out[key] = tr[key];
+      }
+      if (tr.services?.length) out.services = tr.services;
+      return out;
     });
   }
 
@@ -1301,6 +1308,9 @@ const HospitalApp = (function () {
       if (typeof CmsContent !== 'undefined' && CmsContent.startVersionWatch) {
         CmsContent.startVersionWatch(30000);
       }
+
+      document.documentElement.classList.remove('i18n-pending');
+      document.documentElement.classList.add('i18n-ready');
 
       return getData();
     })();

@@ -68,12 +68,17 @@ const I18n = (function () {
   }
 
   async function loadLanguage(lang) {
+    if (window.__I18N__?.[lang]) {
+      dictionary = window.__I18N__[lang];
+    }
     try {
       const res = await fetch(`${getAssetBase()}lang/${lang}.json`, { cache: 'no-store' });
       if (!res.ok) throw new Error(`Locale not found: ${lang}`);
       dictionary = await res.json();
     } catch {
-      dictionary = window.__I18N__?.[lang] || { content: {} };
+      if (!dictionary || !Object.keys(dictionary).length) {
+        dictionary = window.__I18N__?.[lang] || { content: {} };
+      }
     }
     currentLang = lang;
     const meta = config.languages.find((l) => l.code === lang);

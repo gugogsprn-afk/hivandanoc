@@ -8,6 +8,14 @@ body.hss-page {
   background: #fff;
 }
 
+html.i18n-pending body {
+  visibility: hidden;
+}
+
+html.i18n-ready body {
+  visibility: visible;
+}
+
 .hss-page main,
 .hss-page #main-content {
   background: #fff;

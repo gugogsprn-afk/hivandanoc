@@ -47,14 +47,16 @@ const CmsContent = (function () {
   function mergeLocalizedById(primary, localized) {
     if (!localized?.length) return primary;
     const map = new Map(localized.map((x) => [x.id, x]));
+    const TEXT = ['name', 'role', 'bio', 'experience', 'location', 'education', 'languages'];
     return (primary || []).map((item) => {
       const tr = map.get(item.id);
       if (!tr) return item;
-      return {
-        ...item,
-        ...tr,
-        services: tr.services?.length ? tr.services : item.services
-      };
+      const out = { ...item };
+      for (const key of TEXT) {
+        if (tr[key]) out[key] = tr[key];
+      }
+      if (tr.services?.length) out.services = tr.services;
+      return out;
     });
   }
 
@@ -85,7 +87,7 @@ const CmsContent = (function () {
         if (key === 'address') {
           merged.hospital.address = locVal || merged.hospital.address || cmsVal || '';
         } else {
-          merged.hospital[key] = cmsVal || locVal || merged.hospital[key] || '';
+          merged.hospital[key] = locVal || cmsVal || merged.hospital[key] || '';
         }
       }
       for (const key of MAP_KEYS) {

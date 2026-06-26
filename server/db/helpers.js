@@ -7,17 +7,22 @@ function pick(row, field, lang) {
   if (!row) return '';
   const direct = row[`${field}_${lang}`];
   if (direct) return direct;
+  if (lang !== 'ru') {
+    const en = row[`${field}_en`];
+    if (en) return en;
+  }
   return '';
 }
 
-/** Triplet object { hy, ru, en } — no cross-language fallback except on hy. */
+/** Triplet object { hy, ru, en } — same language only, then English. */
 function pickTriplet(obj, lang) {
   if (!obj) return '';
   if (typeof obj === 'string') return obj;
   const v = obj[lang];
   if (v) return v;
-  if (lang === 'hy') return obj.hy || obj.ru || obj.en || '';
-  return '';
+  if (lang === 'hy') return obj.en || '';
+  if (lang === 'ru') return obj.en || '';
+  return obj.en || obj.ru || obj.hy || '';
 }
 
 function triplet(value) {
@@ -168,9 +173,12 @@ function buildPublicContent(lang = 'hy') {
         name: pick(s, 'title', lang),
         icon: s.icon || '🩺',
         description: pick(s, 'description', lang),
-        services: items.map((item) =>
-          typeof item === 'string' ? item : pick(item, 'name', lang) || (lang === 'hy' ? item.name || '' : '')
-        ),
+        services: items.map((item) => {
+          if (typeof item === 'string') return item;
+          const localized = pick(item, 'name', lang);
+          if (localized) return localized;
+          return lang === 'ru' ? item.name || '' : '';
+        }),
         price: s.price,
         duration: s.duration,
         doctorId: s.doctor_id,
@@ -189,7 +197,7 @@ function buildPublicContent(lang = 'hy') {
       departmentId: d.department_id,
       location: pick(d, 'location', lang),
       isSurgeon: !!d.is_surgeon,
-      experience: d.experience,
+      experience: pick(d, 'experience', lang) || d.experience,
       image: d.image_url,
       bio: pick(d, 'bio', lang),
       education: pick(d, 'education', lang),
