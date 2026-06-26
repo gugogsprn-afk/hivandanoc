@@ -3,7 +3,7 @@ const fs = require('fs');
 const express = require('express');
 const helmet = require('helmet');
 const { initDb } = require('./db');
-const { seed, ensureStaffUsers } = require('./db/seed');
+const { seed, ensureStaffUsers, ensureHospitalMapSettings } = require('./db/seed');
 const { apiLimiter } = require('./middleware/rateLimit');
 
 const authRoutes = require('./routes/auth');
@@ -48,9 +48,14 @@ function createCmsApp() {
   } else {
     try {
       ensureStaffUsers();
+      ensureHospitalMapSettings();
     } catch (err) {
       console.error('[cms] staff users error:', err.message);
     }
+  }
+
+  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    console.warn('[cms] GOOGLE_MAPS_API_KEY is not set — clinic map pin requires Google Maps API key in .env');
   }
 
   const app = express();

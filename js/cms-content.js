@@ -78,7 +78,7 @@ const CmsContent = (function () {
         if (val == null || val === '') continue;
         if (!HOSPITAL_TEXT.includes(key)) merged.hospital[key] = val;
       }
-      const MAP_KEYS = ['mapsQuery', 'mapLat', 'mapLng', 'mapsEmbed', 'mapsDirections'];
+      const MAP_KEYS = ['mapsQuery', 'mapLat', 'mapLng', 'mapPlaceId', 'mapsEmbed', 'mapsDirections'];
       for (const key of HOSPITAL_TEXT) {
         const cmsVal = cms.hospital[key];
         const locVal = locH[key];
@@ -90,7 +90,9 @@ const CmsContent = (function () {
       }
       for (const key of MAP_KEYS) {
         const cmsVal = cms.hospital[key];
-        if (cmsVal != null && cmsVal !== '') merged.hospital[key] = cmsVal;
+        if (cmsVal == null || cmsVal === '') continue;
+        if (key === 'mapsEmbed' && String(cmsVal).includes('!1m3!2m1!1s')) continue;
+        merged.hospital[key] = cmsVal;
       }
     }
     if (cms.departments?.length) {

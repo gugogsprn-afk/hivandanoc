@@ -235,6 +235,7 @@ function buildPublicContent(lang = 'hy') {
       address: pickTriplet(hospital.address, lang),
       mapsQuery: hospital.mapsQuery || '',
       mapsEmbed: hospital.mapsEmbed || '',
+      mapPlaceId: hospital.mapPlaceId || '',
       mapLat: hospital.mapLat ?? null,
       mapLng: hospital.mapLng ?? null,
       hours: pickTriplet(hospital.hours, lang),

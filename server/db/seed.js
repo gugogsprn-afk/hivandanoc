@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { initDb, getDb } = require('./index');
-const { setSetting, triplet } = require('./helpers');
+const { setSetting, triplet, getSetting } = require('./helpers');
+const { isBrokenMapsEmbed } = require('../services/clinic-map');
 
 const HOSPITAL_JSON = path.join(__dirname, '../../data/hospital.json');
 
@@ -98,6 +99,7 @@ function seedFromHospitalJson() {
       address: triplet(h.address),
       mapsQuery: h.mapsQuery || '',
       mapsEmbed: h.mapsEmbed || '',
+      mapPlaceId: h.mapPlaceId || '',
       mapLat: h.mapLat ?? null,
       mapLng: h.mapLng ?? null,
       hours: triplet(h.hours),
@@ -231,10 +233,34 @@ function seedFromHospitalJson() {
   console.log('[cms:seed] Imported hospital.json into CMS database');
 }
 
+function ensureHospitalMapSettings() {
+  if (!fs.existsSync(HOSPITAL_JSON)) return;
+  const data = JSON.parse(fs.readFileSync(HOSPITAL_JSON, 'utf8'));
+  const h = data.hospital || {};
+  const global = getSetting('global', {});
+  const hospital = global.hospital || {};
+  const next = {
+    ...global,
+    hospital: {
+      ...hospital,
+      mapsQuery: h.mapsQuery || hospital.mapsQuery || '',
+      mapPlaceId: h.mapPlaceId || hospital.mapPlaceId || '',
+      mapLat: h.mapLat ?? hospital.mapLat ?? null,
+      mapLng: h.mapLng ?? hospital.mapLng ?? null,
+      mapsEmbed: h.mapsEmbed || hospital.mapsEmbed || ''
+    }
+  };
+  if (isBrokenMapsEmbed(next.hospital.mapsEmbed) && h.mapsEmbed) {
+    next.hospital.mapsEmbed = h.mapsEmbed;
+  }
+  setSetting('global', next);
+}
+
 function seed() {
   initDb();
   seedUsers();
   ensureStaffUsers();
+  ensureHospitalMapSettings();
   const svcCount = getDb().prepare('SELECT COUNT(*) AS c FROM services').get().c;
   if (svcCount === 0) {
     seedFromHospitalJson();
@@ -247,4 +273,4 @@ if (require.main === module) {
   seed();
 }
 
-module.exports = { seed, seedFromHospitalJson, seedUsers, ensureStaffUsers };
+module.exports = { seed, seedFromHospitalJson, seedUsers, ensureStaffUsers, ensureHospitalMapSettings };

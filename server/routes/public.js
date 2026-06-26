@@ -9,6 +9,34 @@ const { buildSitemapXml } = require('../services/sitemap');
 
 const router = express.Router();
 
+const { buildMapEmbedUrl, clinicCoords } = require('../services/clinic-map');
+
+router.get('/maps-config', (_req, res) => {
+  const key = process.env.GOOGLE_MAPS_API_KEY || '';
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.json({ ok: true, googleMapsApiKey: key, hasGoogleMapsKey: !!key });
+});
+
+router.get('/map-embed', (req, res) => {
+  const lat = Number.parseFloat(req.query.lat);
+  const lng = Number.parseFloat(req.query.lng);
+  const zoom = Number.parseInt(req.query.zoom, 10);
+  const hospital = {
+    mapLat: Number.isFinite(lat) ? lat : undefined,
+    mapLng: Number.isFinite(lng) ? lng : undefined,
+    mapZoom: Number.isFinite(zoom) ? zoom : undefined
+  };
+  const key = process.env.GOOGLE_MAPS_API_KEY || '';
+  const embedUrl = buildMapEmbedUrl(hospital, key);
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.json({
+    ok: true,
+    embedUrl,
+    hasGoogleMapsKey: !!key,
+    coords: clinicCoords(hospital)
+  });
+});
+
 router.get('/version', (_req, res) => {
   const status = getPublishStatus();
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');

@@ -534,15 +534,13 @@ const HospitalApp = (function () {
   }
 
   function mapEmbedUrl(h) {
-    if (!h) h = {};
-    if (h.mapsEmbed) return h.mapsEmbed;
-    const q = h.mapsQuery || h.address || brandName() + ', Yerevan, Armenia';
-    const params = new URLSearchParams({ q, z: '17', hl: 'ru', output: 'embed' });
-    const lat = h.mapLat ?? h.latitude;
-    const lng = h.mapLng ?? h.longitude;
-    if (lat != null && lng != null && String(lat) !== '' && String(lng) !== '') {
-      params.set('ll', `${lat},${lng}`);
+    if (typeof ClinicMap !== 'undefined' && ClinicMap.mapEmbedUrl) {
+      return ClinicMap.mapEmbedUrl(h);
     }
+    if (!h) h = {};
+    const lat = Number(h.mapLat ?? h.latitude ?? 40.2074194);
+    const lng = Number(h.mapLng ?? h.longitude ?? 44.4782661);
+    const params = new URLSearchParams({ q: `${lat},${lng}`, z: '17', hl: 'ru', output: 'embed' });
     return `https://maps.google.com/maps?${params.toString()}`;
   }
 
@@ -562,21 +560,20 @@ const HospitalApp = (function () {
     if (!container) return;
     const hospital = h || getData()?.hospital || {};
     const address = hospital.address || '';
-    const name = brandName();
-    const title = typeof I18n !== 'undefined' ? I18n.t('footer.mapTitle') : 'Our location';
     const directionsLabel =
       typeof I18n !== 'undefined' ? I18n.t('footer.mapDirections') : 'Open in Google Maps';
-    const embed = mapEmbedUrl(hospital);
     const directions = mapDirectionsUrl(hospital);
-    const openSvg =
-      '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-      '<path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6h-2v6H5V5z"/></svg>';
-    const isFooter = container.id === 'footer-map';
 
-    container.className = container.classList.contains('hss-map')
-      ? `${container.className} hss-map--embed${isFooter ? ' hss-map--footer' : ''}`.trim()
-      : `hss-map hss-map--embed${isFooter ? ' hss-map--footer' : ''}`;
-    container.innerHTML = `
+    if (typeof ClinicMap !== 'undefined') {
+      ClinicMap.render(container, hospital, { footer: container.id === 'footer-map' });
+    } else {
+      const title = typeof I18n !== 'undefined' ? I18n.t('footer.mapTitle') : 'Our location';
+      const embed = mapEmbedUrl(hospital);
+      const isFooter = container.id === 'footer-map';
+      container.className = container.classList.contains('hss-map')
+        ? `${container.className} hss-map--embed${isFooter ? ' hss-map--footer' : ''}`.trim()
+        : `hss-map hss-map--embed${isFooter ? ' hss-map--footer' : ''}`;
+      container.innerHTML = `
       <div class="hss-map__wrap">
         <iframe
           class="hss-map__iframe"
@@ -586,18 +583,8 @@ const HospitalApp = (function () {
           referrerpolicy="no-referrer-when-downgrade"
           allowfullscreen
         ></iframe>
-        <a
-          class="hss-map__place-card"
-          href="${directions}"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="${escHtml(directionsLabel)}"
-        >
-          <span class="hss-map__place-card-title">${escHtml(name)}</span>
-          <span class="hss-map__place-card-address">${escHtml(address)}</span>
-          <span class="hss-map__place-card-open">${openSvg}</span>
-        </a>
       </div>`;
+    }
 
     const addrEl = document.getElementById('footer-map-address');
     if (addrEl) addrEl.textContent = address;
