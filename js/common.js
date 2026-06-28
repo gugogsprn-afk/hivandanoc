@@ -46,10 +46,14 @@ const HospitalApp = (function () {
         el.loop = true;
         el.autoplay = true;
         el.controls = true;
-        el.playsInline = true;
-        el.setAttribute('playsinline', '');
-        el.preload = 'metadata';
-        container.insertBefore(el, container.firstChild);
+      el.playsInline = true;
+      el.setAttribute('playsinline', '');
+      el.preload = 'metadata';
+      el.style.width = '100%';
+      el.style.height = '100%';
+      el.style.objectFit = 'cover';
+      el.style.objectPosition = 'center';
+      container.insertBefore(el, container.firstChild);
       }
       el.src = mediaUrl;
       container.classList.add('has-video');

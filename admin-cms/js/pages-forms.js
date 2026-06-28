@@ -109,7 +109,7 @@ const PagesForms = (function () {
     if (!url) return '';
     const src = esc(mediaUrl(url));
     if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(url)) {
-      return `<video src="${src}" class="cms-pages-preview cms-pages-preview--video" controls preload="metadata" playsinline></video>`;
+      return `<div class="cms-pages-preview-wrap cms-pages-preview-wrap--video"><video src="${src}" class="cms-pages-preview cms-pages-preview--video" controls preload="metadata" playsinline></video></div>`;
     }
     return `<img src="${src}" alt="" class="cms-pages-preview" onerror="this.style.display='none'">`;
   }
@@ -246,7 +246,7 @@ const PagesForms = (function () {
         try {
           const url = await uploadFile(file, statusEl);
           urlInput.value = url;
-          const existingPreview = wrap.querySelector('.cms-pages-preview, .cms-pages-preview--video');
+          const existingPreview = wrap.querySelector('.cms-pages-preview-wrap, .cms-pages-preview, .cms-pages-preview--video');
           if (existingPreview) existingPreview.remove();
           wrap.querySelector('label')?.insertAdjacentHTML('afterend', mediaPreviewHTML(url));
           AdminUI.toast('File uploaded — click Save to publish on public site', 'success');

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = "20260702"
+VERSION = "20260703"
 
 for path in ROOT.glob("*.html"):
     text = path.read_text(encoding="utf-8")
