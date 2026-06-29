@@ -1812,8 +1812,8 @@ html.i18n-ready body {
 }
 
 .hss-header .logo-img--mark {
-  width: 48px;
-  height: 48px;
+  width: 84px;
+  height: 84px;
   object-fit: cover;
   object-position: center 18%;
   border-radius: 50%;
@@ -3430,8 +3430,8 @@ body.hss-modal-open {
 }
 
 .hss-header .logo-brand--header .logo-img--mark {
-  width: 52px;
-  height: 52px;
+  width: 84px;
+  height: 84px;
 }
 
 /* —— Reviews page —— */

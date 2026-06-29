@@ -7,7 +7,6 @@ function fillAppointmentForm() {
   const t = (k) => I18n.t(k);
   const deptSelect = form.querySelector('[name="departmentId"]');
   const doctorSelect = form.querySelector('[name="doctorId"]');
-  const timeSelect = form.querySelector('[name="time"]');
 
   const savedDept = deptSelect.value;
   const savedDoctor = doctorSelect.value;
@@ -15,11 +14,6 @@ function fillAppointmentForm() {
   deptSelect.innerHTML = `<option value="">${t('pages.appointment.department')}</option>`;
   appointmentData.departments.forEach((d) => {
     deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-  });
-
-  timeSelect.innerHTML = `<option value="">${t('pages.appointment.time')}</option>`;
-  appointmentData.timeSlots.forEach((slot) => {
-    timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
   });
 
   if (savedDept) deptSelect.value = savedDept;
@@ -52,11 +46,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   appointmentData = await HospitalApp.init();
   I18n.applyDOM();
 
-  const dateInput = form.querySelector('[name="date"]');
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  dateInput.min = tomorrow.toISOString().split('T')[0];
-
   fillAppointmentForm();
 
   form.querySelector('[name="departmentId"]').addEventListener('change', updateDoctorOptions);
@@ -84,8 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       email: fd.get('email') || '',
       departmentId: fd.get('departmentId'),
       doctorId: fd.get('doctorId') || '',
-      date: fd.get('date'),
-      time: fd.get('time'),
       comment: fd.get('comment') || ''
     };
 

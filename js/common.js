@@ -183,7 +183,7 @@ const HospitalApp = (function () {
     }
     return `
       <span class="logo-brand logo-brand--header">
-        <img src="${mark}" alt="" id="header-logo" class="logo-img logo-img--mark" width="48" height="48" loading="eager" aria-hidden="true" />
+        <img src="${mark}" alt="" id="header-logo" class="logo-img logo-img--mark" width="84" height="84" loading="eager" aria-hidden="true" />
       </span>`;
   }
 
@@ -307,12 +307,6 @@ const HospitalApp = (function () {
 
     mount.innerHTML = `
       <header class="header-wrap hss-header" id="site-header">
-        <div class="header-top">
-          <a href="${prefix}about" data-i18n="nav.whyUs">${I18n.t('nav.whyUs')}</a>
-          <a href="${prefix}about" data-i18n="nav.aboutOrg">${I18n.t('nav.aboutOrg')}</a>
-          <span class="header-top__sep" aria-hidden="true">|</span>
-          <a href="mailto:${h.email || 'info@gkb1.ru'}" id="header-email">${h.email || 'info@gkb1.ru'}</a>
-        </div>
         <nav class="navbar">
           <div class="nav-container">
             <a href="${prefix === '../' ? '../' : '/'}" class="logo logo--brand" aria-label="${brandName()}">
