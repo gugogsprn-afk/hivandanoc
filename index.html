@@ -10,7 +10,7 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":["MedicalClinic","Organization"],"name":"Healthy Spine","url":"https://healthyspinedoc.com/","address":{"@type":"PostalAddress","addressLocality":"Yerevan","addressCountry":"AM"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://healthyspinedoc.com/"}]}]}</script>
     <title>Առողջ ողնաշար</title>
     <link rel="stylesheet" href="css/hospital-theme.css?v=20260702">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260726">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260727">
 <script src="js/i18n-boot.js?v=20260718"></script>
 </head>
 <body class="hss-page" data-page="home" data-i18n-title="pages.home.title">
@@ -18,12 +18,14 @@
 
     <main id="main-content">
 
-        <!-- 1. Hero (white, H1 + subtitle + single CTA) -->
-        <section class="hss-hero" id="home">
-            <div class="hss-wrap">
+        <!-- 1. Hero — photo / video banner with text overlay -->
+        <section class="hss-hero hss-hero--banner" id="home">
+            <div class="hss-hero-banner__media" id="home-hero-media" aria-hidden="true"></div>
+            <div class="hss-hero-banner__overlay" aria-hidden="true"></div>
+            <div class="hss-wrap hss-hero-banner__content">
                 <h1 id="hero-title">—</h1>
                 <p class="hss-hero__tagline" id="hero-subtitle">—</p>
-                <a href="appointment.html" class="hss-btn hss-btn--primary" data-i18n="common.bookAppointment">—</a>
+                <a href="appointment.html" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="common.bookAppointment">—</a>
             </div>
         </section>
 

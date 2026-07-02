@@ -87,6 +87,50 @@ const HospitalApp = (function () {
     });
   }
 
+  function applyHomeHeroMedia(url, type) {
+    const container = document.getElementById('home-hero-media');
+    if (!container) return null;
+    const defaultImage =
+      'https://images.unsplash.com/photo-1579684385127-1ef15f558a2a?w=1800&q=88';
+    const mediaUrl = (url || '').trim() || defaultImage;
+    const isVideo = inferMediaType(mediaUrl, type) === 'video';
+    let el = document.getElementById('home-hero-image');
+
+    if (isVideo) {
+      if (!el || el.tagName !== 'VIDEO') {
+        if (el) el.remove();
+        el = document.createElement('video');
+        el.id = 'home-hero-image';
+        el.className = 'hss-hero-banner__bg';
+        el.muted = true;
+        el.loop = true;
+        el.autoplay = true;
+        el.playsInline = true;
+        el.setAttribute('playsinline', '');
+        el.preload = 'metadata';
+        el.setAttribute('aria-hidden', 'true');
+        container?.insertBefore(el, container.firstChild);
+      }
+      el.src = mediaUrl;
+      container?.classList.add('has-video');
+      el.play().catch(() => {});
+    } else {
+      if (!el || el.tagName !== 'IMG') {
+        if (el) el.remove();
+        el = document.createElement('img');
+        el.id = 'home-hero-image';
+        el.className = 'hss-hero-banner__bg';
+        el.alt = '';
+        el.loading = 'eager';
+        el.decoding = 'async';
+        container?.insertBefore(el, container.firstChild);
+      }
+      el.src = mediaUrl;
+      container?.classList.remove('has-video');
+    }
+    return el;
+  }
+
   function applyPatientHeroMedia(url, type) {
     const section = document.getElementById('patient-hero');
     const container = document.getElementById('patient-hero-media') || section;
@@ -1146,7 +1190,12 @@ const HospitalApp = (function () {
   function applyPageFields(fields) {
     if (!fields || typeof fields !== 'object') return;
     const MEDIA_FIELDS = {
-      'patient-hero-image': applyPatientHeroMedia,
+      'home-hero-image': applyHomeHeroMedia,
+      'patient-hero-image': (url, type) => {
+        applyHomeHeroMedia(url, type);
+        const lower = document.getElementById('patient-hero');
+        if (lower) lower.hidden = !!(url || '').trim();
+      },
       'home-feature-image': applyFeatureMedia,
       'back-in-game-image': (url, type) =>
         applyBlockMedia({
@@ -1334,6 +1383,7 @@ const HospitalApp = (function () {
     isVideoUrl,
     inferMediaType,
     applyPatientHeroMedia,
+    applyHomeHeroMedia,
     applyFeatureMedia,
     applyBlockMedia,
     initVideoHeroPlayers

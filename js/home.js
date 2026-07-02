@@ -12,7 +12,31 @@ function initDoctorSearch(data) {
   initDoctorSearchBand(data);
 }
 
+function renderHomeHeroBanner(data, pf = {}) {
+  const h = data.hospital || {};
+  const ph = data.patientHero;
+  const url =
+    pf['home-hero-image'] ||
+    pf['patient-hero-image'] ||
+    ph?.image ||
+    h.heroImage ||
+    '';
+  const mediaType =
+    pf['home-hero-image__type'] ||
+    pf['patient-hero-image__type'] ||
+    inferMediaType(url);
+  HospitalApp.applyHomeHeroMedia(url, mediaType);
+
+  const lowerSection = document.getElementById('patient-hero');
+  if (lowerSection) {
+    const mainMedia = pf['home-hero-image'] || pf['patient-hero-image'] || ph?.image;
+    lowerSection.hidden = !!mainMedia;
+  }
+}
+
 function renderPatientHero(ph, pf = {}) {
+  const mainMedia = pf['home-hero-image'] || pf['patient-hero-image'] || ph?.image;
+  if (mainMedia) return;
   if (!ph && !pf['patient-hero-image']) return;
   const url = pf['patient-hero-image'] || ph?.image || '';
   const mediaType = pf['patient-hero-image__type'] || inferMediaType(url);
@@ -144,6 +168,8 @@ function renderHomePage() {
   const locH = I18n.getContent()?.hospital || {};
   const t = (k) => I18n.t(k);
   const pf = data.pageFields?.home || {};
+
+  renderHomeHeroBanner(data, pf);
 
   const heroTitle = document.getElementById('hero-title');
   if (heroTitle) {

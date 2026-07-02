@@ -88,8 +88,12 @@
   }
 
   function setText(el, val, field) {
+    if (el?.id === 'home-hero-image' && typeof HospitalApp !== 'undefined') {
+      HospitalApp.applyHomeHeroMedia(val, inferFieldValueType(val, el));
+      return;
+    }
     if (el?.id === 'patient-hero-image' && typeof HospitalApp !== 'undefined') {
-      HospitalApp.applyPatientHeroMedia(val, inferFieldValueType(val, el));
+      HospitalApp.applyHomeHeroMedia(val, inferFieldValueType(val, el));
       return;
     }
     if (el?.id === 'home-feature-image' && typeof HospitalApp !== 'undefined') {
@@ -387,17 +391,30 @@
     { sel: '#hero-subtitle', label: 'Hero subtitle', type: 'text',
       async get() { return getCachedField('hero-subtitle') || (await loadHeroSection()).subtitle?.[lang] || getText(document.querySelector('#hero-subtitle')); },
       async save(val, el) { await persistField(el || document.querySelector('#hero-subtitle'), val); } },
-    { sel: '#patient-hero-image', label: 'Homepage hero photo / video', type: 'image',
+    { sel: '#home-hero-image', label: 'Homepage banner photo / video', type: 'image',
       async get() {
-        const el = document.getElementById('patient-hero-image');
-        return getCachedField('patient-hero-image') || contentExtra.patientHero?.image || el?.src || el?.currentSrc || '';
+        const el = document.getElementById('home-hero-image');
+        return (
+          getCachedField('home-hero-image') ||
+          getCachedField('patient-hero-image') ||
+          contentExtra.patientHero?.image ||
+          el?.src ||
+          el?.currentSrc ||
+          ''
+        );
       },
       async save(val, el) {
-        const target = el || document.getElementById('patient-hero-image');
+        const target = el || document.getElementById('home-hero-image');
+        const valueType = inferFieldValueType(val, target);
         await persistField(target, val, {
-          fieldKey: 'patient-hero-image',
-          valueType: inferFieldValueType(val, target)
+          fieldKey: 'home-hero-image',
+          valueType
         });
+        if (typeof HospitalApp !== 'undefined') {
+          HospitalApp.applyHomeHeroMedia(val, valueType);
+        }
+        const lower = document.getElementById('patient-hero');
+        if (lower) lower.hidden = !!val;
       } },
     { sel: '#home-feature-image', label: 'Feature photo / video', type: 'image',
       async get() {
@@ -701,8 +718,10 @@
         const valueType = inferFieldValueType(val, el, activeEdit?.opts || {});
         await field.save(val, el);
         setText(el, val, field);
-        if (el?.id === 'patient-hero-image' && typeof HospitalApp !== 'undefined') {
-          HospitalApp.applyPatientHeroMedia(val, valueType);
+        if (el?.id === 'home-hero-image' && typeof HospitalApp !== 'undefined') {
+          HospitalApp.applyHomeHeroMedia(val, valueType);
+        } else if (el?.id === 'patient-hero-image' && typeof HospitalApp !== 'undefined') {
+          HospitalApp.applyHomeHeroMedia(val, valueType);
         } else if (el?.id === 'home-feature-image' && typeof HospitalApp !== 'undefined') {
           HospitalApp.applyFeatureMedia(val, valueType);
         }
@@ -935,7 +954,7 @@
       markEditable(el, { ...fieldFromI18n(el, key, true), type: 'text', fieldType: 'placeholder' });
     });
 
-    document.querySelectorAll('main img, main video, .hss-wrap img, .hss-hero img, .hss-section img, .hss-about-hero img, .hss-video-hero__bg, #patient-hero-image, #home-feature-image').forEach((img) => {
+    document.querySelectorAll('main img, main video, .hss-wrap img, .hss-hero img, .hss-section img, .hss-about-hero img, .hss-video-hero__bg, #home-hero-image, #patient-hero-image, #home-feature-image').forEach((img) => {
       if (isInsideChrome(img) || img.closest('[data-cms-editable]')) return;
       if (HOME_FIELDS.some((f) => f.sel === `#${img.id}`)) return;
       markEditable(img, fieldFromImage(img));
