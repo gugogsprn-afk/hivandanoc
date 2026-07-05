@@ -59,6 +59,20 @@ app.post('/api/review', (req, res) =>
   handleLegacyForm(req, res, 'review', 'Новый отзыв с сайта')
 );
 
+const LEGACY_HTML_REDIRECTS = {
+  'contact.html': '/contact',
+  'about.html': '/about',
+  'contacts.html': '/locations',
+  'departments.html': '/patient-care',
+  'doctors.html': '/find-a-doctor',
+  'services.html': '/services',
+  'conditions.html': '/conditions',
+  'knowledge.html': '/knowledge'
+};
+Object.entries(LEGACY_HTML_REDIRECTS).forEach(([file, target]) => {
+  app.get(`/${file}`, (_req, res) => res.redirect(301, target));
+});
+
 app.use(express.static(root, { index: 'index.html' }));
 
 app.use((_req, res) => {

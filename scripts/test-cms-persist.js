@@ -31,6 +31,11 @@ async function main() {
     'Content-Type': 'application/json'
   };
 
+  const before = await fetch(`${API}/public/content?lang=hy&_t=${Date.now()}`, {
+    headers: { 'Cache-Control': 'no-cache' }
+  });
+  const prior = (await before.json()).pageFields?.home?.['hero-title'] || '';
+
   const save = await request('/admin/pages/bulk/fields', {
     method: 'PATCH',
     headers,
@@ -63,6 +68,64 @@ async function main() {
 
   console.log('PASS: public API returns saved hero-title');
   console.log('Value:', got);
+
+  if (prior && prior !== TEST_VALUE) {
+    await request('/admin/pages/bulk/fields', {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({
+        changes: [
+          {
+            pageKey: 'home',
+            sectionKey: 'hero',
+            fieldKey: 'hero-title',
+            lang: 'hy',
+            value: prior,
+            value_type: 'text'
+          }
+        ]
+      })
+    });
+    console.log('Restored hero-title:', prior);
+  } else {
+    const { initDb, getDb } = require('../server/db');
+    const { publishAll } = require('../server/services/content-publish');
+    initDb();
+    getDb()
+      .prepare("DELETE FROM page_fields WHERE page_key = 'home' AND field_key = 'hero-title'")
+      .run();
+
+    const heroRow = getDb()
+      .prepare("SELECT content_json FROM page_sections WHERE page_key = 'home' AND section_key = 'hero'")
+      .get();
+    let hero = {};
+    try {
+      hero = JSON.parse(heroRow?.content_json || '{}');
+    } catch {
+      hero = {};
+    }
+    if (hero.title && /^CMS_test_/i.test(hero.title.hy || '')) {
+      delete hero.title.hy;
+      delete hero.title.ru;
+      delete hero.title.en;
+      if (prior) {
+        hero.title = hero.title || {};
+        hero.title.hy = prior;
+        hero.title.ru = prior;
+        hero.title.en = prior;
+      }
+      getDb()
+        .prepare(
+          `INSERT INTO page_sections (page_key, section_key, enabled, sort_order, content_json, updated_at)
+           VALUES ('home', 'hero', 1, 0, ?, datetime('now'))
+           ON CONFLICT(page_key, section_key) DO UPDATE SET content_json = excluded.content_json`
+        )
+        .run(JSON.stringify(hero));
+    }
+
+    await publishAll();
+    console.log('Removed temporary hero-title override');
+  }
 }
 
 main().catch((err) => {

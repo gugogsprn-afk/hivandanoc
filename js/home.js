@@ -160,6 +160,11 @@ function cmsTriplet(obj, lang) {
   return lang === 'hy' ? obj.hy || '' : '';
 }
 
+function toggleSection(id, visible) {
+  const el = document.getElementById(id);
+  if (el) el.hidden = !visible;
+}
+
 function renderHomePage() {
   const data = HospitalApp.getData();
   if (!data) return;
@@ -211,8 +216,10 @@ function renderHomePage() {
 
   const conditionsEl = document.getElementById('home-conditions');
   if (conditionsEl) {
-    const items = (data.conditions || []).slice(0, 3);
-    conditionsEl.innerHTML = items.map((c) => `<li>${c}</li>`).join('');
+    const items = data.conditions || [];
+    conditionsEl.innerHTML = items
+      .map((c) => `<li>${typeof c === 'string' ? c : c.name || c}</li>`)
+      .join('');
   }
 
   renderPatientHero(data.patientHero, pf);
@@ -292,25 +299,8 @@ function renderHomePage() {
       .join('');
   }
 
-  const storyVideos = document.getElementById('home-story-videos');
-  if (storyVideos) {
-    storyVideos.innerHTML = (data.storyVideos || [])
-      .map(
-        (v) => `
-      <article class="hss-video-card">
-        <div class="hss-video-card__thumb">
-          <img src="${v.image || 'images/team-member-03.jpg'}" alt="${v.title || ''}" loading="lazy" decoding="async" width="360" height="202" />
-          <span class="hss-video-card__play" aria-hidden="true">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </span>
-        </div>
-        <p>${v.title}</p>
-      </article>`
-      )
-      .join('');
-  }
-
   renderNewsCards(data.news || []);
+  toggleSection('news', (data.news || []).length > 0);
 
   const patientStories = document.getElementById('home-patient-stories');
   if (patientStories) {
@@ -318,16 +308,22 @@ function renderHomePage() {
       .map(
         (s) => `
       <a href="patient-story.html?id=${s.id}" class="hss-patient hss-patient--link" aria-label="${s.name}">
-        <div class="hss-patient__photo">
-          <img src="${s.image || 'images/team-member-03.jpg'}" alt="${s.name}" loading="lazy" decoding="async" width="320" height="320" />
-        </div>
-        <h3>${s.name}</h3>
-        <p class="hss-patient__loc">${s.location}</p>
-        <p class="hss-patient__tx">${s.treatment}</p>
+        <article class="hss-patient__card">
+          <div class="hss-patient__photo">
+            <span class="hss-patient__ring" aria-hidden="true"></span>
+            <img src="${s.image || 'images/team-member-03.jpg'}" alt="${s.name}" loading="lazy" decoding="async" width="320" height="320" />
+          </div>
+          <div class="hss-patient__body">
+            <h3>${s.name}</h3>
+            <p class="hss-patient__loc">${s.location}</p>
+            <p class="hss-patient__tx"><span>${s.treatment}</span></p>
+          </div>
+        </article>
       </a>`
       )
       .join('');
   }
+  toggleSection('patient-stories', (data.patientStories || []).length > 0);
 
   const tel = HospitalApp.phoneTelUri(h.phone);
   const mobilePhone = document.getElementById('mobile-bar-phone');

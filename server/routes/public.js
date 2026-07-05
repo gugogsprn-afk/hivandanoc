@@ -1,5 +1,6 @@
 const express = require('express');
 const { buildPublicContent } = require('../db/helpers');
+const { buildServiceCatalog } = require('../services/service-catalog');
 const { getDb } = require('../db');
 const { getPublishStatus, readPublishedContent } = require('../services/content-publish');
 const { publicFormLimiter } = require('../middleware/rateLimit');
@@ -80,10 +81,16 @@ router.get('/doctors', (req, res) => {
 router.get('/services', (req, res) => {
   const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
   const content = buildPublicContent(lang);
+  const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+  const catalog = buildServiceCatalog(content, category || null);
   res.json({
     ok: true,
-    categories: content.serviceCategories,
-    services: content.departments
+    lang,
+    category: category || null,
+    categories: catalog.categories,
+    services: catalog.services,
+    groups: catalog.groups,
+    total: catalog.total
   });
 });
 

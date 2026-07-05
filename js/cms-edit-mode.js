@@ -133,7 +133,11 @@
     }
     if (el.id === 'header-logo') {
       document.querySelectorAll('#header-logo, .logo-img--mark').forEach((img) => {
-        img.src = val;
+        const url = val && !img.closest('.logo-brand--footer') ? val : null;
+        img.src =
+          typeof HospitalApp !== 'undefined' && HospitalApp.normalizeAssetUrl
+            ? HospitalApp.normalizeAssetUrl(url || '/images/brand/logo-mark.png')
+            : url || '/images/brand/logo-mark.png';
       });
       return;
     }
@@ -1095,6 +1099,8 @@
     previewResizeObserver = new ResizeObserver(() => reportPreviewHeight());
     previewResizeObserver.observe(document.body);
     previewResizeObserver.observe(document.documentElement);
+    const hero = document.querySelector('.hss-home-hero');
+    if (hero) previewResizeObserver.observe(hero);
   }
 
   async function init() {
@@ -1129,6 +1135,10 @@
       setTimeout(attachAll, 300);
       setTimeout(syncEditLayout, 350);
       setTimeout(reportPreviewHeight, 500);
+    });
+    window.addEventListener('cms-hero-media-ready', () => {
+      setTimeout(reportPreviewHeight, 50);
+      setTimeout(reportPreviewHeight, 400);
     });
   }
 

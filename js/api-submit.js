@@ -153,7 +153,7 @@ const FormApi = (function () {
       needsApi: true,
       status: 0,
       error:
-        'Сервер уведомлений недоступен. Проверьте подключение к интернету или напишите на info@healthyspinedoc.com.'
+        'Сервер уведомлений недоступен. Проверьте подключение к интернету или напишите на info@healthyspine.am.'
     };
   }
 

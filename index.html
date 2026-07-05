@@ -1,31 +1,32 @@
 <!DOCTYPE html>
 <html lang="hy">
 <head>
-    <script>(function(){var c=['hy','ru','en'],l='hy',k='gkb_lang';try{var s=localStorage.getItem(k);if(s&&c.indexOf(s)>=0)l=s;}catch(e){}try{var q=new URLSearchParams(location.search).get('lang');if(q&&c.indexOf(q)>=0)l=q;}catch(e){}document.documentElement.lang=l;document.documentElement.classList.add('i18n-pending');})();</script>
+    <script>(function(){var c=['hy','ru','en'],l='hy',k='gkb_lang';try{var s=localStorage.getItem(k);if(s&&c.indexOf(s)>=0)l=s;}catch(e){}document.documentElement.lang=l;document.documentElement.classList.add('i18n-pending');})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="«Առողջ ողնաշար» — պոզանոցի և հոդերի վերականգնողական կենտրոն">
+    <meta name="description" content="«Առողջ ողնաշար» — ողնաշարի և հոդերի վերականգնողական կենտրոն">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://healthyspinedoc.com/">
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":["MedicalClinic","Organization"],"name":"Healthy Spine","url":"https://healthyspinedoc.com/","address":{"@type":"PostalAddress","addressLocality":"Yerevan","addressCountry":"AM"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://healthyspinedoc.com/"}]}]}</script>
     <title>Առողջ ողնաշար</title>
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260702">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260727">
-<script src="js/i18n-boot.js?v=20260718"></script>
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260772">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260772">
+<script src="js/locale-policy.js?v=20260762"></script>
+<script src="js/i18n-boot.js?v=20260762"></script>
 </head>
 <body class="hss-page" data-page="home" data-i18n-title="pages.home.title">
     <div id="site-nav"></div>
 
     <main id="main-content">
 
-        <!-- 1. Hero — photo / video banner with text overlay -->
-        <section class="hss-hero hss-hero--banner" id="home">
-            <div class="hss-hero-banner__media" id="home-hero-media" aria-hidden="true"></div>
-            <div class="hss-hero-banner__overlay" aria-hidden="true"></div>
-            <div class="hss-wrap hss-hero-banner__content">
-                <h1 id="hero-title">—</h1>
-                <p class="hss-hero__tagline" id="hero-subtitle">—</p>
-                <a href="appointment.html" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="common.bookAppointment">—</a>
+        <!-- 1. Full-screen video / photo hero -->
+        <section class="hss-home-hero" id="home">
+            <div class="hss-home-hero__media" id="home-hero-media" aria-hidden="true"></div>
+            <div class="hss-home-hero__overlay" aria-hidden="true"></div>
+            <div class="hss-wrap hss-home-hero__content">
+                <h1 class="hss-home-hero__title" id="hero-title">—</h1>
+                <p class="hss-home-hero__tagline" id="hero-subtitle">—</p>
+                <a href="/contact" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="common.bookAppointment">—</a>
             </div>
         </section>
 
@@ -49,7 +50,7 @@
             <div class="hss-wrap">
                 <h2 data-i18n="pages.home.introTitle">—</h2>
                 <div class="hss-prose" id="home-intro-prose"></div>
-                <p class="hss-prose"><a href="/about" class="hss-link" data-i18n="pages.home.rankingsLink">—</a> · <a href="/contact" class="hss-link">—</a></p>
+                <p class="hss-prose"><a href="/about" class="hss-link" data-i18n="pages.home.rankingsLink">—</a> · <a href="/contact" class="hss-link" data-i18n="nav.contacts">—</a></p>
             </div>
         </section>
 
@@ -62,7 +63,7 @@
                     </span>
                     <h3 data-i18n="pages.home.tileDoctors">—</h3>
                 </a>
-                <a href="appointment.html" class="hss-tile">
+                <a href="/contact" class="hss-tile">
                     <span class="hss-tile__icon" aria-hidden="true">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </span>
@@ -113,12 +114,9 @@
             </div>
         </section>
 
-        <!-- Back in the game — brand story split -->
+        <!-- Back in the game — brand story split (text left, media right) -->
         <section class="hss-split hss-brand-story" id="brand-story">
             <div class="hss-wrap hss-split__grid">
-                <div class="hss-split__media">
-                    <img id="back-in-game-image" src="" alt="">
-                </div>
                 <div class="hss-split__text">
                     <div class="hss-brand-story__logo">
                         <img src="images/brand/logo.png" alt="Առողջ ողնաշար" width="48" height="48" class="logo-img--mark">
@@ -126,6 +124,9 @@
                     </div>
                     <div class="hss-prose" id="back-in-game-text"></div>
                     <p><a href="#patient-stories" class="hss-link" id="back-in-game-link">—</a></p>
+                </div>
+                <div class="hss-split__media">
+                    <img id="back-in-game-image" src="" alt="">
                 </div>
             </div>
         </section>
@@ -185,14 +186,6 @@
             <div class="hss-wrap hss-awards__grid" id="home-awards-grid"></div>
         </section>
 
-        <!-- 9. Patient video stories -->
-        <section class="hss-section hss-section--alt" id="reviews">
-            <div class="hss-wrap">
-                <h2 data-i18n="pages.home.reviewsTitle">—</h2>
-                <div class="hss-videos" id="home-story-videos"></div>
-            </div>
-        </section>
-
         <!-- 10. News cards -->
         <section class="hss-section" id="news">
             <div class="hss-wrap">
@@ -205,7 +198,7 @@
         </section>
 
         <!-- 11. Patient stories grid -->
-        <section class="hss-section hss-section--alt" id="patient-stories">
+        <section class="hss-section hss-section--alt hss-patient-stories" id="patient-stories">
             <div class="hss-wrap">
                 <div class="hss-section-head">
                     <h2 data-i18n="pages.home.storiesTitle">—</h2>
@@ -219,27 +212,27 @@
         <section class="hss-cta-band">
             <div class="hss-wrap hss-cta-band__inner">
                 <p class="hss-cta-band__text" data-i18n="pages.home.footerCta">—</p>
-                <a href="appointment.html" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="common.bookAppointment">—</a>
+                <a href="/contact" class="hss-btn hss-btn--primary hss-btn--lg" data-i18n="common.bookAppointment">—</a>
             </div>
         </section>
     </main>
 
     <!-- Mobile sticky bar (HSS pattern) -->
     <div class="hss-mobile-bar" id="mobile-bar">
-        <a href="tel:+37410000000" class="hss-mobile-bar__phone" id="mobile-bar-phone" data-i18n="common.callUs">—</a>
-        <a href="appointment.html" class="hss-btn hss-btn--primary" data-i18n="common.bookAppointment">—</a>
+        <a href="tel:+37493274888" class="hss-mobile-bar__phone" id="mobile-bar-phone" data-i18n="common.callUs">—</a>
+        <a href="/contact" class="hss-btn hss-btn--primary" data-i18n="common.bookAppointment">—</a>
     </div>
 
     <div id="site-footer"></div>
 
     <script src="data/hospital.embed.js"></script>
 <script src="js/storage.js"></script>
-    <script src="js/i18n.js?v=20260702"></script>
+    <script src="js/i18n.js?v=20260762"></script>
     <script src="js/cms-config.js?v=20260710"></script>
     <script src="js/cms-content.js?v=20260718"></script>
     <script src="js/clinic-map.js?v=20260712"></script>
-    <script src="js/common.js?v=20260726"></script>
+    <script src="js/common.js?v=20260771"></script>
     <script src="js/doctor-search.js?v=20260717"></script>
-    <script src="js/home.js?v=20260710"></script>
+    <script src="js/home.js?v=20260763"></script>
 </body>
 </html>

@@ -1,5 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { getLaunchedServiceSlugs } = require('./service-pages');
+const { getLaunchedConditionSlugs } = require('./condition-pages');
+const { getLaunchedKnowledgeSlugs } = require('./knowledge-pages');
+const { LAUNCHED_AUTHORITY_SLUGS } = require('./local-authority-pages');
 
 const SITE_ROOT = path.join(__dirname, '../..');
 
@@ -7,11 +11,13 @@ const SITE_ROOT = path.join(__dirname, '../..');
 const CORE_ROUTES = [
   { path: '/', file: 'index.html', priority: '1.0', changefreq: 'weekly' },
   { path: '/find-a-doctor', file: 'doctors.html', priority: '0.9', changefreq: 'weekly' },
+  { path: '/services', file: 'services.html', priority: '0.95', changefreq: 'weekly' },
   { path: '/patient-care', file: 'departments.html', priority: '0.9', changefreq: 'weekly' },
   { path: '/about', file: 'about.html', priority: '0.8', changefreq: 'monthly' },
   { path: '/contact', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
   { path: '/locations', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
-  { path: '/reviews.html', file: 'reviews.html', priority: '0.8', changefreq: 'weekly' }
+  { path: '/knowledge', file: 'knowledge.html', priority: '0.92', changefreq: 'weekly' },
+  { path: '/consultation-process', file: 'consultation-process.html', priority: '0.85', changefreq: 'monthly' }
 ];
 
 function siteBase() {
@@ -51,12 +57,51 @@ function urlEntry(loc, { lastmod, changefreq, priority }) {
 
 function buildSitemapEntries() {
   const base = siteBase();
-  return CORE_ROUTES.map((route) => ({
+  const today = new Date().toISOString().slice(0, 10);
+  const entries = CORE_ROUTES.map((route) => ({
     loc: route.path === '/' ? `${base}/` : `${base}${route.path}`,
     lastmod: fileLastMod(route.file),
     changefreq: route.changefreq,
     priority: route.priority
   }));
+
+  for (const slug of getLaunchedServiceSlugs()) {
+    entries.push({
+      loc: `${base}/services/${slug}`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: '0.88'
+    });
+  }
+
+  for (const slug of getLaunchedConditionSlugs()) {
+    entries.push({
+      loc: `${base}/conditions/${slug}`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: '0.87'
+    });
+  }
+
+  for (const slug of getLaunchedKnowledgeSlugs()) {
+    entries.push({
+      loc: `${base}/knowledge/${slug}`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: '0.88'
+    });
+  }
+
+  for (const authorityPath of LAUNCHED_AUTHORITY_SLUGS) {
+    entries.push({
+      loc: `${base}${authorityPath}`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: '0.85'
+    });
+  }
+
+  return entries;
 }
 
 function buildSitemapXml() {

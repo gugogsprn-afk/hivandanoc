@@ -150,7 +150,13 @@ function renderVideos(mb, t) {
 
 function renderPress(mb, t) {
   const el = document.getElementById('mb-press');
-  if (!el) return;
+  const section = document.getElementById('mb-press-section');
+  const items = mb?.pressNews || [];
+  if (section) section.hidden = items.length === 0;
+  if (!el || !items.length) {
+    if (el) el.innerHTML = '';
+    return;
+  }
   el.innerHTML = `
     <h2 class="hss-mb-section-title hss-serif">${t('pages.moveBetter.sectionPress')}</h2>
     <div class="hss-mb-press-grid">

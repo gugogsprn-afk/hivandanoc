@@ -396,3 +396,40 @@ body.cms-edit-mode #site-header [data-cms-editable]:hover {
 body.cms-edit-mode .hss-mobile-bar {
   display: none;
 }
+
+/* Admin visual editor: homepage hero as horizontal 16:9 banner (not full viewport) */
+body.cms-edit-mode .hss-home-hero {
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9;
+}
+
+body.cms-edit-mode .hss-home-hero__bg {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center;
+}
+
+body.cms-edit-mode .hss-home-hero__content {
+  padding: clamp(0.75rem, 2.5vw, 1.5rem) 4%;
+}
+
+body.cms-edit-mode .hss-home-hero__title {
+  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  margin-bottom: 0.35rem;
+  max-width: 12ch;
+}
+
+body.cms-edit-mode .hss-home-hero__tagline {
+  font-size: clamp(0.75rem, 1.8vw, 1rem);
+  margin-bottom: 0.75rem;
+  max-width: 28rem;
+}
+
+body.cms-edit-mode .hss-home-hero__content .hss-btn--lg {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+}

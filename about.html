@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="hy">
 <head>
-    <script>(function(){var c=['hy','ru','en'],l='hy',k='gkb_lang';try{var s=localStorage.getItem(k);if(s&&c.indexOf(s)>=0)l=s;}catch(e){}try{var q=new URLSearchParams(location.search).get('lang');if(q&&c.indexOf(q)>=0)l=q;}catch(e){}document.documentElement.lang=l;document.documentElement.classList.add('i18n-pending');})();</script>
+    <script>(function(){document.documentElement.lang='hy';document.documentElement.classList.add('i18n-pending');})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="About Healthy Spine rehabilitation center in Yerevan — mission, team, values, and evidence-based spine and joint care.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://healthyspinedoc.com/about">
     <title>About Us — Healthy Spine</title>
-    <link rel="stylesheet" href="css/hospital-theme.css?v=20260701">
-    <link rel="stylesheet" href="css/hss-spine.css?v=20260726">
+    <link rel="stylesheet" href="css/hospital-theme.css?v=20260772">
+    <link rel="stylesheet" href="css/hss-spine.css?v=20260772">
+<script src="js/locale-policy.js?v=20260703"></script>
 <script src="js/i18n-boot.js?v=20260718"></script>
 </head>
 <body class="hss-page" data-page="about" data-i18n-title="pages.about.title">
     <div id="site-nav"></div>
 
     <div class="hss-about-hero">
+        <div class="hss-about-hero__overlay" aria-hidden="true"></div>
         <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=85" alt="" id="about-hero-img" loading="eager">
+        <div class="hss-about-hero__shine" aria-hidden="true"></div>
     </div>
 
-    <nav class="hss-subnav" aria-label="About sections">
+    <nav class="hss-subnav hss-subnav--premium" aria-label="About sections">
         <div class="hss-wrap">
             <ul class="hss-subnav__list" id="about-subnav">
                 <li><a href="/about#overview" data-section="overview" data-i18n="pages.about.subnavOverview">—</a></li>
@@ -32,10 +35,12 @@
         </div>
     </nav>
 
-    <main class="hss-about-main" id="main-content">
+    <main class="hss-about-main hss-about-main--premium" id="main-content">
         <div class="hss-wrap">
 
-            <section class="hss-about-section" id="overview">
+            <section class="hss-about-section hss-about-panel" id="overview">
+                <div class="hss-about-panel__glow" aria-hidden="true"></div>
+                <div class="hss-about-panel__body">
                 <h1 class="hss-about-section__title" id="about-article-title">—</h1>
                 <p class="hss-about-section__lead" id="about-text">History, mission, and values of our rehabilitation center.</p>
                 <figure class="hss-about-figure">
@@ -43,29 +48,42 @@
                     <figcaption data-i18n="pages.about.signCaption">—</figcaption>
                 </figure>
                 <div class="hss-about-article" id="about-article"></div>
+                </div>
             </section>
 
-            <section class="hss-about-section" id="leadership">
+            <section class="hss-about-section hss-about-panel" id="leadership">
+                <div class="hss-about-panel__glow" aria-hidden="true"></div>
+                <div class="hss-about-panel__body">
                 <h2 class="hss-about-section__title" data-i18n="pages.about.leadershipTitle">—</h2>
                 <p class="hss-about-section__lead" data-i18n="pages.about.leadershipLead">—</p>
                 <div class="hss-about-council" id="about-leadership"></div>
+                </div>
             </section>
 
-            <section class="hss-about-section" id="awards">
+            <section class="hss-about-section hss-about-panel" id="awards">
+                <div class="hss-about-panel__glow" aria-hidden="true"></div>
+                <div class="hss-about-panel__body">
                 <h2 class="hss-about-section__title" data-i18n="pages.about.awardsTitle">—</h2>
                 <p class="hss-about-section__lead" data-i18n="pages.about.awardsLead">—</p>
                 <div class="hss-about-awards" id="about-awards"></div>
+                </div>
             </section>
 
-            <section class="hss-about-section" id="mission">
+            <section class="hss-about-section hss-about-panel hss-about-panel--mission" id="mission">
+                <div class="hss-about-panel__glow" aria-hidden="true"></div>
+                <div class="hss-about-panel__body">
                 <h2 class="hss-about-section__title" data-i18n="pages.about.missionTitle">—</h2>
                 <p class="hss-about-section__body" id="mission-text"></p>
                 <ul class="hss-about-values" id="about-values"></ul>
+                </div>
             </section>
 
-            <section class="hss-about-section" id="history">
+            <section class="hss-about-section hss-about-panel" id="history">
+                <div class="hss-about-panel__glow" aria-hidden="true"></div>
+                <div class="hss-about-panel__body">
                 <h2 class="hss-about-section__title" data-i18n="pages.about.historyTitle">—</h2>
                 <p class="hss-about-section__body" data-i18n="pages.about.historyBody">—</p>
+                </div>
             </section>
 
         </div>
@@ -79,8 +97,8 @@
     <script src="js/cms-config.js?v=20260706"></script>
     <script src="js/cms-content.js?v=20260718"></script>
     <script src="js/clinic-map.js?v=20260712"></script>
-    <script src="js/common.js?v=20260726"></script>
+    <script src="js/common.js?v=20260771"></script>
     <script src="js/about-article.js"></script>
-    <script src="js/pages.js"></script>
+    <script src="js/pages.js?v=20260764"></script>
 </body>
 </html>

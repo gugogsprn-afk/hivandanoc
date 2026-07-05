@@ -11,7 +11,11 @@
     "cms:sync-contact": "node scripts/sync-contact-from-env.js",
     "cms:backup": "node scripts/cms-backup.js",
     "cms:reconcile": "node scripts/cms-reconcile-uploads.js",
-    "seo:audit": "node scripts/seo-audit.js"
+    "cms:test": "node scripts/test-admin-api.js && node scripts/test-cms-persist.js",
+    "cms:restore-hero": "node scripts/restore-home-hero.js",
+    "seo:audit": "node scripts/seo-audit.js",
+    "deploy:verify": "npm run seo:audit",
+    "predeploy": "npm run seo:audit"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -27,5 +31,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
   }
 }

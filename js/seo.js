@@ -7,7 +7,7 @@ const SiteSEO = (function () {
     org: '«Առողջ ողնաշար»',
     baseUrl: 'https://healthyspinedoc.com',
     defaultImage: 'images/brand/logo.png',
-    phone: '+37410000000',
+    phone: '+37493274888',
     email: 'info@healthyspine.am'
   };
 
@@ -157,18 +157,8 @@ const SiteSEO = (function () {
     });
   }
 
-  function hreflangUrl(canonicalPath, code) {
-    const u = new URL(canonicalPath, `${SITE.baseUrl}/`);
-    u.searchParams.set('lang', code);
-    return u.href;
-  }
-
-  function injectHreflang(canonicalPath) {
+  function injectHreflang() {
     document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
-    LANGS.forEach((code) => {
-      upsertLink('alternate', hreflangUrl(canonicalPath, code), { hreflang: code });
-    });
-    upsertLink('alternate', absoluteUrl(canonicalPath.split('?')[0] || '/'), { hreflang: 'x-default' });
   }
 
   function pageDescription(page, title) {

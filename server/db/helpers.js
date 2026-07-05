@@ -1,7 +1,11 @@
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 const { getDb } = require('./index');
+const { normalizeCategoryId } = require('../services/service-catalog');
 
 const LANGS = ['hy', 'ru', 'en'];
+const HOSPITAL_JSON = path.join(__dirname, '../../data/hospital.json');
 
 function pick(row, field, lang) {
   if (!row) return '';
@@ -149,6 +153,11 @@ function getPageFieldsMap(lang = 'hy') {
 
 function buildPublicContent(lang = 'hy') {
   const db = getDb();
+  try {
+    db.pragma('wal_checkpoint(PASSIVE)');
+  } catch {
+    /* ignore */
+  }
   const settings = getSetting('global', {});
   const hospital = settings.hospital || {};
 
@@ -169,7 +178,8 @@ function buildPublicContent(lang = 'hy') {
       }
       return {
         id: s.id,
-        category: s.category_id,
+        category: normalizeCategoryId(s.category_id),
+        category_id: s.category_id,
         name: pick(s, 'title', lang),
         icon: s.icon || '🩺',
         description: pick(s, 'description', lang),
@@ -185,6 +195,37 @@ function buildPublicContent(lang = 'hy') {
         image: s.image_url
       };
     });
+
+  if (lang === 'hy' && fs.existsSync(HOSPITAL_JSON)) {
+    try {
+      const hospitalFile = JSON.parse(fs.readFileSync(HOSPITAL_JSON, 'utf8'));
+      const byId = new Map((hospitalFile.departments || []).map((d) => [d.id, d]));
+      for (let i = 0; i < services.length; i++) {
+        const src = byId.get(services[i].id);
+        if (!src) continue;
+        if (src.name) services[i].name = src.name;
+        if (src.description) services[i].description = src.description;
+        if (Array.isArray(src.services) && src.services.length) services[i].services = src.services;
+      }
+    } catch {
+      /* keep CMS values */
+    }
+  }
+
+  if (lang === 'hy') {
+    try {
+      const { hyNames, hyDetails } = require('../../scripts/lib/dept-translations');
+      for (let i = 0; i < services.length; i++) {
+        const id = services[i].id;
+        if (hyNames[id]) services[i].name = hyNames[id];
+        const det = hyDetails[id];
+        if (det?.description) services[i].description = det.description;
+        if (det?.services?.length) services[i].services = det.services;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
 
   const doctors = db
     .prepare('SELECT * FROM doctors WHERE published = 1 ORDER BY sort_order, id')

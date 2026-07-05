@@ -2,9 +2,11 @@
 
 const HospitalApp = (function () {
   const NAV_ITEMS = [
+    { href: '/services', key: 'nav.services', id: 'services' },
+    { href: '/conditions', key: 'nav.conditions', id: 'conditions' },
+    { href: '/knowledge', key: 'nav.knowledge', id: 'knowledge' },
     { href: '/find-a-doctor', key: 'nav.doctors', id: 'doctors' },
     { href: '/locations', key: 'nav.locations', id: 'contacts' },
-    { href: '/patient-care', key: 'nav.patientCare', id: 'departments' },
     { href: '/about', key: 'nav.about', id: 'about' }
   ];
 
@@ -22,6 +24,27 @@ const HospitalApp = (function () {
   function inferMediaType(url, explicitType) {
     if (explicitType === 'video' || explicitType === 'image') return explicitType;
     return isVideoUrl(url) ? 'video' : 'image';
+  }
+
+  /** Canonical homepage banner — home-hero-image wins over legacy patient-hero-image */
+  function resolveHomeBannerMedia(fields = {}) {
+    const url = String(fields['home-hero-image'] || fields['patient-hero-image'] || '').trim();
+    const type = fields['home-hero-image']
+      ? fields['home-hero-image__type'] || inferMediaType(url)
+      : fields['patient-hero-image__type'] || inferMediaType(url);
+    return { url, type };
+  }
+
+  function mirrorBannerFieldChanges(fields = {}) {
+    const { url, type } = resolveHomeBannerMedia(fields);
+    if (!url) return fields;
+    return {
+      ...fields,
+      'home-hero-image': url,
+      'patient-hero-image': url,
+      'home-hero-image__type': type,
+      'patient-hero-image__type': type
+    };
   }
 
   function applyMediaElement({ container, elementId, url, type, className, defaultImage }) {
@@ -87,6 +110,27 @@ const HospitalApp = (function () {
     });
   }
 
+  function applyHeroMediaElementStyles(el) {
+    if (!el) return;
+    if (/[?&]cms-edit=1/.test(location.search)) {
+      el.style.position = 'absolute';
+      el.style.top = '50%';
+      el.style.left = '50%';
+      el.style.width = '100%';
+      el.style.height = '100%';
+      el.style.minWidth = '100%';
+      el.style.minHeight = '100%';
+      el.style.transform = 'translate(-50%, -50%) scale(1.02)';
+      el.style.objectFit = 'cover';
+      el.style.objectPosition = 'center center';
+      return;
+    }
+    el.style.width = '100%';
+    el.style.height = '100%';
+    el.style.objectFit = 'cover';
+    el.style.objectPosition = 'center';
+  }
+
   function applyHomeHeroMedia(url, type) {
     const container = document.getElementById('home-hero-media');
     if (!container) return null;
@@ -101,34 +145,66 @@ const HospitalApp = (function () {
         if (el) el.remove();
         el = document.createElement('video');
         el.id = 'home-hero-image';
-        el.className = 'hss-hero-banner__bg';
+        el.className = 'hss-home-hero__bg';
         el.muted = true;
-        el.loop = true;
-        el.autoplay = true;
         el.playsInline = true;
         el.setAttribute('playsinline', '');
-        el.preload = 'metadata';
         el.setAttribute('aria-hidden', 'true');
-        container?.insertBefore(el, container.firstChild);
+        applyHeroMediaElementStyles(el);
+        container.insertBefore(el, container.firstChild);
       }
+      const editPreview = /[?&]cms-edit=1/.test(location.search);
+      el.loop = !editPreview;
+      el.autoplay = !editPreview;
+      el.preload = editPreview ? 'metadata' : 'auto';
       el.src = mediaUrl;
       container?.classList.add('has-video');
-      el.play().catch(() => {});
+      applyHeroMediaElementStyles(el);
+      if (editPreview) {
+        el.pause();
+      } else {
+        el.play().catch(() => {});
+        el.addEventListener(
+          'loadeddata',
+          () => {
+            el.play().catch(() => {});
+            notifyCmsHeroMediaReady();
+          },
+          { once: true }
+        );
+      }
     } else {
       if (!el || el.tagName !== 'IMG') {
         if (el) el.remove();
         el = document.createElement('img');
         el.id = 'home-hero-image';
-        el.className = 'hss-hero-banner__bg';
+        el.className = 'hss-home-hero__bg';
         el.alt = '';
         el.loading = 'eager';
         el.decoding = 'async';
-        container?.insertBefore(el, container.firstChild);
+        applyHeroMediaElementStyles(el);
+        container.insertBefore(el, container.firstChild);
       }
       el.src = mediaUrl;
       container?.classList.remove('has-video');
+      applyHeroMediaElementStyles(el);
+      el.addEventListener('load', notifyCmsHeroMediaReady, { once: true });
     }
+    notifyCmsHeroMediaReady();
     return el;
+  }
+
+  function notifyCmsHeroMediaReady() {
+    if (!/[?&]cms-edit=1/.test(location.search)) return;
+    window.dispatchEvent(new CustomEvent('cms-hero-media-ready'));
+    if (window.parent && window.parent !== window) {
+      const height = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        720
+      );
+      window.parent.postMessage({ type: 'cms-preview-height', height }, '*');
+    }
   }
 
   function applyPatientHeroMedia(url, type) {
@@ -140,7 +216,7 @@ const HospitalApp = (function () {
       url,
       type,
       className: 'hss-video-hero__bg',
-      defaultImage: 'images/about-image-01.jpg'
+      defaultImage: rootAsset('images/about-image-01.jpg')
     });
     if (el?.tagName === 'IMG') {
       el.width = 1200;
@@ -157,7 +233,7 @@ const HospitalApp = (function () {
       url,
       type,
       className: '',
-      defaultImage: 'images/about-image-01.jpg'
+      defaultImage: rootAsset('images/about-image-01.jpg')
     });
   }
 
@@ -165,30 +241,47 @@ const HospitalApp = (function () {
     /* Native video controls only — no overlay play button */
   }
 
+  function isAdminPath() {
+    return window.location.pathname.includes('/admin/');
+  }
+
   function pathPrefix() {
-    return window.location.pathname.includes('/admin/') ? '../' : '';
+    return isAdminPath() ? '../' : '';
+  }
+
+  /** Root-relative asset URL — works on clean URLs like /conditions/slug */
+  function rootAsset(relativePath) {
+    const clean = String(relativePath).replace(/^\//, '');
+    return isAdminPath() ? `../${clean}` : `/${clean}`;
+  }
+
+  /** Normalize CMS / legacy relative paths to root-relative on public pages */
+  function normalizeAssetUrl(url) {
+    if (!url || typeof url !== 'string') return url;
+    if (/^https?:\/\//i.test(url) || url.startsWith('data:')) return url;
+    if (url.startsWith('/')) return url;
+    return rootAsset(url);
+  }
+
+  /** Root-relative route — works on nested clean URLs */
+  function routeHref(path) {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    return isAdminPath() ? `../${normalized.replace(/^\//, '')}` : normalized;
   }
 
   function logoPath() {
-    return `${pathPrefix()}images/brand/logo.png`;
+    return rootAsset('images/brand/logo.png');
   }
 
-  function showPreviewNotice(message) {
-    if (document.getElementById('preview-notice')) return;
-    const bar = document.createElement('div');
-    bar.id = 'preview-notice';
-    bar.className = 'preview-notice';
-    bar.innerHTML = message;
-    document.body.prepend(bar);
+  function logoMarkPath() {
+    return rootAsset('images/brand/logo-mark.png');
   }
 
   function checkPreviewMode() {
-    if (window.location.protocol !== 'file:') return;
-    showPreviewNotice(
-      '<strong>Не открывайте файл напрямую!</strong> Запустите <code>СМОТРЕТЬ.bat</code> → ' +
-        '<a href="http://127.0.0.1:8765/index.html">http://127.0.0.1:8765/index.html</a> ' +
-        '· В браузере нажмите <strong>Ctrl+F5</strong>'
-    );
+    /* No on-page dev banner — use browser console if opened via file:// */
+    if (window.location.protocol === 'file:') {
+      console.warn('[Healthy Spine] Open via npm start → http://127.0.0.1:8765/');
+    }
   }
 
   function brandName() {
@@ -211,23 +304,20 @@ const HospitalApp = (function () {
     return brandName();
   }
 
-  function logoMarkPath() {
-    return `${pathPrefix()}images/brand/logo.png`;
-  }
-
   function logoMarkup(prefix, variant) {
-    const mark = logoMarkPath();
     const name = brandName();
     if (variant === 'footer') {
+      const mark = logoPath();
       return `
         <span class="logo-brand logo-brand--footer">
           <img src="${mark}" alt="" class="logo-img logo-img--mark" width="48" height="48" loading="lazy" aria-hidden="true" />
           <span class="logo-brand__name">${name}</span>
         </span>`;
     }
+    const mark = logoMarkPath();
     return `
       <span class="logo-brand logo-brand--header">
-        <img src="${mark}" alt="" id="header-logo" class="logo-img logo-img--mark" width="84" height="84" loading="eager" aria-hidden="true" />
+        <img src="${mark}" alt="" id="header-logo" class="logo-img logo-img--mark" width="96" height="96" loading="eager" aria-hidden="true" />
       </span>`;
   }
 
@@ -254,7 +344,10 @@ const HospitalApp = (function () {
 
   function mergeById(baseList, locList) {
     if (!locList?.length) return baseList;
-    const TEXT = ['name', 'role', 'bio', 'experience', 'location', 'description', 'title', 'text'];
+    const TEXT = [
+      'name', 'role', 'bio', 'experience', 'location', 'description', 'title', 'text',
+      'category', 'treatment', 'label', 'desc', 'linkText', 'quote', 'ctaText', 'author'
+    ];
     return (baseList || []).map((item) => {
       const tr = locList.find((x) => x.id === item.id);
       if (!tr) return item;
@@ -278,6 +371,26 @@ const HospitalApp = (function () {
       serviceCategories: loc.serviceCategories?.length
         ? mergeById(data.serviceCategories || [], loc.serviceCategories)
         : data.serviceCategories,
+      news: loc.news?.length ? mergeById(data.news || [], loc.news) : data.news,
+      storyVideos: loc.storyVideos?.length
+        ? mergeById(data.storyVideos || [], loc.storyVideos)
+        : data.storyVideos,
+      patientStories: loc.patientStories?.length
+        ? mergeById(data.patientStories || [], loc.patientStories)
+        : data.patientStories,
+      awards: loc.awards?.length ? loc.awards : data.awards,
+      backInGame: loc.backInGame ? { ...data.backInGame, ...loc.backInGame } : data.backInGame,
+      patientHero: loc.patientHero ? { ...data.patientHero, ...loc.patientHero } : data.patientHero,
+      expertiseOverlay: loc.expertiseOverlay
+        ? { ...data.expertiseOverlay, ...loc.expertiseOverlay }
+        : data.expertiseOverlay,
+      introParagraphs: loc.introParagraphs?.length ? loc.introParagraphs : data.introParagraphs,
+      approachParagraphs: loc.approachParagraphs?.length
+        ? loc.approachParagraphs
+        : data.approachParagraphs,
+      expertsParagraphs: loc.expertsParagraphs?.length ? loc.expertsParagraphs : data.expertsParagraphs,
+      imagingParagraphs: loc.imagingParagraphs?.length ? loc.imagingParagraphs : data.imagingParagraphs,
+      feature: loc.feature ? { ...data.feature, ...loc.feature } : data.feature,
       conditions: loc.conditions?.length ? loc.conditions : data.conditions
     };
   }
@@ -346,17 +459,17 @@ const HospitalApp = (function () {
 
     const links = NAV_ITEMS.map((item) => {
       const cls = page === item.id ? 'active' : '';
-      return `<li><a href="${prefix}${item.href}" class="${cls}" data-nav-id="${item.id}" data-i18n="${item.key}">${I18n.t(item.key)}</a></li>`;
+      return `<li><a href="${routeHref(item.href)}" class="${cls}" data-nav-id="${item.id}" data-i18n="${item.key}">${I18n.t(item.key)}</a></li>`;
     }).join('');
 
     mount.innerHTML = `
       <header class="header-wrap hss-header" id="site-header">
         <nav class="navbar">
           <div class="nav-container">
-            <a href="${prefix === '../' ? '../' : '/'}" class="logo logo--brand" aria-label="${brandName()}">
+            <a href="${routeHref('/')}" class="logo logo--brand" aria-label="${brandName()}">
               ${logoMarkup(prefix, 'header')}
             </a>
-            <ul class="nav-links nav-links--hss">${links}</ul>
+            <ul class="nav-links nav-links--hss" id="site-mobile-nav">${links}</ul>
             <div class="nav-actions">
               <button type="button" class="nav-search" aria-label="${I18n.t('nav.search')}" id="nav-search-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -366,11 +479,11 @@ const HospitalApp = (function () {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 <span id="header-phone-text">${h.phone || '+7 (495) 123-45-67'}</span>
               </a>
-              <a href="${prefix}reviews.html" class="nav-cta hss-btn hss-btn--primary" id="header-rate-btn" data-i18n="common.rateUs">${I18n.t('common.rateUs')}</a>
+              <a href="${routeHref('/reviews')}" class="nav-cta hss-btn hss-btn--primary" id="header-rate-btn" data-i18n="common.rateUs">${I18n.t('common.rateUs')}</a>
             </div>
-            <div class="mobile-menu" aria-label="${I18n.t('nav.menuAria')}">
-              <span></span><span></span><span></span>
-            </div>
+            <button type="button" class="mobile-menu" aria-label="${I18n.t('nav.menuAria')}" aria-expanded="false" aria-controls="site-mobile-nav">
+              <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+            </button>
           </div>
         </nav>
       </header>`;
@@ -668,8 +781,8 @@ const HospitalApp = (function () {
       .join('');
 
     const site = getData()?.site || {};
-    const devName = (site.developerName || '').trim() || 'DEWEBAM.COM';
-    const devUrl = (site.developerUrl || '').trim();
+    const devName = 'DEWEBAM.COM';
+    const devUrl = (site.developerUrl || '').trim() || 'https://dewebam.com';
     const developerHtml = devUrl
       ? `<p class="hss-footer__developer"><span data-i18n="footer.developedBy">${t('footer.developedBy')}</span> <a href="${devUrl}" target="_blank" rel="noopener noreferrer">${devName}</a></p>`
       : '';
@@ -678,7 +791,7 @@ const HospitalApp = (function () {
       <footer class="site-footer hss-footer">
         <div class="hss-footer__cta">
           <div class="hss-wrap">
-            <a href="${prefix}appointment.html" class="hss-footer__cta-link" data-footer-brand="ctaLink">${t('footer.ctaLink', { name })}</a>
+            <a href="${routeHref('/contact')}" class="hss-footer__cta-link" data-footer-brand="ctaLink">${t('footer.ctaLink', { name })}</a>
           </div>
         </div>
         <section class="hss-footer-map" aria-labelledby="footer-map-title">
@@ -703,30 +816,32 @@ const HospitalApp = (function () {
         <div class="hss-footer__body">
           <div class="hss-wrap hss-footer__grid">
             <div class="hss-footer__brand">
-              <a href="${prefix}index.html" class="hss-footer__logo" aria-label="${name}">
+              <a href="${routeHref('/')}" class="hss-footer__logo" aria-label="${name}">
                 ${logoMarkup(prefix, 'footer')}
               </a>
               <div class="hss-footer__socials">${socialRow}</div>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.learnTitle">${t('footer.learnTitle')}</h4>
-              <a href="${prefix}about" data-footer-brand="aboutOrg">${t('nav.aboutOrg')}</a>
-              <a href="${prefix}contact" data-footer-brand="linkSupport">${t('footer.linkSupport', { name })}</a>
+              <a href="${routeHref('/about')}" data-footer-brand="aboutOrg">${t('nav.aboutOrg')}</a>
+              <a href="${routeHref('/contact')}" data-footer-brand="linkSupport">${t('footer.linkSupport', { name })}</a>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.infoTitle">${t('footer.infoTitle')}</h4>
-              <a href="${prefix}appointment.html" data-i18n="footer.infoPatients">${t('footer.infoPatients')}</a>
-              <a href="${prefix}find-a-doctor" data-i18n="footer.infoDoctors">${t('footer.infoDoctors')}</a>
-              <a href="${prefix}patient-care" data-i18n="footer.infoServices">${t('footer.infoServices')}</a>
-              <a href="${prefix}locations" data-i18n="footer.infoHours">${t('footer.infoHours')}</a>
-              <a href="${prefix}appointment.html" data-i18n="footer.infoBook">${t('footer.infoBook')}</a>
+              <a href="${routeHref('/services')}" data-i18n="nav.services">${t('nav.services')}</a>
+              <a href="${routeHref('/conditions')}" data-i18n="nav.conditions">${t('nav.conditions')}</a>
+              <a href="${routeHref('/knowledge')}" data-i18n="nav.knowledge">${t('nav.knowledge')}</a>
+              <a href="${routeHref('/contact')}" data-i18n="footer.infoPatients">${t('footer.infoPatients')}</a>
+              <a href="${routeHref('/find-a-doctor')}" data-i18n="footer.infoDoctors">${t('footer.infoDoctors')}</a>
+              <a href="${routeHref('/locations')}" data-i18n="footer.infoHours">${t('footer.infoHours')}</a>
+              <a href="${routeHref('/contact')}" data-i18n="footer.infoBook">${t('footer.infoBook')}</a>
             </div>
             <div class="hss-footer__col">
               <h4 data-i18n="footer.policiesTitle">${t('footer.policiesTitle')}</h4>
-              <a href="${prefix}privacy-policy.html" data-i18n="footer.policyPrivacy">${t('footer.policyPrivacy')}</a>
-              <a href="${prefix}cookies-policy.html" data-i18n="footer.policyCookies">${t('footer.policyCookies')}</a>
-              <a href="${prefix}terms.html" data-i18n="footer.policyTerms">${t('footer.policyTerms')}</a>
-              <a href="${prefix}patient-information.html" data-i18n="footer.policyPatient">${t('footer.policyPatient')}</a>
+              <a href="${routeHref('/privacy-policy')}" data-i18n="footer.policyPrivacy">${t('footer.policyPrivacy')}</a>
+              <a href="${routeHref('/cookies-policy')}" data-i18n="footer.policyCookies">${t('footer.policyCookies')}</a>
+              <a href="${routeHref('/terms')}" data-i18n="footer.policyTerms">${t('footer.policyTerms')}</a>
+              <a href="${routeHref('/patient-information')}" data-i18n="footer.policyPatient">${t('footer.policyPatient')}</a>
             </div>
           </div>
         </div>
@@ -776,31 +891,21 @@ const HospitalApp = (function () {
     const menu = document.querySelector('.mobile-menu');
     const links = document.querySelector('.nav-links');
 
-    const toggle = () => {
-      links.classList.toggle('active');
-      navActions?.classList.toggle('active');
+    const setOpen = (open) => {
+      links.classList.toggle('active', open);
+      navActions?.classList.toggle('active', open);
+      menu.classList.toggle('is-open', open);
+      menu.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
 
+    const close = () => setOpen(false);
+
     menu.addEventListener('click', () => {
-      toggle();
-      const spans = menu.querySelectorAll('span');
-      spans.forEach((span, index) => {
-        span.style.transform = links.classList.contains('active')
-          ? index === 0
-            ? 'rotate(45deg) translate(5px, 5px)'
-            : index === 1
-              ? 'opacity(0)'
-              : 'rotate(-45deg) translate(7px, -6px)'
-          : 'none';
-      });
+      setOpen(!links.classList.contains('active'));
     });
 
-    links.querySelectorAll('a').forEach((a) => {
-      a.addEventListener('click', () => {
-        links.classList.remove('active');
-        navActions?.classList.remove('active');
-      });
-    });
+    links.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+    navActions?.querySelectorAll('a, button').forEach((el) => el.addEventListener('click', close));
   }
 
   async function loadData() {
@@ -809,7 +914,10 @@ const HospitalApp = (function () {
     let base = null;
 
     try {
-      const res = await fetch(`${baseUrl || prefix}data/hospital.json`);
+      const dataUrl = baseUrl
+        ? `${baseUrl.replace(/\/?$/, '/')}data/hospital.json`
+        : rootAsset('data/hospital.json');
+      const res = await fetch(dataUrl);
       if (res.ok) base = await res.json();
     } catch {
       /* offline / file:// */
@@ -912,6 +1020,11 @@ const HospitalApp = (function () {
 
     document.querySelectorAll('.logo-img--mark').forEach((img) => {
       img.alt = '';
+      if (img.id === 'header-logo' || img.closest('.logo-brand--header')) {
+        img.src = logoMarkPath();
+      } else if (img.closest('.logo-brand--footer')) {
+        img.src = logoPath();
+      }
     });
 
     const displayName = h.shortName || h.name || brandName();
@@ -1112,15 +1225,15 @@ const HospitalApp = (function () {
     if (!document.querySelector('link[href*="legal.css"]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = `${prefix}css/legal.css?v=20260619`;
+      link.href = `${rootAsset('css/legal.css')}?v=20260619`;
       document.head.appendChild(link);
     }
     if (!document.querySelector('script[src*="seo.js"]')) {
-      await loadScriptOnce(`${prefix}js/seo.js?v=20260711`);
+      await loadScriptOnce(`${rootAsset('js/seo.js')}?v=20260711`);
     }
     if (!document.querySelector('script[src*="cookie-consent"]')) {
-      await loadScriptOnce(`${prefix}js/legal-page.js`);
-      await loadScriptOnce(`${prefix}js/cookie-consent.js`);
+      await loadScriptOnce(`${rootAsset('js/legal-page.js')}`);
+      await loadScriptOnce(`${rootAsset('js/cookie-consent.js')}`);
     }
     injectFormConsentText();
   }
@@ -1130,19 +1243,19 @@ const HospitalApp = (function () {
     if (!el) return;
     const prefix = pathPrefix();
     try {
-      const res = await fetch(`${prefix}lang/legal.json`);
+      const res = await fetch(rootAsset('lang/legal.json'));
       if (res.ok) {
         const data = await res.json();
         const bundle = data[I18n.getLang()] || data.en || {};
         if (bundle.formConsent) {
-          el.innerHTML = bundle.formConsent.replace(/href="([^"]+)"/g, `href="${prefix}$1"`);
+          el.innerHTML = bundle.formConsent.replace(/href="([^"]+)"/g, (_, href) => `href="${routeHref(href)}"`);
           return;
         }
       }
     } catch {
       /* fallback */
     }
-    el.innerHTML = `I agree to the <a href="${prefix}privacy-policy.html">Privacy Policy</a>.`;
+    el.innerHTML = `I agree to the <a href="${routeHref('/privacy-policy')}">Privacy Policy</a>.`;
   }
 
   async function refreshLanguage() {
@@ -1189,6 +1302,14 @@ const HospitalApp = (function () {
 
   function applyPageFields(fields) {
     if (!fields || typeof fields !== 'object') return;
+    fields = mirrorBannerFieldChanges(fields);
+    const banner = resolveHomeBannerMedia(fields);
+    if (banner.url) {
+      applyHomeHeroMedia(banner.url, banner.type);
+      const lower = document.getElementById('patient-hero');
+      if (lower) lower.hidden = true;
+    }
+    const BANNER_KEYS = new Set(['home-hero-image', 'patient-hero-image']);
     const MEDIA_FIELDS = {
       'home-hero-image': applyHomeHeroMedia,
       'patient-hero-image': (url, type) => {
@@ -1210,7 +1331,7 @@ const HospitalApp = (function () {
           elementId: 'home-approach-image',
           url,
           type,
-          defaultImage: 'images/about-image-01.jpg'
+          defaultImage: rootAsset('images/about-image-01.jpg')
         }),
       'home-experts-image': (url, type) =>
         applyBlockMedia({
@@ -1218,7 +1339,7 @@ const HospitalApp = (function () {
           elementId: 'home-experts-image',
           url,
           type,
-          defaultImage: 'images/team-member-01.jpg'
+          defaultImage: rootAsset('images/team-member-01.jpg')
         }),
       'home-imaging-image': (url, type) =>
         applyBlockMedia({
@@ -1226,7 +1347,7 @@ const HospitalApp = (function () {
           elementId: 'home-imaging-image',
           url,
           type,
-          defaultImage: 'images/team-member-02.jpg'
+          defaultImage: rootAsset('images/team-member-02.jpg')
         }),
       'expertise-image': (url, type) =>
         applyBlockMedia({
@@ -1239,6 +1360,7 @@ const HospitalApp = (function () {
     };
     Object.entries(fields).forEach(([key, val]) => {
       if (key.endsWith('__type') || val == null || val === '') return;
+      if (BANNER_KEYS.has(key)) return;
       if (key.startsWith('i18n_')) {
         const i18nKey = key.slice(5);
         document.querySelectorAll(`[data-i18n="${i18nKey}"]`).forEach((el) => {
@@ -1256,7 +1378,7 @@ const HospitalApp = (function () {
       const el = document.getElementById(key);
       if (!el) return;
       if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
-        el.src = val;
+        el.src = normalizeAssetUrl(val);
         return;
       }
       if (el.id === 'hero-subtitle') {
@@ -1277,7 +1399,7 @@ const HospitalApp = (function () {
     Object.entries(cms.pageImages || {}).forEach(([key, url]) => {
       if (!url) return;
       const el = resolveCmsStyleKey(key);
-      if (el?.tagName === 'IMG') el.src = url;
+      if (el?.tagName === 'IMG') el.src = normalizeAssetUrl(url);
     });
     const lang = I18n.getLang();
     Object.entries(cms.inlineText || {}).forEach(([key, texts]) => {
@@ -1335,11 +1457,7 @@ const HospitalApp = (function () {
         renderNav();
         renderFooter();
       } catch (err) {
-        showPreviewNotice(
-          '<strong>Запустите файл <code>СМОТРЕТЬ.bat</code></strong> в папке проекта. ' +
-            'Ссылка: <a href="http://127.0.0.1:8765/index.html">http://127.0.0.1:8765/index.html</a>'
-        );
-        console.error(err);
+        console.error('[HospitalApp] loadData failed:', err);
       }
 
       I18n.applyDOM();
@@ -1370,6 +1488,9 @@ const HospitalApp = (function () {
     getData,
     departmentName,
     pathPrefix,
+    rootAsset,
+    normalizeAssetUrl,
+    routeHref,
     initAnimations,
     resetAnimations,
     applyCmsVisuals,
@@ -1386,7 +1507,9 @@ const HospitalApp = (function () {
     applyHomeHeroMedia,
     applyFeatureMedia,
     applyBlockMedia,
-    initVideoHeroPlayers
+    initVideoHeroPlayers,
+    resolveHomeBannerMedia,
+    mirrorBannerFieldChanges
   };
 })();
 

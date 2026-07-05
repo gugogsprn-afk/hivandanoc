@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const { initDb } = require('./db');
 const { seed, ensureStaffUsers, ensureHospitalMapSettings } = require('./db/seed');
 const { apiLimiter } = require('./middleware/rateLimit');
+const { localeRedirectMiddleware } = require('./middleware/locale-redirect');
 
 const authRoutes = require('./routes/auth');
 const publicRoutes = require('./routes/public');
@@ -79,6 +80,8 @@ function createCmsApp() {
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
   });
+
+  app.use(localeRedirectMiddleware);
 
   app.use(express.json({ limit: '2mb' }));
   app.use('/api/v1', apiLimiter);

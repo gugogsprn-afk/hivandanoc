@@ -106,11 +106,20 @@ const PagesForms = (function () {
     return !!value;
   }
 
-  function mediaPreviewHTML(url) {
+  const BANNER_FIELD_KEYS = new Set(['home-hero-image', 'patient-hero-image']);
+
+  function mediaPreviewHTML(url, fieldKey) {
     if (!url) return '';
     const src = esc(mediaUrl(url));
-    if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(url)) {
-      return `<div class="cms-pages-preview-wrap cms-pages-preview-wrap--video"><video src="${src}" class="cms-pages-preview cms-pages-preview--video" controls preload="metadata" playsinline></video></div>`;
+    const isVideo = /\.(mp4|webm|ogg)(\?|#|$)/i.test(url);
+    const isBanner = fieldKey && BANNER_FIELD_KEYS.has(fieldKey);
+
+    if (isVideo || isBanner) {
+      const wrapClass = `cms-pages-preview-wrap cms-pages-preview-wrap--banner${isVideo ? ' cms-pages-preview-wrap--video' : ''}`;
+      if (isVideo) {
+        return `<div class="${wrapClass}"><video src="${src}" class="cms-pages-preview cms-pages-preview--video" controls preload="metadata" playsinline></video></div>`;
+      }
+      return `<div class="${wrapClass}"><img src="${src}" alt="" class="cms-pages-preview cms-pages-preview--banner" onerror="this.parentElement.style.display='none'"></div>`;
     }
     return `<img src="${src}" alt="" class="cms-pages-preview" onerror="this.style.display='none'">`;
   }
@@ -121,7 +130,7 @@ const PagesForms = (function () {
     const id = `pf-${fk.replace(/[^a-z0-9_-]/gi, '_')}`;
 
     if (field.type === 'image') {
-      const preview = val ? mediaPreviewHTML(val) : '';
+      const preview = val ? mediaPreviewHTML(val, field.key) : '';
       return `
         <div class="cms-field cms-field--image" data-field-key="${esc(fk)}" data-value-type="image">
           <label>${esc(field.label)}</label>
@@ -249,7 +258,8 @@ const PagesForms = (function () {
           urlInput.value = url;
           const existingPreview = wrap.querySelector('.cms-pages-preview-wrap, .cms-pages-preview, .cms-pages-preview--video');
           if (existingPreview) existingPreview.remove();
-          wrap.querySelector('label')?.insertAdjacentHTML('afterend', mediaPreviewHTML(url));
+          const fieldKey = wrap.dataset.fieldKey;
+          wrap.querySelector('label')?.insertAdjacentHTML('afterend', mediaPreviewHTML(url, fieldKey));
           AdminUI.toast('File uploaded — click Save to publish on public site', 'success');
         } catch (err) {
           AdminUI.toast(err.message, 'error');

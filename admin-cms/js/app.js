@@ -535,8 +535,18 @@
         <div class="cms-form__section">
           <h3>Details</h3>
           <div class="cms-field"><label>Linked service ID<input name="department_id" value="${esc(doc?.department_id || '')}" placeholder="e.g. consult-spine"></label></div>
-          <div class="cms-field"><label>Photo URL<input name="image_url" value="${esc(doc?.image_url || '')}" placeholder="Paste URL from Media Library"></label></div>
-          ${doc?.image_url ? `<img src="${esc(doc.image_url)}" alt="" style="max-width:120px;border-radius:8px;border:1px solid var(--cms-border)" onerror="this.hidden=true">` : ''}
+          <div class="cms-form__section cms-form__section--compact">
+            <h3>Doctor photo</h3>
+            <div id="doctor-photo-preview" class="cms-pages-preview-wrap">
+              ${doc?.image_url ? `<img src="${esc(doc.image_url)}" alt="" class="cms-pages-preview" onerror="this.hidden=true">` : ''}
+            </div>
+            <div class="cms-field"><label>Photo URL<input name="image_url" value="${esc(doc?.image_url || '')}" placeholder="Paste URL or upload below"></label></div>
+            <div class="cms-pages-upload-row">
+              <input type="file" class="cms-doctor-photo-file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" hidden>
+              <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm cms-doctor-photo-pick">Upload photo from computer</button>
+              <span class="cms-muted cms-doctor-photo-status"></span>
+            </div>
+          </div>
           <div class="cms-field"><label>Experience<input name="experience" value="${esc(doc?.experience || '')}" placeholder="e.g. 15 years"></label></div>
           <div class="cms-form__checks">
             <label><input type="checkbox" name="is_surgeon" ${doc?.is_surgeon ? 'checked' : ''}> Surgeon</label>
@@ -552,6 +562,37 @@
         await AdminApi.del(`/admin/doctors/${doc.id}`);
         toast('Doctor deleted');
         renderDoctors();
+      });
+
+      const fileInput = form.querySelector('.cms-doctor-photo-file');
+      const pickBtn = form.querySelector('.cms-doctor-photo-pick');
+      const urlInput = form.querySelector('[name="image_url"]');
+      const previewEl = form.querySelector('#doctor-photo-preview');
+      const statusEl = form.querySelector('.cms-doctor-photo-status');
+
+      pickBtn?.addEventListener('click', () => fileInput?.click());
+      fileInput?.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        try {
+          if (statusEl) statusEl.textContent = `Uploading ${file.name}…`;
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('folder', 'doctors');
+          const res = await AdminApi.upload('/admin/media/upload', fd);
+          const url = res.media?.url || res.url;
+          if (!url) throw new Error('Upload succeeded but no URL returned');
+          urlInput.value = url;
+          if (previewEl) {
+            previewEl.innerHTML = `<img src="${esc(url)}" alt="" class="cms-pages-preview" onerror="this.hidden=true">`;
+          }
+          if (statusEl) statusEl.textContent = 'Upload complete';
+          toast('Photo uploaded', 'success');
+        } catch (err) {
+          if (statusEl) statusEl.textContent = '';
+          toast(err.message, 'error');
+        }
+        fileInput.value = '';
       });
     };
     renderForm();
