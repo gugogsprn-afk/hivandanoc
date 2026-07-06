@@ -13,13 +13,12 @@ function clinicCoords(hospital) {
   };
 }
 
-/** Map centered on coordinates — valid without API key; no place name card. */
+/** Map centered on coordinates — no Google POI marker (custom overlay pin instead). */
 function viewEmbedUrl(h) {
   const { lat, lng, zoom } = clinicCoords(h);
-  const q = `${lat},${lng}`;
   return (
     'https://maps.google.com/maps' +
-    `?q=${encodeURIComponent(q)}` +
+    `?ll=${encodeURIComponent(`${lat},${lng}`)}` +
     `&z=${zoom}&hl=ru&output=embed`
   );
 }

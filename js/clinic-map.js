@@ -2,11 +2,15 @@
  * Clinic map — Google Maps JS API Marker (preferred) or official embed iframe.
  */
 const ClinicMap = (function () {
-const DEFAULT_LAT = 40.2074194;
-const DEFAULT_LNG = 44.4782661;
-const DEFAULT_ZOOM = 17;
-const DEFAULT_PLACE_ID = '0x406aa2da86294267:0x3ebd491e4e41f40';
-const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
+  const DEFAULT_LAT = 40.2074194;
+  const DEFAULT_LNG = 44.4782661;
+  const DEFAULT_ZOOM = 17;
+  const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
+
+  const PIN_SVG =
+    '<svg viewBox="0 0 27 43" width="27" height="43" aria-hidden="true">' +
+    '<path fill="#EA4335" d="M13.5 0C6.04 0 0 6.04 0 13.5 0 23.63 13.5 43 13.5 43S27 23.63 27 13.5C27 6.04 20.96 0 13.5 0zm0 18.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>' +
+    '</svg>';
 
   let mapsKeyPromise = null;
   let embedUrlPromise = null;
@@ -40,6 +44,16 @@ const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
         ? I18n.getContent().hospital.address
         : '';
     return loc || h?.address || h?.mapsQuery || DEFAULT_PLACE_NAME.replace(/\+/g, ' ');
+  }
+
+  function directionsUrl(h) {
+    if (h?.mapsDirections) return h.mapsDirections;
+    const c = coords(h);
+    return `https://yandex.ru/navi/?rtext=~${c.lat},${c.lng}`;
+  }
+
+  function navigatorLabel() {
+    return typeof I18n !== 'undefined' ? I18n.t('footer.yandexNavigator') : 'Yandex Navigator';
   }
 
   function apiBase() {
@@ -87,13 +101,12 @@ const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
     return embedUrlPromise.promise;
   }
 
-  /** Map centered on clinic coords — valid embed, no Google place card. */
+  /** Center map on coords without Google's clickable POI marker. */
   function viewEmbedUrl(h) {
     const c = coords(h);
-    const q = `${c.lat},${c.lng}`;
     return (
       'https://maps.google.com/maps' +
-      `?q=${encodeURIComponent(q)}` +
+      `?ll=${encodeURIComponent(`${c.lat},${c.lng}`)}` +
       `&z=${c.zoom}&hl=ru&output=embed`
     );
   }
@@ -118,13 +131,51 @@ const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
     return typeof I18n !== 'undefined' ? I18n.t('footer.mapTitle') : 'Clinic location';
   }
 
+  function closeLabel() {
+    return typeof I18n !== 'undefined' ? I18n.t('common.close') || 'Close' : 'Close';
+  }
+
   function infoWindowHtml(h) {
+    const navUrl = directionsUrl(h);
+    const label = navigatorLabel();
     return (
       `<div class="hss-gmap-info">` +
       `<strong>${escHtml(clinicTitle(h))}</strong>` +
       `<span>${escHtml(clinicAddress(h))}</span>` +
+      `<a class="hss-gmap-info__nav" href="${escHtml(navUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:0.55rem;padding:0.45rem 0.85rem;background:#1a4f4f;color:#fff;border-radius:6px;font-size:0.8125rem;font-weight:600;text-decoration:none;">${escHtml(label)}</a>` +
       `</div>`
     );
+  }
+
+  function overlayHtml(h) {
+    const address = clinicAddress(h);
+    return (
+      `<button type="button" class="hss-map__marker-hit" aria-label="${escHtml(address)}">` +
+      `<span class="hss-map__marker-pin">${PIN_SVG}</span>` +
+      `</button>` +
+      `<div class="hss-map__infowindow" hidden>` +
+      `<button type="button" class="hss-map__infowindow-close" aria-label="${escHtml(closeLabel())}">×</button>` +
+      infoWindowHtml(h) +
+      `</div>`
+    );
+  }
+
+  function bindIframeOverlays(wrap) {
+    const hit = wrap.querySelector('.hss-map__marker-hit');
+    const popup = wrap.querySelector('.hss-map__infowindow');
+    const closeBtn = wrap.querySelector('.hss-map__infowindow-close');
+    if (!hit || !popup) return;
+
+    hit.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      popup.hidden = false;
+    });
+
+    closeBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      popup.hidden = true;
+    });
   }
 
   function applyMapContainerClass(container, isFooter) {
@@ -142,8 +193,10 @@ const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
     const safeEmbed = String(embed || mapEmbedUrl(h)).replace(/"/g, '&quot;');
     container.innerHTML =
       `<div class="hss-map__wrap">` +
+      overlayHtml(h) +
       `<iframe class="hss-map__iframe" title="${escHtml(title)}" src="${safeEmbed}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen style="border:0;width:100%;height:100%"></iframe>` +
       `</div>`;
+    bindIframeOverlays(container.querySelector('.hss-map__wrap'));
   }
 
   function loadGoogleMaps(key, callback) {
@@ -167,23 +220,17 @@ const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
     document.head.appendChild(script);
   }
 
-  function initGoogleMap(container, h, isFooter) {
+  function initGoogleMap(container, h) {
     const c = coords(h);
     const canvas = container.querySelector('.hss-map__canvas');
     if (!canvas || !window.google?.maps) return false;
 
-    const map = new google.maps.Map(canvas, {
+    new google.maps.Map(canvas, {
       center: { lat: c.lat, lng: c.lng },
       zoom: c.zoom,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true
-    });
-
-    new google.maps.Marker({
-      position: { lat: c.lat, lng: c.lng },
-      map,
-      title: clinicTitle(h)
     });
 
     return true;
@@ -193,10 +240,15 @@ const DEFAULT_PLACE_NAME = '6+Margaryan+St,+Yerevan+0078,+Armenia';
     const title = mapTitle();
     applyMapContainerClass(container, isFooter);
     container.innerHTML =
-      `<div class="hss-map__wrap"><div class="hss-map__canvas" role="application" aria-label="${escHtml(title)}"></div></div>`;
+      `<div class="hss-map__wrap">` +
+      overlayHtml(h) +
+      `<div class="hss-map__canvas" role="application" aria-label="${escHtml(title)}"></div>` +
+      `</div>`;
+    const wrap = container.querySelector('.hss-map__wrap');
+    bindIframeOverlays(wrap);
 
     loadGoogleMaps(key, () => {
-      if (!initGoogleMap(container, h, isFooter)) {
+      if (!initGoogleMap(container, h)) {
         resolveEmbedUrl(h).then((embed) => renderIframe(container, h, embed, isFooter));
       }
     });

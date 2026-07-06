@@ -67,7 +67,15 @@ const LEGACY_HTML_REDIRECTS = {
   'doctors.html': '/find-a-doctor',
   'services.html': '/services',
   'conditions.html': '/conditions',
-  'knowledge.html': '/knowledge'
+  'knowledge.html': '/knowledge',
+  'reviews.html': '/reviews',
+  'privacy-policy.html': '/privacy-policy',
+  'cookies-policy.html': '/cookies-policy',
+  'terms.html': '/terms',
+  'patient-information.html': '/patient-information',
+  'appointment.html': '/appointment',
+  'submit-story.html': '/submit-story',
+  'patient-story.html': '/patient-story'
 };
 Object.entries(LEGACY_HTML_REDIRECTS).forEach(([file, target]) => {
   app.get(`/${file}`, (_req, res) => res.redirect(301, target));

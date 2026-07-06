@@ -702,7 +702,7 @@ const HospitalApp = (function () {
     if (!h) h = {};
     const lat = Number(h.mapLat ?? h.latitude ?? 40.2074194);
     const lng = Number(h.mapLng ?? h.longitude ?? 44.4782661);
-    const params = new URLSearchParams({ q: `${lat},${lng}`, z: '17', hl: 'ru', output: 'embed' });
+    const params = new URLSearchParams({ ll: `${lat},${lng}`, z: '17', hl: 'ru', output: 'embed' });
     return `https://maps.google.com/maps?${params.toString()}`;
   }
 
@@ -712,10 +712,10 @@ const HospitalApp = (function () {
     const lat = h.mapLat ?? h.latitude;
     const lng = h.mapLng ?? h.longitude;
     if (lat != null && lng != null && String(lat) !== '' && String(lng) !== '') {
-      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
+      return `https://yandex.ru/navi/?rtext=~${lat},${lng}`;
     }
     const q = h.mapsQuery || h.address || brandName() + ', Yerevan, Armenia';
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+    return `https://yandex.ru/maps/?rtext=~${encodeURIComponent(q)}&rtt=auto`;
   }
 
   function renderHospitalMap(container, h) {
