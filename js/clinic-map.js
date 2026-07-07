@@ -94,16 +94,35 @@ const ClinicMap = (function () {
           { headers: { Accept: 'application/json' }, cache: 'no-store' }
         )
           .then((res) => (res.ok ? res.json() : null))
-          .then((data) => data?.embedUrl || mapEmbedUrl(h))
+          .then((data) => normalizeEmbedUrl(data?.embedUrl, h) || mapEmbedUrl(h))
           .catch(() => mapEmbedUrl(h))
       };
     }
     return embedUrlPromise.promise;
   }
 
+  /** Rewrite legacy ?q=lat,lng embeds that trigger Google's place-card error. */
+  function normalizeEmbedUrl(url, h) {
+    if (!url || typeof url !== 'string') return url;
+    try {
+      const u = new URL(url);
+      if (!u.hostname.includes('google.com')) return url;
+      if (u.pathname.includes('/embed') && u.search.includes('!1s')) return mapEmbedUrl(h);
+      const q = u.searchParams.get('q');
+      if (q && !u.searchParams.has('ll') && /^-?\d/.test(q.trim())) {
+        u.searchParams.delete('q');
+        u.searchParams.set('ll', q.trim());
+        return u.toString();
+      }
+    } catch (_err) {
+      /* ignore */
+    }
+    return url;
+  }
+
   /** Center map on coords without Google's clickable POI marker. */
   function viewEmbedUrl(h) {
-    const c = coords(h);
+    const c = coords(h || {});
     return (
       'https://maps.google.com/maps' +
       `?ll=${encodeURIComponent(`${c.lat},${c.lng}`)}` +
@@ -190,7 +209,7 @@ const ClinicMap = (function () {
   function renderIframe(container, h, embed, isFooter) {
     const title = mapTitle();
     applyMapContainerClass(container, isFooter);
-    const safeEmbed = String(embed || mapEmbedUrl(h)).replace(/"/g, '&quot;');
+    const safeEmbed = String(normalizeEmbedUrl(embed, h) || mapEmbedUrl(h)).replace(/"/g, '&quot;');
     container.innerHTML =
       `<div class="hss-map__wrap">` +
       overlayHtml(h) +

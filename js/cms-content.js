@@ -93,7 +93,17 @@ const CmsContent = (function () {
       for (const key of MAP_KEYS) {
         const cmsVal = cms.hospital[key];
         if (cmsVal == null || cmsVal === '') continue;
-        if (key === 'mapsEmbed' && String(cmsVal).includes('!1m3!2m1!1s')) continue;
+        if (key === 'mapsEmbed') {
+          const val = String(cmsVal);
+          if (val.includes('!1m3!2m1!1s') || (val.includes('/embed') && val.includes('!1s'))) continue;
+          try {
+            const u = new URL(val);
+            const q = u.searchParams.get('q');
+            if (q && !u.searchParams.has('ll') && /^-?\d/.test(q.trim())) continue;
+          } catch {
+            /* ignore */
+          }
+        }
         merged.hospital[key] = cmsVal;
       }
     }

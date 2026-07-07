@@ -41,7 +41,16 @@ function buildMapEmbedUrl(hospital, apiKey) {
 }
 
 function isBrokenMapsEmbed(url) {
-  return typeof url === 'string' && url.includes('!1m3!2m1!1s');
+  if (typeof url !== 'string') return false;
+  if (url.includes('!1m3!2m1!1s')) return true;
+  if (url.includes('/embed') && url.includes('!1s')) return true;
+  try {
+    const u = new URL(url);
+    const q = u.searchParams.get('q');
+    return !!q && !u.searchParams.has('ll') && /^-?\d/.test(q.trim());
+  } catch {
+    return false;
+  }
 }
 
 module.exports = {
