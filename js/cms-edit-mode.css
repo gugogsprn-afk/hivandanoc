@@ -393,8 +393,19 @@ body.cms-edit-mode #site-header [data-cms-editable]:hover {
   }
 }
 
-body.cms-edit-mode .hss-mobile-bar {
-  display: none;
+body.cms-edit-mode #home-hero-media[data-cms-editable],
+body.cms-edit-mode #patient-hero-media[data-cms-editable] {
+  cursor: pointer;
+  position: relative;
+  outline: 2px dashed rgba(73, 213, 213, 0.45);
+  outline-offset: -2px;
+}
+
+body.cms-edit-mode #home-conditions[data-cms-editable],
+body.cms-edit-mode #home-imaging-list[data-cms-editable],
+body.cms-edit-mode #expertise-links[data-cms-editable] {
+  min-height: 2.5rem;
+  padding: 0.35rem;
 }
 
 /* Admin visual editor: homepage hero as horizontal 16:9 banner (not full viewport) */

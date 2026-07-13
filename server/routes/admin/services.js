@@ -4,9 +4,16 @@ const { authRequired, requireRole } = require('../../middleware/auth');
 const { logActivity } = require('../../db/helpers');
 const { parseLangFields, sanitizeString } = require('../../middleware/validate');
 const { v4: uuidv4 } = require('uuid');
+const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
+const { persistAfterChange } = require('../../services/cms-persistence');
 
 const router = express.Router();
 const LANG_FIELDS = ['title', 'description', 'seo_title', 'seo_desc'];
+
+function afterServiceWrite() {
+  persistAfterChange('service');
+  return schedulePublish(1500);
+}
 
 router.get('/categories', authRequired, (_req, res) => {
   const categories = getDb()
@@ -85,7 +92,8 @@ router.post('/', authRequired, requireRole('super_admin', 'manager'), (req, res)
     );
 
   logActivity(req.user.sub, 'create', 'service', id, null, req.ip);
-  res.status(201).json({ ok: true, id });
+  const publish = afterServiceWrite();
+  res.status(201).json({ ok: true, id, publish: { ...getPublishStatus(), ...publish } });
 });
 
 router.put('/:id', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
@@ -133,14 +141,16 @@ router.put('/:id', authRequired, requireRole('super_admin', 'manager'), (req, re
     );
 
   logActivity(req.user.sub, 'update', 'service', req.params.id, null, req.ip);
-  res.json({ ok: true });
+  const publish = afterServiceWrite();
+  res.json({ ok: true, publish: { ...getPublishStatus(), ...publish } });
 });
 
 router.delete('/:id', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
   const r = getDb().prepare('DELETE FROM services WHERE id = ?').run(req.params.id);
   if (!r.changes) return res.status(404).json({ ok: false, error: 'Service not found' });
   logActivity(req.user.sub, 'delete', 'service', req.params.id, null, req.ip);
-  res.json({ ok: true });
+  const publish = afterServiceWrite();
+  res.json({ ok: true, publish: { ...getPublishStatus(), ...publish } });
 });
 
 module.exports = router;

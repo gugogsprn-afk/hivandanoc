@@ -5,21 +5,39 @@
   const CODES = ['hy', 'ru', 'en'];
   const STORAGE_KEY = 'gkb_lang';
 
+  function parseLangParam(raw) {
+    if (raw == null || raw === '') return null;
+    const code = String(raw).trim().toLowerCase();
+    return CODES.includes(code) ? code : null;
+  }
+
   function resolveLang() {
-    let lang = 'hy';
+    if (typeof LocalePolicy !== 'undefined') {
+      if (typeof LocalePolicy.resolvePreferredLang === 'function') {
+        return LocalePolicy.resolvePreferredLang(STORAGE_KEY);
+      }
+      if (typeof LocalePolicy.resolveLangFromSearch === 'function') {
+        const fromUrl = LocalePolicy.resolveLangFromSearch();
+        if (fromUrl) return fromUrl;
+      }
+    }
     try {
-      const qp = new URLSearchParams(location.search).get('lang');
-      if (qp && CODES.includes(qp)) return qp;
+      const params = new URLSearchParams(location.search);
+      for (const code of params.getAll('lang')) {
+        const parsed = parseLangParam(code);
+        if (parsed) return parsed;
+      }
     } catch {
       /* ignore */
     }
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved && CODES.includes(saved)) lang = saved;
+      const parsed = parseLangParam(saved);
+      if (parsed) return parsed;
     } catch {
       /* private mode */
     }
-    return lang;
+    return 'hy';
   }
 
   function t(dict, key) {
@@ -82,4 +100,9 @@
   }
 
   window.__I18N_BOOT_LANG__ = lang;
+
+  setTimeout(() => {
+    document.documentElement.classList.remove('i18n-pending');
+    document.documentElement.classList.add('i18n-ready');
+  }, 4000);
 })();

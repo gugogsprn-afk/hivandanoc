@@ -456,6 +456,68 @@
   }
 
   let editingDoctorId = null;
+  let pendingOpenDoctorId = null;
+  let doctorsDirty = false;
+
+  async function publishDoctorsToPublic() {
+    const pub = await AdminApi.post('/admin/publish', {});
+    if (typeof CmsContent !== 'undefined') CmsContent.invalidate?.();
+    return pub;
+  }
+
+  async function saveAllDoctors() {
+    const form = $('#doctor-form');
+    const formCard = $('#doctor-form-card');
+    if (form && formCard && !formCard.hidden) {
+      const body = {
+        ...collectTriplet(form, 'name'),
+        ...collectTriplet(form, 'role'),
+        ...collectTriplet(form, 'location'),
+        ...collectTriplet(form, 'bio'),
+        department_id: form.department_id?.value || '',
+        image_url: form.image_url?.value || '',
+        experience: form.experience?.value || '',
+        is_surgeon: !!form.is_surgeon?.checked,
+        published: !!form.published?.checked
+      };
+      if (editingDoctorId) {
+        await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
+        highlightDoctorId = editingDoctorId;
+      } else if ((body.name_hy || body.name_ru || body.name_en || '').trim()) {
+        const res = await AdminApi.post('/admin/doctors', body);
+        highlightDoctorId = res.id;
+      }
+      formCard.hidden = true;
+    }
+
+    await publishDoctorsToPublic();
+
+    const host = $('#doctors-preview-host');
+    const frame = host?.querySelector('iframe');
+    if (frame?.contentWindow) {
+      try {
+        await new Promise((resolve) => {
+          const timeout = setTimeout(resolve, 8000);
+          function onMsg(ev) {
+            if (ev.data?.type === 'cms-save-all-done' || ev.data?.type === 'cms-save-all-error') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', onMsg);
+              resolve();
+            }
+          }
+          window.addEventListener('message', onMsg);
+          frame.contentWindow.postMessage({ type: 'cms-save-all' }, '*');
+        });
+      } catch {
+        /* ignore */
+      }
+      frame.src = frame.src;
+    }
+
+    doctorsDirty = false;
+    await renderDoctors();
+    toast('All doctor changes published to the live site', 'success');
+  }
 
   async function renderDoctors() {
     const root = $('#view-doctors');
@@ -471,9 +533,13 @@
           <div class="cms-panel">
             <div class="cms-panel__head">
               <h2>Doctors (${data.doctors.length})</h2>
-              <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="add-doctor">+ Add doctor</button>
+              <div class="cms-panel__head-actions">
+                <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="doctors-save-all">${typeof AdminI18n !== 'undefined' ? AdminI18n.t('pageEditor.saveAll') : 'Save All'}</button>
+                <button type="button" class="cms-btn cms-btn--primary cms-btn--sm" id="add-doctor">+ Add doctor</button>
+              </div>
             </div>
             <div class="cms-panel__body">
+              <p class="cms-muted" style="margin:0 0 1rem">Edit a doctor, then click <strong>Save All</strong> to publish every change to the public Find a Doctor page.</p>
               ${data.doctors.length
                 ? AdminUI.tableResponsive(`<thead><tr><th></th><th>Name</th><th>Specialty</th><th></th></tr></thead><tbody id="doctors-tbody">
                   ${data.doctors.map((d) => `<tr class="${highlightDoctorId === d.id ? 'cms-row-highlight' : ''}" data-doctor-id="${d.id}">
@@ -491,6 +557,20 @@
 
       $('#add-doctor', root)?.addEventListener('click', () => openDoctorForm(null));
       $('#add-doctor-empty', root)?.addEventListener('click', () => openDoctorForm(null));
+      $('#doctors-save-all', root)?.addEventListener('click', async () => {
+        const btn = $('#doctors-save-all', root);
+        btn.disabled = true;
+        const prev = btn.textContent;
+        btn.textContent = 'Saving…';
+        try {
+          await saveAllDoctors();
+        } catch (err) {
+          toast(err.message, 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      });
       $$('[data-edit-doctor]', root).forEach((btn) => {
         btn.addEventListener('click', () => {
           openDoctorForm(data.doctors.find((d) => d.id === btn.dataset.editDoctor));
@@ -501,6 +581,12 @@
         const row = root.querySelector(`[data-doctor-id="${highlightDoctorId}"]`);
         row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         highlightDoctorId = null;
+      }
+
+      if (pendingOpenDoctorId) {
+        const doc = data.doctors.find((d) => d.id === pendingOpenDoctorId);
+        pendingOpenDoctorId = null;
+        if (doc) openDoctorForm(doc);
       }
 
       const host = $('#doctors-preview-host', root);
@@ -612,18 +698,19 @@
         is_surgeon: form.is_surgeon.checked,
         published: form.published.checked
       };
-      try {
-        if (editingDoctorId) {
-          await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
-          highlightDoctorId = editingDoctorId;
-        } else {
-          const res = await AdminApi.post('/admin/doctors', body);
-          highlightDoctorId = res.id;
-        }
-        toast('Doctor saved — see updated list below', 'success');
-        $('#doctor-form-card').hidden = true;
-        renderDoctors();
-      } catch (err) { toast(err.message, 'error'); }
+        try {
+          if (editingDoctorId) {
+            await AdminApi.put(`/admin/doctors/${editingDoctorId}`, body);
+            highlightDoctorId = editingDoctorId;
+          } else {
+            const res = await AdminApi.post('/admin/doctors', body);
+            highlightDoctorId = res.id;
+          }
+          doctorsDirty = true;
+          toast('Doctor saved — click Save All to refresh the public page', 'success');
+          $('#doctor-form-card').hidden = true;
+          renderDoctors();
+        } catch (err) { toast(err.message, 'error'); }
       finally { btn.disabled = false; }
     };
   }
@@ -1006,12 +1093,8 @@
   }
 
   window.__cmsShowView = (name, doctorId) => {
+    if (name === 'doctors' && doctorId) pendingOpenDoctorId = doctorId;
     showView(name);
-    if (name === 'doctors' && doctorId) {
-      setTimeout(() => {
-        document.querySelector(`[data-edit-doctor="${doctorId}"]`)?.click();
-      }, 600);
-    }
   };
 
   async function bootApp(user) {

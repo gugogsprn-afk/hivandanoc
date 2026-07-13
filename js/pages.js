@@ -10,7 +10,8 @@ async function hydrateHubRoot(rootId) {
   const root = document.getElementById(rootId);
   if (!root || root.querySelector('.seo-crawl-content')) return;
   try {
-    const res = await fetch(window.location.pathname, { credentials: 'same-origin' });
+    const url = `${window.location.pathname}${window.location.search || ''}`;
+    const res = await fetch(url, { credentials: 'same-origin' });
     if (!res.ok) return;
     const html = await res.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -34,6 +35,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('hospital:refresh', () => {
     pagesData = HospitalApp.getData();
     renderPageContent(page);
+  });
+
+  window.addEventListener('languagechange', () => {
+    // SSR hub/detail pages must reload so main content matches HY/RU/EN
+    if (hubRootId || /\/(services|conditions|knowledge|doctors)\//.test(location.pathname)) {
+      if (typeof LocalePolicy !== 'undefined' && LocalePolicy.langUrl) {
+        const lang =
+          typeof I18n !== 'undefined' ? I18n.getLang() : LocalePolicy.getActiveLang?.() || 'hy';
+        const dest = LocalePolicy.langUrl(lang);
+        const current = location.pathname + location.search + location.hash;
+        if (dest !== current) location.assign(dest);
+      }
+    }
   });
 });
 

@@ -11,7 +11,30 @@ const { persistAfterChange } = require('../../services/cms-persistence');
 
 const router = express.Router();
 
-const PAGE_KEYS = ['home', 'doctors', 'contacts', 'departments', 'about'];
+const PAGE_KEYS = [
+  'home',
+  'doctors',
+  'contacts',
+  'departments',
+  'about',
+  'services',
+  'service',
+  'doctor',
+  'appointment',
+  'reviews',
+  'knowledge',
+  'knowledge-article',
+  'conditions',
+  'condition',
+  'patient-information',
+  'consultation-process',
+  'move-better',
+  'patient-story',
+  'submit-story',
+  'privacy-policy',
+  'cookies-policy',
+  'terms'
+];
 
 function normalizeFieldItems(items) {
   return items

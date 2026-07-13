@@ -42,41 +42,93 @@ function jsonLd(graphs) {
   return `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graphs })}</script>`;
 }
 
-function faqMarkup(items) {
+const AUTHORITY_I18N = require('./authority-i18n');
+const AUTHORITY_I18N_PAGES = require('./authority-i18n-pages');
+const {
+  normalizeLang,
+  ui,
+  clinicDisplayName,
+  jsonLdBreadcrumb,
+  contactBlockHtml,
+  injectLocaleIntoLinks
+} = require('./i18n-ssr');
+const { normalizeRootAssetPaths } = require('./html-utils');
+
+function resolveAuthorityConfig(routePath, lang) {
+  lang = normalizeLang(lang);
+  const base = PAGES[routePath];
+  if (!base) return null;
+  if (lang === 'hy') return base;
+  const overlay = AUTHORITY_I18N[lang]?.[routePath];
+  const expanded = AUTHORITY_I18N_PAGES[lang]?.[routePath];
+  if (!overlay && !expanded) return base;
+  return { ...base, ...(overlay || {}), ...(expanded || {}) };
+}
+
+function faqHeading(lang) {
+  if (lang === 'ru') return 'Часто задаваемые вопросы';
+  if (lang === 'en') return 'Frequently asked questions';
+  return 'Հաճախ տրվող հարցեր';
+}
+
+function faqMarkup(items, lang = 'hy') {
   if (!items || !items.length) return '';
   const dl = items.map((f) => `<dt>${esc(f.q)}</dt>\n<dd>${esc(f.a)}</dd>`).join('\n');
-  return `<section class="seo-service-section"><h2>\u0540\u0561\u0573\u0561\u056d \u057f\u0580\u057e\u0578\u0572 \u0570\u0561\u0580\u0581\u0565\u0580</h2>\n<dl class="hss-faq">\n${dl}\n</dl></section>`;
+  return `<section class="seo-service-section"><h2>${esc(faqHeading(lang))}</h2>\n<dl class="hss-faq">\n${dl}\n</dl></section>`;
 }
 
-function faqSchemaNodes(items) {
-  if (!items || !items.length) return [];
-  return [{ '@type': 'FAQPage', mainEntity: items.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }];
-}
-
-function servePage(routePath) {
-  const config = PAGES[routePath];
+function servePage(routePath, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const config = resolveAuthorityConfig(routePath, lang);
   if (!config) return null;
 
-  const data = buildPublicContent('hy');
+  const data = buildPublicContent(lang);
+  data.hospital = { ...(data.hospital || {}), name: clinicDisplayName(data, lang) };
+  const u = ui(lang);
   const url = `${BASE}${config.path}`;
-  const bcItems = [{ name: '\u0533\u056c\u056d\u0561\u057e\u0578\u0580', url: `${BASE}/` }];
-  if (config.parent) bcItems.push({ name: config.parent.name, url: `${BASE}${config.parent.path}` });
+  const bcItems = [{ name: u.home, url: `${BASE}/` }];
+  if (config.parent) {
+    bcItems.push({ name: config.parent.name, url: `${BASE}${config.parent.path}` });
+  }
   bcItems.push({ name: config.h1, url });
 
-  const graphs = config.schema ? config.schema(data, url) : [clinicNode(data)];
-  graphs.push(breadcrumbSchema(bcItems));
-  if (config.faq) graphs.push(...faqSchemaNodes(config.faq));
+  const graphs = [
+    {
+      '@type': 'WebPage',
+      name: config.h1,
+      url,
+      description: config.description,
+      isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: `${BASE}/` }
+    }
+  ];
+  graphs.push(
+    jsonLdBreadcrumb(
+      BASE,
+      lang,
+      ...bcItems.slice(1).map((item) => ({ name: item.name, item: item.url }))
+    )
+  );
+  if (config.faq && config.faq.length) graphs.push(...faqSchemaNodes(config.faq));
 
-  const bcHtml = bcItems.map((item, i) =>
-    i < bcItems.length - 1
-      ? `<a href="${esc(item.url.replace(BASE, '') || '/')}">${esc(item.name)}</a> \u203A`
-      : `<span>${esc(item.name)}</span>`
-  ).join(' ');
+  const bcHtml = bcItems
+    .map((item, i) =>
+      i < bcItems.length - 1
+        ? `<a href="${esc(item.url.replace(BASE, '') || '/')}">${esc(item.name)}</a> ›`
+        : `<span>${esc(item.name)}</span>`
+    )
+    .join(' ');
 
-  const body = typeof config.body === 'function' ? config.body(data) : '';
+  let body = typeof config.body === 'function' ? config.body(data) : '';
+  if (lang !== 'hy') {
+    if (config.bodyHtml) {
+      body = config.bodyHtml;
+    } else if (config.bodyIntro) {
+      body = `<div class="hss-prose"><p>${esc(config.bodyIntro)}</p></div>`;
+    }
+  }
 
-  return `<!DOCTYPE html>
-<html lang="hy">
+  let html = `<!DOCTYPE html>
+<html lang="${lang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -99,11 +151,11 @@ function servePage(routePath) {
             <article class="seo-crawl-content seo-authority-page" id="seo-crawl-content">
                 <nav class="seo-breadcrumb" aria-label="Breadcrumb">${bcHtml}</nav>
                 ${body}
-                ${faqMarkup(config.faq)}
+                ${faqMarkup(config.faq, lang)}
                 <nav class="seo-service-cta" aria-label="Next steps">
-                  <p><a href="/contact" class="hss-btn hss-btn--primary">\u0533\u0580\u0561\u0576\u0581\u057e\u0565\u056c \u056d\u0578\u0580\u0570\u0580\u0564\u0561\u057f\u057e\u0578\u0582\u0569\u0575\u0561\u0576</a>
-                  <a href="/locations" class="hss-btn hss-btn--outline">\u0540\u0561\u057d\u0581\u0565 \u0587 \u056a\u0561\u0574\u0565\u0580</a>
-                  <a href="/consultation-process" class="hss-link">\u053d\u0578\u0580\u0570\u0580\u0564\u0561\u057f\u057e\u0578\u0582\u0569\u0575\u0561\u0576 \u0563\u0578\u0580\u056e\u0568\u0576\u0569\u0561\u0581</a></p>
+                  <p><a href="/contact" class="hss-btn hss-btn--primary">${esc(u.bookAppointment)}</a>
+                  <a href="/locations" class="hss-btn hss-btn--outline">${esc(u.locations)}</a>
+                  <a href="/consultation-process" class="hss-link">${esc(u.consultation)}</a></p>
                 </nav>
             </article>
         </div>
@@ -117,6 +169,13 @@ function servePage(routePath) {
     <script src="/js/common.js?v=20260771"></script>
 </body>
 </html>`;
+  html = injectLocaleIntoLinks(html, lang);
+  return normalizeRootAssetPaths(html);
+}
+
+function faqSchemaNodes(items) {
+  if (!items || !items.length) return [];
+  return [{ '@type': 'FAQPage', mainEntity: items.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }];
 }
 
 // Page configurations are loaded from the config file

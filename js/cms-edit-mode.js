@@ -5,16 +5,208 @@
 (function () {
   if (!/[?&]cms-edit=1/.test(location.search)) return;
 
-  const lang = new URLSearchParams(location.search).get('lang') || localStorage.getItem('gkb_lang') || 'hy';
-  const pagePath = location.pathname.split('/').pop() || 'index.html';
+  let lang = new URLSearchParams(location.search).get('lang') || localStorage.getItem('gkb_lang') || 'hy';
+
+  const CMS_UI = {
+    hy: {
+      banner: '✎ Խմբագրման ռեժիմ — սեղմեք տեքստի կամ նկարի վրա։ Հղումներն ու կոճակները անջատված են։',
+      language: 'Լեզու',
+      cancel: 'Չեղարկել',
+      save: 'Պահպանել',
+      saving: 'Պահպանվում է…',
+      uploading: 'Վերբեռնվում է…',
+      uploadFile: 'Վերբեռնել ֆայլ',
+      pasteLink: 'Տեղադրել հղում',
+      chooseFile: 'Ընտրել լուսանկար կամ տեսանյութ',
+      uploadHint: 'Մաքս. 10 ՄԲ · JPG, PNG, WebP, MP4, WebM',
+      imageVideo: 'Նկար / տեսանյութ',
+      text: 'Տեքստ',
+      placeholder: 'Տեղադրիչ',
+      onePerLine: 'մեկ տողում մեկ',
+      linkFormat: 'տեքստ|հղում',
+      itemFormat: 'անուն|նկարագրություն'
+    },
+    ru: {
+      banner: '✎ Режим редактирования — нажмите на текст или изображение. Ссылки и кнопки отключены.',
+      language: 'Язык',
+      cancel: 'Отмена',
+      save: 'Сохранить',
+      saving: 'Сохранение…',
+      uploading: 'Загрузка…',
+      uploadFile: 'Загрузить файл',
+      pasteLink: 'Вставить ссылку',
+      chooseFile: 'Выбрать фото или видео',
+      uploadHint: 'Макс. 10 МБ · JPG, PNG, WebP, MP4, WebM',
+      imageVideo: 'Изображение / видео',
+      text: 'Текст',
+      placeholder: 'Подсказка',
+      onePerLine: 'по одному на строку',
+      linkFormat: 'текст|ссылка',
+      itemFormat: 'название|описание'
+    },
+    en: {
+      banner: '✎ Edit mode — click text or images to edit. Links and buttons are disabled.',
+      language: 'Language',
+      cancel: 'Cancel',
+      save: 'Save',
+      saving: 'Saving…',
+      uploading: 'Uploading…',
+      uploadFile: 'Upload file',
+      pasteLink: 'Paste link',
+      chooseFile: 'Choose photo or video',
+      uploadHint: 'Max 10 MB · JPG, PNG, WebP, MP4, WebM',
+      imageVideo: 'Image / video',
+      text: 'Text',
+      placeholder: 'Placeholder',
+      onePerLine: 'one per line',
+      linkFormat: 'text|link',
+      itemFormat: 'name|description'
+    }
+  };
+
+  const FIELD_LABELS = {
+    hy: {
+      'hero-title': 'Գլխավոր վերնագիր',
+      'hero-subtitle': 'Գլխավոր ենթավերնագիր',
+      'home-hero-image': 'Գլխավոր բաներ (լուսանկար / տեսանյութ)',
+      'patient-hero-image': 'Տեսանյութ բաներ (ներքև)',
+      'home-conditions': 'Հիվանդությունների ցանկ',
+      'home-imaging-list': 'Սարքավորումների ցանկ',
+      'home-expertise-links': 'Փորձագիտության հղումներ',
+      'home-awards': 'Պարգևների քարտեր',
+      'home-news': 'Նորությունների քարտեր',
+      'home-intro-prose': 'Ներածական տեքստ',
+      'home-feature-image': 'Բլոկի լուսանկար / տեսանյութ',
+      'home-feature-title': 'Բլոկի վերնագիր',
+      'home-feature-desc': 'Բլոկի նկարագրություն'
+    },
+    ru: {
+      'hero-title': 'Заголовок героя',
+      'hero-subtitle': 'Подзаголовок героя',
+      'home-hero-image': 'Главный баннер (фото / видео)',
+      'patient-hero-image': 'Видео-баннер (нижний)',
+      'home-conditions': 'Список заболеваний',
+      'home-imaging-list': 'Список оборудования',
+      'home-expertise-links': 'Ссылки экспертизы',
+      'home-awards': 'Карточки наград',
+      'home-news': 'Карточки новостей',
+      'home-intro-prose': 'Вводный текст',
+      'home-feature-image': 'Фото / видео блока',
+      'home-feature-title': 'Заголовок блока',
+      'home-feature-desc': 'Описание блока'
+    },
+    en: {
+      'hero-title': 'Hero title',
+      'hero-subtitle': 'Hero subtitle',
+      'home-hero-image': 'Main banner (photo / video)',
+      'patient-hero-image': 'Video banner (lower)',
+      'home-conditions': 'Conditions list',
+      'home-imaging-list': 'Equipment list',
+      'home-expertise-links': 'Expertise links',
+      'home-awards': 'Award cards',
+      'home-news': 'News cards',
+      'home-intro-prose': 'Intro text',
+      'home-feature-image': 'Feature photo / video',
+      'home-feature-title': 'Feature title',
+      'home-feature-desc': 'Feature description'
+    }
+  };
+
+  function ui(key) {
+    return CMS_UI[lang]?.[key] || CMS_UI.en[key] || key;
+  }
+
+  function fieldLabel(fieldKey, fallback) {
+    return FIELD_LABELS[lang]?.[fieldKey] || FIELD_LABELS.en?.[fieldKey] || fallback || fieldKey;
+  }
+
+  function listFieldText(selector) {
+    return [...document.querySelectorAll(`${selector} li`)].map((li) => li.textContent.trim()).join('\n');
+  }
+
+  function listFieldLinks(selector) {
+    return [...document.querySelectorAll(`${selector} li a`)].map((a) => {
+      const href = a.getAttribute('href') || '#';
+      return `${a.textContent.trim()}|${href}`;
+    }).join('\n');
+  }
+
+  function listFieldAwards(selector) {
+    return [...document.querySelectorAll(`${selector} .hss-award-card`)].map((card) => {
+      const label = card.querySelector('strong')?.textContent?.trim() || '';
+      const desc = card.querySelector('span')?.textContent?.trim() || '';
+      return `${label}|${desc}`;
+    }).join('\n');
+  }
+
+  function listFieldNews(selector) {
+    return [...document.querySelectorAll(`${selector} .hss-news-card`)].map((card) => {
+      const title = card.querySelector('h3')?.textContent?.trim() || '';
+      const category = card.querySelector('.hss-news-card__cat')?.textContent?.trim() || '';
+      const image = card.querySelector('img')?.getAttribute('src') || '';
+      return `${title}|${category}|${image}`;
+    }).join('\n');
+  }
+  const pagePath = resolvePagePath();
 
   const PAGE_PATH_TO_KEY = {
     'index.html': 'home',
     'doctors.html': 'doctors',
     'contacts.html': 'contacts',
     'departments.html': 'departments',
-    'about.html': 'about'
+    'about.html': 'about',
+    'services.html': 'services',
+    'service.html': 'service',
+    'doctor.html': 'doctor',
+    'appointment.html': 'appointment',
+    'reviews.html': 'reviews',
+    'knowledge.html': 'knowledge',
+    'knowledge-article.html': 'knowledge-article',
+    'conditions.html': 'conditions',
+    'condition.html': 'condition',
+    'patient-information.html': 'patient-information',
+    'consultation-process.html': 'consultation-process',
+    'move-better.html': 'move-better',
+    'patient-story.html': 'patient-story',
+    'submit-story.html': 'submit-story',
+    'privacy-policy.html': 'privacy-policy',
+    'cookies-policy.html': 'cookies-policy',
+    'terms.html': 'terms'
   };
+
+  function resolvePagePath() {
+    const raw = (location.pathname || '/').replace(/\/+$/, '') || '/';
+    if (raw === '/' || raw === '/index.html') return 'index.html';
+    const cleanMap = {
+      '/doctors': 'doctors.html',
+      '/find-a-doctor': 'doctors.html',
+      '/contact': 'contacts.html',
+      '/contacts': 'contacts.html',
+      '/departments': 'departments.html',
+      '/patient-care': 'departments.html',
+      '/about': 'about.html',
+      '/services': 'services.html',
+      '/appointment': 'appointment.html',
+      '/reviews': 'reviews.html',
+      '/knowledge': 'knowledge.html',
+      '/conditions': 'conditions.html',
+      '/patient-information': 'patient-information.html',
+      '/consultation-process': 'consultation-process.html',
+      '/move-better': 'move-better.html',
+      '/submit-story': 'submit-story.html',
+      '/privacy-policy': 'privacy-policy.html',
+      '/cookies-policy': 'cookies-policy.html',
+      '/terms': 'terms.html'
+    };
+    if (cleanMap[raw]) return cleanMap[raw];
+    if (raw.startsWith('/services/')) return 'service.html';
+    if (raw.startsWith('/doctors/') || raw.startsWith('/find-a-doctor/')) return 'doctor.html';
+    if (raw.startsWith('/conditions/')) return 'condition.html';
+    if (raw.startsWith('/knowledge/')) return 'knowledge-article.html';
+    if (raw.startsWith('/patient-stories/') || raw.startsWith('/patient-story')) return 'patient-story.html';
+    const last = raw.split('/').pop() || 'index.html';
+    return last.endsWith('.html') ? last : `${last}.html`;
+  }
 
   let pageFieldsCache = {};
   /** @type {Map<string, object>} */
@@ -88,12 +280,12 @@
   }
 
   function setText(el, val, field) {
-    if (el?.id === 'home-hero-image' && typeof HospitalApp !== 'undefined') {
+    if ((el?.id === 'home-hero-image' || el?.id === 'home-hero-media') && typeof HospitalApp !== 'undefined') {
       HospitalApp.applyHomeHeroMedia(val, inferFieldValueType(val, el));
       return;
     }
-    if (el?.id === 'patient-hero-image' && typeof HospitalApp !== 'undefined') {
-      HospitalApp.applyHomeHeroMedia(val, inferFieldValueType(val, el));
+    if ((el?.id === 'patient-hero-image' || el?.id === 'patient-hero-media') && typeof HospitalApp !== 'undefined') {
+      HospitalApp.applyPatientHeroMedia(val, inferFieldValueType(val, el));
       return;
     }
     if (el?.id === 'home-feature-image' && typeof HospitalApp !== 'undefined') {
@@ -139,6 +331,43 @@
             ? HospitalApp.normalizeAssetUrl(url || '/images/brand/logo-mark.png')
             : url || '/images/brand/logo-mark.png';
       });
+      return;
+    }
+    if (el.id === 'home-conditions') {
+      el.innerHTML = val.split('\n').filter(Boolean).map((item) => `<li>${item.trim()}</li>`).join('');
+      return;
+    }
+    if (el.id === 'home-imaging-list') {
+      el.innerHTML = val.split('\n').filter(Boolean).map((line) => {
+        const sep = line.includes('|') ? '|' : ' — ';
+        const parts = line.split(sep).map((s) => s.trim());
+        const name = parts[0] || '';
+        const desc = parts.slice(1).join(sep.trim()).trim();
+        return desc ? `<li><strong>${name}</strong> — ${desc}</li>` : `<li><strong>${name}</strong></li>`;
+      }).join('');
+      return;
+    }
+    if (el.id === 'expertise-links') {
+      el.innerHTML = val.split('\n').filter(Boolean).map((line) => {
+        const [text, href] = line.split('|').map((s) => s.trim());
+        return `<li><a href="${href || '#'}">${text || line}</a></li>`;
+      }).join('');
+      return;
+    }
+    if (el.id === 'home-awards-grid') {
+      const cards = val.split('\n').filter(Boolean).map((line, i) => {
+        const [label, desc] = line.split('|').map((s) => s.trim());
+        return `<div class="hss-award-card"><div class="hss-award-card__badge">${i + 1}</div><strong>${label || line}</strong><span>${desc || ''}</span></div>`;
+      }).join('');
+      const intro = el.querySelector('.hss-awards__intro');
+      el.innerHTML = cards + (intro ? intro.outerHTML : '');
+      return;
+    }
+    if (el.id === 'home-news') {
+      el.innerHTML = val.split('\n').filter(Boolean).map((line) => {
+        const [title, category, image] = line.split('|').map((s) => s.trim());
+        return `<a href="#" class="hss-news-card"><div class="hss-news-card__img"><img src="${image || 'images/about-image-01.jpg'}" alt="${title || ''}" loading="lazy" decoding="async" width="400" height="260"></div><div class="hss-news-card__cat">${category || ''}</div><h3>${title || line}</h3></a>`;
+      }).join('');
       return;
     }
     if (el.classList.contains('hss-prose') || el.id === 'back-in-game-text') {
@@ -395,7 +624,7 @@
     { sel: '#hero-subtitle', label: 'Hero subtitle', type: 'text',
       async get() { return getCachedField('hero-subtitle') || (await loadHeroSection()).subtitle?.[lang] || getText(document.querySelector('#hero-subtitle')); },
       async save(val, el) { await persistField(el || document.querySelector('#hero-subtitle'), val); } },
-    { sel: '#home-hero-image', label: 'Homepage banner photo / video', type: 'image',
+    { sel: '#home-hero-image', fieldKey: 'home-hero-image', label: 'Homepage banner photo / video', type: 'image',
       async get() {
         const el = document.getElementById('home-hero-image');
         return (
@@ -408,7 +637,7 @@
         );
       },
       async save(val, el) {
-        const target = el || document.getElementById('home-hero-image');
+        const target = document.getElementById('home-hero-image') || document.getElementById('home-hero-media') || el;
         const valueType = inferFieldValueType(val, target);
         await persistField(target, val, {
           fieldKey: 'home-hero-image',
@@ -418,7 +647,39 @@
           HospitalApp.applyHomeHeroMedia(val, valueType);
         }
         const lower = document.getElementById('patient-hero');
-        if (lower) lower.hidden = !!val;
+        const isEdit = /[?&]cms-edit=1/.test(location.search);
+        if (lower && !isEdit) lower.hidden = !!val;
+      } },
+    { sel: '#home-hero-media', fieldKey: 'home-hero-image', label: 'Homepage banner photo / video', type: 'image',
+      async get() {
+        const heroField = HOME_FIELDS.find((f) => f.fieldKey === 'home-hero-image' && f.sel === '#home-hero-image');
+        return heroField ? heroField.get() : '';
+      },
+      async save(val, el) {
+        const heroField = HOME_FIELDS.find((f) => f.fieldKey === 'home-hero-image' && f.sel === '#home-hero-image');
+        if (heroField) return heroField.save(val, el);
+      } },
+    { sel: '#patient-hero-image', fieldKey: 'patient-hero-image', label: 'Lower video banner', type: 'image',
+      async get() {
+        const el = document.getElementById('patient-hero-image');
+        return getCachedField('patient-hero-image') || contentExtra.patientHero?.image || el?.src || el?.currentSrc || '';
+      },
+      async save(val, el) {
+        const target = document.getElementById('patient-hero-image') || document.getElementById('patient-hero-media') || el;
+        const valueType = inferFieldValueType(val, target);
+        await persistField(target, val, { fieldKey: 'patient-hero-image', valueType });
+        if (typeof HospitalApp !== 'undefined') {
+          HospitalApp.applyPatientHeroMedia(val, valueType);
+        }
+      } },
+    { sel: '#patient-hero-media', fieldKey: 'patient-hero-image', label: 'Lower video banner', type: 'image',
+      async get() {
+        const field = HOME_FIELDS.find((f) => f.fieldKey === 'patient-hero-image' && f.sel === '#patient-hero-image');
+        return field ? field.get() : '';
+      },
+      async save(val, el) {
+        const field = HOME_FIELDS.find((f) => f.fieldKey === 'patient-hero-image' && f.sel === '#patient-hero-image');
+        if (field) return field.save(val, el);
       } },
     { sel: '#home-feature-image', label: 'Feature photo / video', type: 'image',
       async get() {
@@ -491,7 +752,48 @@
         return getCachedField('home-intro-prose') || (contentExtra.introParagraphs || []).join('\n') ||
           [...(document.querySelector('#home-intro-prose')?.querySelectorAll('p') || [])].map((p) => p.textContent).join('\n');
       },
-      async save(val, el) { await persistField(el || document.querySelector('#home-intro-prose'), val); } }
+      async save(val, el) { await persistField(el || document.querySelector('#home-intro-prose'), val); } },
+    { sel: '#home-conditions', fieldKey: 'home-conditions', label: 'Conditions list', type: 'textarea',
+      hintKey: 'onePerLine',
+      async get() {
+        return getCachedField('home-conditions') ||
+          listFieldText('#home-conditions') ||
+          (contentExtra.conditions || []).join('\n');
+      },
+      async save(val, el) { await persistField(el || document.querySelector('#home-conditions'), val, { fieldKey: 'home-conditions' }); } },
+    { sel: '#home-imaging-list', fieldKey: 'home-imaging-list', label: 'Equipment list', type: 'textarea',
+      hintKey: 'itemFormat',
+      async get() {
+        if (getCachedField('home-imaging-list')) return getCachedField('home-imaging-list');
+        const lines = listFieldText('#home-imaging-list');
+        if (lines) return lines;
+        return (contentExtra.equipment || []).map((eq) => `${eq.name}|${eq.description}`).join('\n');
+      },
+      async save(val, el) { await persistField(el || document.querySelector('#home-imaging-list'), val, { fieldKey: 'home-imaging-list' }); } },
+    { sel: '#expertise-links', fieldKey: 'home-expertise-links', label: 'Expertise links', type: 'textarea',
+      hintKey: 'linkFormat',
+      async get() {
+        return getCachedField('home-expertise-links') ||
+          listFieldLinks('#expertise-links') ||
+          (contentExtra.expertiseOverlay?.links || []).map((l) => `${l.text}|${l.href}`).join('\n');
+      },
+      async save(val, el) { await persistField(el || document.querySelector('#expertise-links'), val, { fieldKey: 'home-expertise-links' }); } },
+    { sel: '#home-awards-grid', fieldKey: 'home-awards', label: 'Award cards', type: 'textarea',
+      hintKey: 'itemFormat',
+      async get() {
+        return getCachedField('home-awards') ||
+          listFieldAwards('#home-awards-grid') ||
+          (contentExtra.awards || []).map((a) => `${a.label}|${a.desc}`).join('\n');
+      },
+      async save(val, el) { await persistField(el || document.querySelector('#home-awards-grid'), val, { fieldKey: 'home-awards' }); } },
+    { sel: '#home-news', fieldKey: 'home-news', label: 'News cards', type: 'textarea',
+      hintKey: 'linkFormat',
+      async get() {
+        return getCachedField('home-news') ||
+          listFieldNews('#home-news') ||
+          (contentExtra.news || []).map((n) => `${n.title}|${n.category}|${n.image || ''}`).join('\n');
+      },
+      async save(val, el) { await persistField(el || document.querySelector('#home-news'), val, { fieldKey: 'home-news' }); } }
   ];
 
   const HEADER_FIELDS = [
@@ -631,20 +933,20 @@
     popover.innerHTML = `
       <h4>${field.label}</h4>
       <div class="cms-edit-tabs">
-        <button type="button" class="cms-edit-tab active" data-tab="upload">Upload file</button>
-        <button type="button" class="cms-edit-tab" data-tab="url">Paste link</button>
+        <button type="button" class="cms-edit-tab active" data-tab="upload">${ui('uploadFile')}</button>
+        <button type="button" class="cms-edit-tab" data-tab="url">${ui('pasteLink')}</button>
       </div>
       <div class="cms-edit-panel" data-panel="upload">
-        <button type="button" class="cms-upload-trigger">Choose photo or video from computer</button>
+        <button type="button" class="cms-upload-trigger">${ui('chooseFile')}</button>
         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" class="cms-edit-file">
-        <p class="cms-edit-hint" id="cms-upload-status">Max 10 MB · JPG, PNG, WebP, MP4, WebM</p>
+        <p class="cms-edit-hint" id="cms-upload-status">${ui('uploadHint')}</p>
       </div>
       <div class="cms-edit-panel" data-panel="url" hidden>
         <input type="url" class="cms-edit-url" placeholder="https://… or /api/v1/media/files/…">
       </div>
       <div class="cms-edit-popover__actions">
-        <button type="button" class="cms-cancel">Cancel</button>
-        <button type="button" class="cms-save">Save</button>
+        <button type="button" class="cms-cancel">${ui('cancel')}</button>
+        <button type="button" class="cms-save">${ui('save')}</button>
       </div>`;
     document.body.appendChild(popover);
     positionPopover(rect);
@@ -686,7 +988,7 @@
       if (!file) return;
       const btn = popover.querySelector('.cms-save');
       btn.disabled = true;
-      btn.textContent = 'Uploading…';
+      btn.textContent = ui('uploading');
       if (statusEl) statusEl.textContent = `Uploading ${file.name}…`;
       try {
         pendingUrl = await uploadFile(file);
@@ -705,7 +1007,7 @@
         if (statusEl) statusEl.textContent = err.message;
       }
       btn.disabled = false;
-      btn.textContent = 'Save';
+      btn.textContent = ui('save');
     });
 
     popover.querySelector('.cms-cancel').onclick = closePopover;
@@ -717,7 +1019,7 @@
         return;
       }
       btn.disabled = true;
-      btn.textContent = 'Saving…';
+      btn.textContent = ui('saving');
       try {
         const valueType = inferFieldValueType(val, el, activeEdit?.opts || {});
         await field.save(val, el);
@@ -734,7 +1036,7 @@
       } catch (err) {
         notifyError(err);
         btn.disabled = false;
-        btn.textContent = 'Save';
+        btn.textContent = ui('save');
       }
     };
   }
@@ -742,13 +1044,13 @@
   function buildTextPopover(field, el, rect) {
     popover = document.createElement('div');
     popover.className = 'cms-edit-popover';
-    popover.innerHTML = `<h4>${field.label}</h4><p class="cms-edit-lang">Language: ${lang.toUpperCase()}</p>`;
+    popover.innerHTML = `<h4>${field.label}</h4><p class="cms-edit-lang">${ui('language')}: ${({ hy: 'Հայերեն', ru: 'Русский', en: 'English' })[lang] || lang.toUpperCase()}</p>`;
     const input = field.type === 'textarea' ? document.createElement('textarea') : document.createElement('input');
     input.value = 'Loading…';
     popover.appendChild(input);
     const actions = document.createElement('div');
     actions.className = 'cms-edit-popover__actions';
-    actions.innerHTML = '<button type="button" class="cms-cancel">Cancel</button><button type="button" class="cms-save">Save</button>';
+    actions.innerHTML = `<button type="button" class="cms-cancel">${ui('cancel')}</button><button type="button" class="cms-save">${ui('save')}</button>`;
     popover.appendChild(actions);
     document.body.appendChild(popover);
     positionPopover(rect);
@@ -766,7 +1068,7 @@
     actions.querySelector('.cms-save').onclick = async () => {
       const btn = actions.querySelector('.cms-save');
       btn.disabled = true;
-      btn.textContent = 'Saving…';
+      btn.textContent = ui('saving');
       try {
         await field.save(input.value.trim(), el);
         setText(el, input.value.trim(), field);
@@ -775,7 +1077,7 @@
       } catch (err) {
         notifyError(err);
         btn.disabled = false;
-        btn.textContent = 'Save';
+        btn.textContent = ui('save');
       }
     };
     input.focus();
@@ -807,7 +1109,7 @@
 
   function fieldFromI18n(el, key, isPlaceholder) {
     return {
-      label: isPlaceholder ? `Placeholder: ${key}` : `Text: ${key}`,
+      label: isPlaceholder ? `${ui('placeholder')}: ${key}` : `${ui('text')}: ${key}`,
       type: isPlaceholder ? 'text' : el.tagName === 'P' || el.classList.contains('hss-prose') ? 'textarea' : 'text',
       fieldType: isPlaceholder ? 'placeholder' : 'i18n',
       async get() {
@@ -822,7 +1124,7 @@
   function fieldFromImage(el) {
     const fk = fieldKeyFor(el);
     return {
-      label: 'Image / video',
+      label: ui('imageVideo'),
       type: 'image',
       async get() {
         return getCachedField(fk) || contentExtra.pageImages?.[cmsKey(el)] || el.src || el.currentSrc || '';
@@ -937,12 +1239,27 @@
 
     HEADER_FIELDS.forEach((field) => {
       const el = document.querySelector(field.sel);
-      if (el) markEditable(el, field);
+      if (el) {
+        markEditable(el, {
+          ...field,
+          label: fieldLabel(field.sel.replace('#', ''), field.label)
+        });
+      }
     });
 
     HOME_FIELDS.forEach((field) => {
+      if (field.sel === '#home-hero-media' && document.getElementById('home-hero-image')) return;
+      if (field.sel === '#patient-hero-media' && document.getElementById('patient-hero-image')) return;
       const el = document.querySelector(field.sel);
-      if (el) markEditable(el, field);
+      if (!el) return;
+      const localized = {
+        ...field,
+        label: fieldLabel(field.fieldKey || field.sel.replace('#', ''), field.label)
+      };
+      if (localized.hintKey) {
+        localized.label = `${localized.label} (${ui(localized.hintKey)})`;
+      }
+      markEditable(el, localized);
     });
 
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -958,15 +1275,36 @@
       markEditable(el, { ...fieldFromI18n(el, key, true), type: 'text', fieldType: 'placeholder' });
     });
 
-    document.querySelectorAll('main img, main video, .hss-wrap img, .hss-hero img, .hss-section img, .hss-about-hero img, .hss-video-hero__bg, #home-hero-image, #patient-hero-image, #home-feature-image').forEach((img) => {
+    const mediaSel = [
+      'main img', 'main video',
+      '.hss-wrap img', '.hss-wrap video',
+      '.hss-hero img', '.hss-section img', '.hss-about-hero img',
+      '.hss-video-hero__bg', '.hss-service-item__photo img',
+      '.hss-doctor-item__photo-img',
+      '#home-hero-image', '#patient-hero-image', '#home-feature-image'
+    ].join(', ');
+    document.querySelectorAll(mediaSel).forEach((img) => {
       if (isInsideChrome(img) || img.closest('[data-cms-editable]')) return;
-      if (HOME_FIELDS.some((f) => f.sel === `#${img.id}`)) return;
+      if (img.id && HOME_FIELDS.some((f) => f.sel === `#${img.id}`)) return;
       markEditable(img, fieldFromImage(img));
     });
 
-    document.querySelectorAll('main h1, main h2, main h3, main h4, main p, main span, main label span, .hss-btn, button.hss-btn, a.hss-btn').forEach((el) => {
+    // Pages like doctors/patient-care have no <main> — cover hero + sections + cards
+    const textSel = [
+      'main h1', 'main h2', 'main h3', 'main h4', 'main p', 'main li', 'main span', 'main label span',
+      '.hss-hero h1', '.hss-hero h2', '.hss-hero p', '.hss-hero__tagline',
+      '.hss-section h1', '.hss-section h2', '.hss-section h3', '.hss-section h4',
+      '.hss-section p', '.hss-section li',
+      '.hss-service-group__title', '.hss-service-item__name', '.hss-service-item__desc',
+      '.hss-service-item__meta', '.hss-service-item__bullets li',
+      '.hss-doctor-item__name', '.hss-doctor-item__role', '.hss-doctor-item__exp',
+      '.hss-doctor-item__loc', '.hss-doctor-item__bio',
+      '.hss-about-section__title', '.hss-about-section__lead', '.hss-about-section__body',
+      '.hss-btn', 'button.hss-btn', 'a.hss-btn'
+    ].join(', ');
+    document.querySelectorAll(textSel).forEach((el) => {
       if (isInsideChrome(el) || isNonEditableChrome(el) || el.closest('#site-header') || el.hasAttribute('data-cms-editable') || el.closest('[data-cms-editable]')) return;
-      if (el.children.length > 0 && !el.classList.contains('hss-btn')) return;
+      if (el.children.length > 0 && !el.classList.contains('hss-btn') && el.tagName !== 'A') return;
       const text = getText(el);
       if (!text || text.length < 2) return;
       markEditable(el, fieldFromInline(el));
@@ -983,6 +1321,38 @@
     applyElementStyles();
     attachDoctorControls();
     reportPreviewHeight();
+  }
+
+  async function waitForPageContent() {
+    await waitForHomeContent();
+    const grids = ['#departments-grid', '#doctors-grid', '#services-hub-root', '#conditions-hub-root', '#knowledge-hub-root', '#reviews-list', '#about-leadership'];
+    const need = grids.map((s) => document.querySelector(s)).filter(Boolean);
+    if (!need.length) return;
+    await new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      const ready = () =>
+        need.some((el) => el.children.length > 0 || el.querySelector('h1, h2, h3, .hss-service-item, .hss-doctor-item'));
+      if (ready()) {
+        finish();
+        return;
+      }
+      const obs = new MutationObserver(() => {
+        if (ready()) {
+          obs.disconnect();
+          finish();
+        }
+      });
+      need.forEach((el) => obs.observe(el, { childList: true, subtree: true }));
+      setTimeout(() => {
+        obs.disconnect();
+        finish();
+      }, 4000);
+    });
   }
 
   function attachDoctorControls() {
@@ -1017,7 +1387,8 @@
       actions.querySelector('.cms-doctor-edit')?.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        window.parent.postMessage({ type: 'cms-open-doctors' }, '*');
+        const docId = row.dataset.doctorId || '';
+        window.parent.postMessage({ type: 'cms-open-doctors', doctorId: docId }, '*');
       });
 
       actions.querySelector('.cms-doctor-del')?.addEventListener('click', async (e) => {
@@ -1061,7 +1432,8 @@
     if (document.querySelector('link[href*="cms-edit-mode.css"]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `js/cms-edit-mode.css?v=${new URLSearchParams(location.search).get('cms_build') || window.CMS_BUILD || '20260628'}`;
+    const rootBase = (document.querySelector('script[src*="common.js"]')?.src || '').replace(/\/js\/common\.js.*$/, '/') || '/';
+    link.href = `${rootBase}js/cms-edit-mode.css?v=${new URLSearchParams(location.search).get('cms_build') || window.CMS_BUILD || '20260628'}`;
     document.head.appendChild(link);
   }
 
@@ -1077,7 +1449,7 @@
     const bar = document.createElement('div');
     bar.id = 'cms-edit-banner';
     bar.className = 'cms-edit-banner';
-    bar.textContent = '✎ Edit mode — hover text or images to edit. Links and buttons are disabled.';
+    bar.textContent = ui('banner');
     document.body.prepend(bar);
   }
 
@@ -1103,6 +1475,41 @@
     if (hero) previewResizeObserver.observe(hero);
   }
 
+  async function syncSiteLanguage() {
+    const urlLang = new URLSearchParams(location.search).get('lang');
+    if (!urlLang || !['hy', 'ru', 'en'].includes(urlLang)) return;
+    lang = urlLang;
+    try {
+      localStorage.setItem('gkb_lang', urlLang);
+    } catch {
+      /* private mode */
+    }
+    if (typeof I18n !== 'undefined') {
+      await I18n.init().catch(() => {});
+      if (I18n.getLang() !== urlLang) {
+        await I18n.setLanguage(urlLang);
+      }
+    }
+  }
+
+  async function waitForHomeContent() {
+    if (pagePath !== 'index.html' && pagePath !== '') return;
+    await new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      if (document.getElementById('home-hero-image')) {
+        finish();
+        return;
+      }
+      window.addEventListener('cms-hero-media-ready', finish, { once: true });
+      setTimeout(finish, 3500);
+    });
+  }
+
   async function init() {
     if (!token()) {
       document.body.innerHTML = '<p style="padding:2rem;font-family:system-ui;text-align:center">Please sign in to the admin panel first.</p>';
@@ -1117,17 +1524,35 @@
     window.addEventListener('resize', syncEditLayout, { passive: true });
     blockInteractions();
     try {
+      await syncSiteLanguage();
+    } catch {
+      /* continue */
+    }
+    try {
       await loadStores();
     } catch {
       /* partial edit still works */
     }
+    try {
+      if (typeof HospitalApp !== 'undefined') {
+        await HospitalApp.init().catch(() => {});
+      }
+      await waitForPageContent();
+    } catch {
+      /* continue */
+    }
     attachAll();
+    // Dynamic grids may populate slightly later — re-scan
+    setTimeout(attachAll, 500);
+    setTimeout(attachAll, 1500);
+    setTimeout(attachAll, 3000);
     updatePendingUI();
     watchPreviewHeight();
     setTimeout(reportPreviewHeight, 300);
     setTimeout(reportPreviewHeight, 1200);
     window.addEventListener('hospital:refresh', () => {
       setTimeout(attachAll, 200);
+      setTimeout(attachAll, 800);
       setTimeout(syncEditLayout, 250);
       setTimeout(reportPreviewHeight, 400);
     });
@@ -1137,7 +1562,11 @@
       setTimeout(reportPreviewHeight, 500);
     });
     window.addEventListener('cms-hero-media-ready', () => {
-      setTimeout(reportPreviewHeight, 50);
+      setTimeout(() => {
+        attachAll();
+        syncEditLayout();
+        reportPreviewHeight();
+      }, 50);
       setTimeout(reportPreviewHeight, 400);
     });
   }

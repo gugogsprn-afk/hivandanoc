@@ -63,10 +63,19 @@ const FormApi = (function () {
         });
         const cmsJson = await cmsRes.json().catch(() => ({}));
         if (cmsRes.ok && cmsJson.ok !== false) {
-          return { ok: true, status: cmsRes.status, cms: true, ...cmsJson };
+          return { ok: true, status: cmsRes.status, cms: true, persisted: true, ...cmsJson };
         }
-      } catch {
-        /* fall through to legacy */
+        // CMS responded with an error — do not fall through to legacy notify-only path
+        return {
+          ok: false,
+          status: cmsRes.status,
+          cms: true,
+          persisted: false,
+          error: cmsJson.error || `Save failed (${cmsRes.status})`
+        };
+      } catch (err) {
+        // Network failure only: try legacy notify so the clinic still gets the message
+        console.warn('[FormApi] CMS unreachable, trying legacy notify', err);
       }
     }
 
@@ -86,7 +95,13 @@ const FormApi = (function () {
         error: 'Сервер уведомлений не найден. Проверьте PRODUCTION_API в js/api-config.js.'
       };
     }
-    return { ok: res.ok && json.ok !== false, status: res.status, ...json };
+    return {
+      ok: res.ok && json.ok !== false,
+      status: res.status,
+      persisted: false,
+      legacy: true,
+      ...json
+    };
   }
 
   async function submitViaFormSubmit(endpoint, data) {

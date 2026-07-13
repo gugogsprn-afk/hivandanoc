@@ -8,6 +8,31 @@ const SPLIT_IMAGES = {
   imaging: 'images/team-member-02.jpg'
 };
 
+const HOME_CONDITION_SLUGS = [
+  'osteochondrosis',
+  'herniated-disc',
+  'scoliosis-pain',
+  'radiculopathy',
+  'joint-pain',
+  null,
+  null,
+  'lower-back-pain'
+];
+
+function internalHref(path) {
+  if (typeof HospitalApp !== 'undefined' && typeof HospitalApp.routeHref === 'function') {
+    return HospitalApp.routeHref(path);
+  }
+  return path;
+}
+
+function parseListLines(text) {
+  return String(text || '')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function initDoctorSearch(data) {
   initDoctorSearchBand(data);
 }
@@ -30,7 +55,8 @@ function renderHomeHeroBanner(data, pf = {}) {
   const lowerSection = document.getElementById('patient-hero');
   if (lowerSection) {
     const mainMedia = pf['home-hero-image'] || pf['patient-hero-image'] || ph?.image;
-    lowerSection.hidden = !!mainMedia;
+    const isEdit = /[?&]cms-edit=1/.test(location.search);
+    lowerSection.hidden = !isEdit && !!mainMedia;
   }
 }
 
@@ -86,7 +112,10 @@ function renderBackInGame(big, pf = {}) {
   const link = document.getElementById('back-in-game-link');
   if (title) title.textContent = pf['back-in-game-title'] || big?.title || '';
   if (text) text.innerHTML = `<p>${pf['back-in-game-text'] || big?.text || ''}</p>`;
-  if (link) link.textContent = pf['back-in-game-link'] || big?.linkText || '';
+  if (link) {
+    link.textContent = pf['back-in-game-link'] || big?.linkText || '';
+    link.href = internalHref(big?.linkHref || '/services');
+  }
 }
 
 function renderExpertise(ex, pf = {}) {
@@ -105,43 +134,85 @@ function renderExpertise(ex, pf = {}) {
   if (title) title.textContent = pf['expertise-title'] || ex?.title || '';
   if (text) text.textContent = pf['expertise-text'] || ex?.text || '';
   if (links) {
-    links.innerHTML = (ex.links || [])
-      .map((l) => `<li><a href="${l.href || '#'}">${l.text}</a></li>`)
-      .join('');
+    const fromPf = pf['home-expertise-links'];
+    if (fromPf) {
+      links.innerHTML = parseListLines(fromPf)
+        .map((line) => {
+          const [text, href] = line.split('|').map((s) => s.trim());
+          return `<li><a href="${internalHref(href || '/about')}">${text || line}</a></li>`;
+        })
+        .join('');
+    } else {
+      links.innerHTML = (ex.links || [])
+        .map((l) => `<li><a href="${internalHref(l.href || '/about')}">${l.text}</a></li>`)
+        .join('');
+    }
   }
 }
 
-function renderAwards(awards) {
+function renderAwards(awards, pf = {}) {
   const grid = document.getElementById('home-awards-grid');
   if (!grid) return;
   const t = (k) => I18n.t(k);
-  const badges = (awards || [])
-    .map(
-      (a, i) => `
+  const fromPf = pf['home-awards'];
+  let badges;
+  if (fromPf) {
+    badges = parseListLines(fromPf)
+      .map(
+        (line, i) => {
+          const [label, desc] = line.split('|').map((s) => s.trim());
+          return `
+    <div class="hss-award-card">
+      <div class="hss-award-card__badge">${i + 1}</div>
+      <strong>${label || line}</strong>
+      <span>${desc || ''}</span>
+    </div>`;
+        }
+      )
+      .join('');
+  } else {
+    badges = (awards || [])
+      .map(
+        (a, i) => `
     <div class="hss-award-card">
       <div class="hss-award-card__badge">${i + 1}</div>
       <strong>${a.label}</strong>
       <span>${a.desc}</span>
     </div>`
-    )
-    .join('');
+      )
+      .join('');
+  }
   grid.innerHTML =
     badges +
     `<div class="hss-awards__intro">
       <h2 class="hss-serif">${t('pages.home.awardsTitle')}</h2>
       <p>${t('pages.home.awardsDesc')}</p>
-      <a href="about.html" class="hss-link">${t('pages.home.rankingsLink')}</a>
+      <a href="${internalHref('/about#awards')}" class="hss-link">${t('pages.home.rankingsLink')}</a>
     </div>`;
 }
 
-function renderNewsCards(news) {
+function renderNewsCards(news, pf = {}) {
   const newsEl = document.getElementById('home-news');
   if (!newsEl) return;
-  newsEl.innerHTML = (news || [])
-    .slice(0, 3)
+  const fromPf = pf['home-news'];
+  let items;
+  if (fromPf) {
+    items = parseListLines(fromPf).map((line) => {
+      const [title, category, image] = line.split('|').map((s) => s.trim());
+      return {
+        title: title || line,
+        category: category || '',
+        image: image || 'images/about-image-01.jpg',
+        url: '/move-better'
+      };
+    });
+  } else {
+    items = (news || []).slice(0, 3);
+  }
+  newsEl.innerHTML = items
     .map(
       (n) => `
-    <a href="#" class="hss-news-card">
+    <a href="${internalHref(n.url || '/move-better')}" class="hss-news-card">
       <div class="hss-news-card__img">
         <img src="${n.image || 'images/about-image-01.jpg'}" alt="${n.title || ''}" loading="lazy" decoding="async" width="400" height="260">
       </div>
@@ -195,9 +266,9 @@ function renderHomePage() {
     const cmsHero = data._cms?.homeSections?.hero;
     const cmsSub =
       pf['hero-subtitle'] ||
-      cmsTriplet(cmsHero?.subtitle, lang) ||
       locH.heroTagline ||
       locH.tagline ||
+      cmsTriplet(cmsHero?.subtitle, lang) ||
       h.heroTagline ||
       h.tagline ||
       t('pages.home.heroSubtitle');
@@ -216,16 +287,41 @@ function renderHomePage() {
 
   const conditionsEl = document.getElementById('home-conditions');
   if (conditionsEl) {
-    const items = data.conditions || [];
-    conditionsEl.innerHTML = items
-      .map((c) => `<li>${typeof c === 'string' ? c : c.name || c}</li>`)
-      .join('');
+    const fromPf = pf['home-conditions'];
+    if (fromPf) {
+      conditionsEl.innerHTML = parseListLines(fromPf)
+        .map((item) => `<li>${item}</li>`)
+        .join('');
+    } else {
+      const items =
+        (typeof I18n !== 'undefined' && typeof I18n.getContent === 'function'
+          ? I18n.getContent()?.conditions
+          : null) ||
+        data.conditions ||
+        [];
+      conditionsEl.innerHTML = items
+        .map((c, i) => {
+          const label = typeof c === 'string' ? c : c.name || c;
+          const slug = typeof c === 'object' && c.slug ? c.slug : HOME_CONDITION_SLUGS[i];
+          if (slug) {
+            return `<li><a href="${internalHref(`/conditions/${slug}`)}">${label}</a></li>`;
+          }
+          return `<li><a href="${internalHref('/conditions')}">${label}</a></li>`;
+        })
+        .join('');
+    }
   }
+
+  const newsViewAll = document.querySelector('a[data-i18n="pages.home.newsViewAll"]');
+  if (newsViewAll) newsViewAll.href = internalHref('/move-better');
+
+  const shareStory = document.querySelector('a[data-i18n="footer.linkStory"]');
+  if (shareStory) shareStory.href = internalHref('/submit-story');
 
   renderPatientHero(data.patientHero, pf);
   renderBackInGame(data.backInGame, pf);
   renderExpertise(data.expertiseOverlay, pf);
-  renderAwards(data.awards);
+  renderAwards(data.awards, pf);
 
   const feature = data.feature || {};
   const featUrl = pf['home-feature-image'] || feature.image || h.heroImage || 'images/about-image-01.jpg';
@@ -294,20 +390,47 @@ function renderHomePage() {
 
   const imagingList = document.getElementById('home-imaging-list');
   if (imagingList) {
-    imagingList.innerHTML = (data.equipment || [])
-      .map((eq) => `<li><strong>${eq.name}</strong> — ${eq.description}</li>`)
-      .join('');
+    const fromPf = pf['home-imaging-list'];
+    if (fromPf) {
+      imagingList.innerHTML = parseListLines(fromPf)
+        .map((line) => {
+          const sep = line.includes('|') ? '|' : ' — ';
+          const parts = line.split(sep).map((s) => s.trim());
+          const name = parts[0] || '';
+          const desc = parts.slice(1).join(sep.trim()).trim();
+          return desc
+            ? `<li><strong>${name}</strong> — ${desc}</li>`
+            : `<li><strong>${name}</strong></li>`;
+        })
+        .join('');
+    } else {
+      imagingList.innerHTML = (data.equipment || [])
+        .map((eq) => `<li><strong>${eq.name}</strong> — ${eq.description}</li>`)
+        .join('');
+    }
   }
 
-  renderNewsCards(data.news || []);
-  toggleSection('news', (data.news || []).length > 0);
+  renderNewsCards(data.news || [], pf);
+  toggleSection('news', !!(pf['home-news'] || (data.news || []).length));
 
   const patientStories = document.getElementById('home-patient-stories');
   if (patientStories) {
+    const storyHref = (id) => {
+      const path = `/patient-story?id=${encodeURIComponent(id)}`;
+      if (typeof HospitalApp !== 'undefined' && typeof HospitalApp.routeHref === 'function') {
+        return HospitalApp.routeHref(path);
+      }
+      if (typeof LocalePolicy !== 'undefined' && typeof LocalePolicy.withLang === 'function') {
+        const lang =
+          typeof LocalePolicy.getActiveLang === 'function' ? LocalePolicy.getActiveLang() : 'hy';
+        return LocalePolicy.withLang(path, lang);
+      }
+      return path;
+    };
     patientStories.innerHTML = (data.patientStories || [])
       .map(
         (s) => `
-      <a href="patient-story.html?id=${s.id}" class="hss-patient hss-patient--link" aria-label="${s.name}">
+      <a href="${storyHref(s.id)}" class="hss-patient hss-patient--link" aria-label="${s.name}">
         <article class="hss-patient__card">
           <div class="hss-patient__photo">
             <span class="hss-patient__ring" aria-hidden="true"></span>
@@ -342,6 +465,9 @@ function renderHomePage() {
   }
   if (HospitalApp.applyPageFields) {
     HospitalApp.applyPageFields(pf);
+  }
+  if (/[?&]cms-edit=1/.test(location.search)) {
+    window.dispatchEvent(new CustomEvent('cms-hero-media-ready'));
   }
 }
 

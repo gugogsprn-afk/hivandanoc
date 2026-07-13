@@ -14,7 +14,7 @@
     "langAria": "Language selection",
     "locations": "Locations",
     "whyUs": "Why Choose Us",
-    "aboutOrg": "About «Առողջ ողնաշար»",
+    "aboutOrg": "About Healthy Spine",
     "patientCare": "Patient Care",
     "search": "Search",
     "services": "Services",
@@ -67,7 +67,7 @@
     "contactsTitle": "Contacts",
     "copyright": "© {year} {name}",
     "ctaText": "Ready to start your recovery? Book an appointment today.",
-    "ctaLink": "Make an appointment at Healthy Spine",
+    "ctaLink": "Make an appointment at {name}",
     "learnTitle": "Learn more",
     "infoTitle": "Information for",
     "policiesTitle": "Policies",
@@ -75,8 +75,8 @@
     "linkStory": "Share your story",
     "linkArticles": "Read articles on Move Better Feel Better",
     "linkNewsletter": "Subscribe to newsletter",
-    "linkSupport": "Support «Առողջ ողնաշար»",
-    "learnAbout": "About «Առողջ ողնաշար»",
+    "linkSupport": "Support {name}",
+    "learnAbout": "About Healthy Spine",
     "learnNews": "News",
     "learnContact": "Contacts",
     "infoPatients": "Patients & visitors",
@@ -92,7 +92,6 @@
     "legalDisclaimer": "All rights reserved. Site content does not replace medical advice.",
     "mapTitle": "Our location",
     "mapDirections": "Open in Google Maps",
-    "yandexNavigator": "Open in Yandex Navigator",
     "developedBy": "Developed By"
   },
   "pages": {
@@ -100,7 +99,7 @@
       "title": "Healthy Spine — Rehabilitation Center",
       "heroEyebrow": "Healthy Spine · Rehabilitation Center",
       "heroSubtitle": "Treatment of spine, joints and musculoskeletal conditions",
-      "heroBadge": "Rehabilitation Center · Առողջ ողնաշար",
+      "heroBadge": "Rehabilitation Center · Healthy Spine",
       "aboutBtn": "About us",
       "advantagesLabel": "Why us",
       "advantagesTitle": "Our advantages",
@@ -116,7 +115,7 @@
       "bookingTitle": "Book your appointment today",
       "bookingDesc": "Choose a convenient time online — our staff will confirm by phone.",
       "reviewsLabel": "Reviews",
-      "reviewsTitle": "Why Choose Us? Our patients say it best.",
+      "reviewsTitle": "Why choose us",
       "review1": "Attentive doctors and quick booking. I completed a full check-up in one day — very convenient.",
       "review1Author": "Maria K.",
       "review1Role": "Patient, therapy",
@@ -152,13 +151,13 @@
       "tileContactsDesc": "How to find us and get in touch",
       "complexCasesLead": "We handle complex cases, including patients with multiple coexisting conditions and those who have had previous treatment.",
       "conditionsIntro": "Our specialists treat all types of spine conditions, including:",
-      "expertsTitle": "Top Specialists Near You",
+      "expertsTitle": "Our specialists",
       "newsTitle": "Healthy Spine in the News",
       "storiesTitle": "Explore Patient Stories",
       "storiesViewAll": "View All Patient Stories",
       "footerCta": "Make an Appointment",
       "rankingsLink": "See our achievements",
-      "complexCasesDetail": "Our multidisciplinary care center delivers treatment based on the latest research, proven practices and cutting-edge techniques.",
+      "complexCasesDetail": "Our multidisciplinary team may support care based on evidence-based practices and individual assessment; this information does not replace medical advice and results may vary.",
       "newsShowMore": "Show more",
       "newsShowLess": "Show less",
       "searchTitle": "Find a doctor and book an appointment online",
@@ -169,12 +168,12 @@
       "quickUrgent": "Same-day orthopedic consultation available",
       "quickSameDay": "Healthy Spine — same day",
       "patientHeroCta": "Read his story",
-      "awardsTitle": "Awards and recognition",
-      "awardsDesc": "Our center delivers high-quality rehabilitation care based on evidence-based methods and personalized treatment plans.",
+      "awardsTitle": "Our focus areas",
+      "awardsDesc": "The center provides rehabilitation care based on evidence-based methods.",
       "newsViewAll": "More in our news section ›"
     },
     "about": {
-      "title": "About — CCH No. 1",
+      "title": "About — Healthy Spine",
       "heroLabel": "About us",
       "heroTitle": "About the hospital",
       "heroDesc": "History, mission and values of our medical institution",
@@ -209,7 +208,7 @@
       "ctaDesc": "We are happy to support you on your path to health."
     },
     "doctors": {
-      "title": "Doctors — CCH No. 1",
+      "title": "Doctors — Healthy Spine",
       "heroLabel": "Team",
       "heroTitle": "Our doctors",
       "heroDesc": "Qualified specialists across all major fields",
@@ -356,7 +355,7 @@
     }
   },
   "admin": {
-    "title": "Admin — CCH No. 1",
+    "title": "Admin — Healthy Spine",
     "loginTitle": "Admin login",
     "loginHint": "Authorized staff only. Contact IT if you need access.",
     "demoPassword": "Demo password:",
@@ -403,24 +402,24 @@
       "mission": "Restore mobility and quality of life through evidence-based rehabilitation and a multidisciplinary approach.",
       "stats": [
         {
-          "value": 30,
-          "suffix": "+",
-          "label": "Services"
+          "value": "",
+          "suffix": "",
+          "label": "Conservative care"
         },
         {
-          "value": 15,
-          "suffix": "+",
-          "label": "Specialists"
+          "value": "",
+          "suffix": "",
+          "label": "Rehabilitation"
         },
         {
-          "value": 98,
-          "suffix": "%",
-          "label": "Satisfied patients"
+          "value": "",
+          "suffix": "",
+          "label": "Consultation"
         },
         {
-          "value": 10,
-          "suffix": "+",
-          "label": "Years of experience"
+          "value": "",
+          "suffix": "",
+          "label": "Individual plans"
         }
       ],
       "heroTagline": "Specialized care for spine, joints and musculoskeletal conditions"
@@ -746,47 +745,47 @@
       },
       {
         "id": "infrared-laser",
-        "name": "Ինֆրակարմիր լազերային թերապիա",
-        "description": "Ինֆրակարմիր լազերային թերապիա ցավի և բորբոքման բուժման համար.",
+        "name": "Infrared laser therapy",
+        "description": "Infrared laser therapy for pain and inflammation.",
         "services": [
-          "Ինֆրակարմիր լազեր",
-          "Տեղային ազդեցություն"
+          "Infrared laser",
+          "Local application"
         ]
       },
       {
         "id": "compression-therapy",
-        "name": "Բազմաֆունկցիոնալ սեղմող թերապիա",
-        "description": "Բազմաֆունկցիոնալ սեղմող թերապիա լիմֆայի և մկանների վերականգնման համար.",
+        "name": "Multifunctional compression therapy",
+        "description": "Multifunctional compression therapy for lymph and muscle recovery.",
         "services": [
-          "Սեղմող թերապիա",
-          "Բազմաֆունկցիոնալ ռեժիմներ"
+          "Compression therapy",
+          "Multifunctional modes"
         ]
       },
       {
         "id": "high-frequency",
-        "name": "Գերբարձր հաճախականությամբ թերապևտիկ միջամտություն",
-        "description": "ԳԲՀ թերապիա ցավի և բորբոքման դեպքում.",
+        "name": "UHF / high-frequency therapy",
+        "description": "High-frequency therapy for pain and inflammation.",
         "services": [
-          "ԳԲՀ թերապիա"
+          "UHF therapy"
         ]
       },
       {
         "id": "pain-inflammation",
-        "name": "Ցավային երևույթների և բորբոքման բուժում",
-        "description": "Ցավի և բորբոքման համակցված բուժում ֆիզիոթերապևտիկ մեթոդներով.",
+        "name": "Pain and inflammation treatment",
+        "description": "Combined physiotherapy treatment for pain and inflammation.",
         "services": [
-          "Ցավի կառավարում",
-          "Հակաբորբոքային թերապիա"
+          "Pain management",
+          "Anti-inflammatory therapy"
         ]
       },
       {
         "id": "pediatric-spine-teen",
-        "name": "Պատանեկան անթափանց և շարժողական դիսֆունկցիաների վերականգնում",
-        "description": "Պատանիների շարժողական դիսֆունկցիաների և անթափանց խնդիրների վերականգնում.",
+        "name": "Adolescent motor dysfunction rehabilitation",
+        "description": "Rehabilitation of motor dysfunction and related issues in adolescents.",
         "services": [
-          "Գնահատում",
-          "Կինեզոթերապիա",
-          "Դիտարկում"
+          "Assessment",
+          "Kinesiotherapy",
+          "Follow-up"
         ]
       }
     ],
@@ -922,16 +921,16 @@
     ],
     "reviews": [],
     "introParagraphs": [
-      "Healthy Spine rehabilitation center is a recognized leader in conservative spine and joint care. More than <strong>5,000 patients</strong> consult us each year. Our approach is built on exceptional patient care, evidence-based methods and modern rehabilitation technology.",
-      "Our commitment to quality is reflected in years of experience and <strong>98% positive patient feedback</strong>."
+      "Healthy Spine rehabilitation center provides conservative care and recovery for spine, joint, and musculoskeletal conditions. Patients contact the center for spine, joint, and rehabilitation care.",
+      "Care plans are based on individual assessment and rehabilitation goals."
     ],
     "approachParagraphs": [
-      "Our specialists help patients avoid unnecessary procedures. We use modern nonsurgical methods to treat orthopedic and neurological conditions.",
+      "Our specialists may help patients avoid unnecessary procedures after assessment. We use conservative methods to treat orthopedic and neurological conditions as part of an individual plan.",
       "Our team includes experts in orthopedics, neurology, physiotherapy, manual therapy, therapeutic exercise and rehabilitation — all focused on spine and neck care.",
-      "From diagnosis to recovery, every team member has extensive experience treating your condition. We offer a range of therapies to relieve pain, prevent further damage and restore mobility — often without surgery."
+      "From diagnosis to recovery, each team member has experience with your condition. We offer therapies that may help relieve pain, support mobility and recovery — often without surgery; this information does not replace medical advice."
     ],
     "expertsParagraphs": [
-      "Our specialists are physicians with years of experience in spine and joint care. They use minimally invasive and conservative methods for less pain, faster recovery and fewer complications.",
+      "Our specialists are physicians with experience in spine and joint care. They use conservative methods that may support recovery after specialist assessment; results may vary.",
       "For convenient access, our specialists see patients at Healthy Spine — you can book online or by phone."
     ],
     "imagingParagraphs": [
@@ -939,12 +938,82 @@
     ],
     "feature": {
       "title": "Innovation in spine rehabilitation",
-      "description": "Modern physiotherapy, manual therapy and therapeutic exercise deliver personalized recovery — often without surgery.",
+      "description": "Modern physiotherapy, manual therapy and therapeutic exercise may support an individual recovery plan after specialist assessment; results may vary.",
       "image": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80"
     },
-    "news": [],
-    "storyVideos": [],
-    "patientStories": [],
+    "news": [
+      {
+        "id": "n1",
+        "title": "Healthy Spine center unveils new rehabilitation programs",
+        "category": "Center news"
+      },
+      {
+        "id": "n2",
+        "title": "Renovated physiotherapy room opens",
+        "category": "Equipment"
+      },
+      {
+        "id": "n3",
+        "title": "Physician seminar: conservative treatment of disc herniation",
+        "category": "Education"
+      }
+    ],
+    "storyVideos": [
+      {
+        "id": "sv1",
+        "title": "How I returned to an active life: osteochondrosis treatment story"
+      },
+      {
+        "id": "sv2",
+        "title": "Recovery after a back injury: a patient story"
+      },
+      {
+        "id": "sv3",
+        "title": "Scoliosis treatment without surgery: a success story"
+      },
+      {
+        "id": "sv4",
+        "title": "How I got rid of neck pain: a rehabilitation story"
+      }
+    ],
+    "patientStories": [
+      {
+        "id": "ps1",
+        "name": "Mariam K.",
+        "location": "Yerevan",
+        "treatment": "Osteochondrosis treatment"
+      },
+      {
+        "id": "ps2",
+        "name": "Alexey S.",
+        "location": "Gyumri",
+        "treatment": "Sports rehabilitation"
+      },
+      {
+        "id": "ps3",
+        "name": "Anna M.",
+        "location": "Yerevan",
+        "treatment": "Scoliosis correction"
+      },
+      {
+        "id": "ps4",
+        "name": "Victor P.",
+        "location": "Vanadzor",
+        "treatment": "Hernia treatment"
+      },
+      {
+        "id": "ps5",
+        "name": "Nora B.",
+        "location": "Yerevan",
+        "treatment": "Manual therapy"
+      },
+      {
+        "id": "ps6",
+        "name": "Garik T.",
+        "location": "Abovyan",
+        "treatment": "Post-injury rehabilitation"
+      }
+    ],
     "moveBetter": {
       "featured": {
         "id": "feat1",
@@ -1109,26 +1178,7 @@
           "overlay": "Food to Fuel"
         }
       ],
-      "pressNews": [
-        {
-          "id": "pn1",
-          "source": "HEALTH+",
-          "title": "This sitting posture may benefit health in older age",
-          "author": "Rehabilitologist, Healthy Spine"
-        },
-        {
-          "id": "pn2",
-          "source": "Press center",
-          "title": "Center unveils new nonsurgical rehabilitation programs",
-          "author": "Healthy Spine"
-        },
-        {
-          "id": "pn3",
-          "source": "MEDIA",
-          "title": "Conservative back treatment: when it works better than surgery",
-          "author": "Orthopedist, Healthy Spine"
-        }
-      ],
+      "pressNews": [],
       "categories": [
         {
           "id": "fitness",
@@ -1160,42 +1210,38 @@
     "awards": [
       {
         "id": "a1",
-        "label": "30+ services",
-        "desc": "Full spectrum of conservative spine and joint care"
+        "label": "Conservative care",
+        "desc": "Nonsurgical approaches for spine and joint conditions"
       },
       {
         "id": "a2",
-        "label": "15+ specialists",
-        "desc": "Multidisciplinary team with 10+ years of experience"
+        "label": "Rehabilitation",
+        "desc": "Physiotherapy, manual therapy, and recovery programs"
       },
       {
         "id": "a3",
-        "label": "98% satisfied patients",
-        "desc": "Individual approach and evidence-based rehabilitation"
+        "label": "Consultation",
+        "desc": "Individual assessment and treatment planning"
       }
     ],
     "patientHero": {
-      "quote": "Aram, fearing back pain would limit his life forever, returned to activity thanks to a rehabilitation program at Healthy Spine.",
-      "ctaText": "Read his story",
+      "quote": "Rehabilitation programs can support pain management and return to daily activity based on specialist assessment.",
+      "ctaText": "Learn more about care",
       "image": "https://images.unsplash.com/photo-1476480862128-209bfaa8dfc8?w=1400&q=85"
     },
     "backInGame": {
-      "title": "Get back in the game",
-      "text": "Our patients' stories are the best proof that conservative treatment and rehabilitation work. Hundreds of people have returned to work, sports and daily activity.",
-      "linkText": "Read inspiring patient stories",
+      "title": "Return to active life",
+      "text": "Conservative care and rehabilitation can support pain relief and improved mobility within an individual plan.",
+      "linkText": "Learn more about our services",
       "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=900&q=80"
     },
     "expertiseOverlay": {
       "title": "Expertise you can trust",
-      "text": "Our specialists — orthopedists, neurologists, physiotherapists and rehabilitologists — work together to offer you the best treatment plan without unnecessary interventions.",
+      "text": "Our specialists — orthopedists, neurologists, physiotherapists, and rehabilitation experts — work together to develop an individual care plan without unnecessary interventions.",
       "links": [
         {
-          "text": "Learn why to choose our center",
+          "text": "Learn why patients choose our center",
           "href": "about.html"
-        },
-        {
-          "text": "See our achievements",
-          "href": "about.html#awards"
         }
       ],
       "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=85"

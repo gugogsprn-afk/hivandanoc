@@ -210,64 +210,174 @@ function articleJsonLd(data, config, url) {
   return graphs;
 }
 
-function hubMeta(data) {
-  const name = clinicName(data);
+
+const KNOWLEDGE_I18N = require('./knowledge-i18n');
+const { getKnowledgeParityOverlay } = require('./knowledge-i18n-parity');
+const {
+  missingKnowledgeConfig,
+  logMissingTranslation,
+  KNOWLEDGE_HUB,
+  KNOWLEDGE_HUB_DISPLAY,
+  applyHubDisplay,
+  localizeData
+} = require('./locale-content');
+const {
+  normalizeLang,
+  ui,
+  clinicDisplayName,
+  breadcrumbNavHtml,
+  jsonLdBreadcrumb,
+  applyHtmlLang,
+  injectLocaleIntoLinks,
+  emergencyRedFlagBlock,
+  editorialTrustBlock
+} = require('./i18n-ssr');
+
+function getKnowledgeConfig(slug, lang) {
+  lang = normalizeLang(lang);
+  if (lang === 'hy') return KNOWLEDGE_CONFIG[slug];
+  const overlay = KNOWLEDGE_I18N[lang]?.[slug] || KNOWLEDGE_I18N.en?.[slug];
+  if (!overlay) {
+    logMissingTranslation('knowledge', slug, lang);
+    return missingKnowledgeConfig(slug, lang);
+  }
+  const parity = getKnowledgeParityOverlay(slug, lang);
+  return parity ? { ...overlay, ...parity } : overlay;
+}
+
+function hubMeta(data, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const name = clinicDisplayName(data, lang);
+  const city = ui(lang).yerevan;
+  const u = ui(lang);
+  if (lang === 'hy') {
+    return {
+      title: `${name} — Գիտելիքների կենտրոն և ցավի գնահատում | ${city}`,
+      description: 'Տեղեկատվական հոդվածներ ողնաշարի, ցավի և վերականգնման թեմաներով «Առողջ ողնաշար» կենտրոնից։',
+      h1: 'Գիտելիքների կենտրոն',
+      tagline: KNOWLEDGE_HUB.hy.tagline
+    };
+  }
+  const hub = KNOWLEDGE_HUB[lang];
   return {
-    title: `${name} — Գիտելիքների կենտրոն և ցավի գնահատում | Երևան`,
+    title: `${name} — ${u.knowledge} | ${city}`,
     description:
-      'Մեջքի և պարանոցի ցավի վերաբերյալ տեղեկատվություն և վերականգնողական խորհրդատվություն «Առողջ ողնաշար» կենտրոնում Երևանում։',
-    h1: 'Գիտելիքների կենտրոն և ցավի թեմաներ',
-    tagline: 'Տեղեկատվականան էջեր՝ ախտանիշային որոնումից ծառայությունների վերականգնողական մոտեցումներ'
+      lang === 'ru'
+        ? `Информационные статьи центра ${name} о здоровье позвоночника.`
+        : `Informational articles from ${name} about spine health.`,
+    h1: u.knowledge,
+    tagline: hub.tagline
   };
 }
 
-function hubBodyHtml() {
-  const pages = LAUNCHED_KNOWLEDGE_SLUGS.map((slug) => KNOWLEDGE_CONFIG[slug]);
+function articleMeta(config, data, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const name = clinicDisplayName(data, lang);
+  const city = ui(lang).yerevan;
+  return {
+    title: `${config.titleSuffix} — ${name} | ${city}`,
+    description: config.description.slice(0, 160),
+    h1: config.h1,
+    tagline: config.tagline
+  };
+}
+
+function hubBodyHtml(lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  const hub = KNOWLEDGE_HUB[lang];
+  const pages = LAUNCHED_KNOWLEDGE_SLUGS.map((slug) =>
+    applyHubDisplay(getKnowledgeConfig(slug, lang), slug, lang, KNOWLEDGE_HUB_DISPLAY)
+  );
   return `<article class="seo-crawl-content seo-knowledge-hub" id="seo-crawl-content">
-    <nav class="seo-breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Գլխավոր</a> › <span>Գիտելիքների կենտրոն</span>
-    </nav>
-    <div class="hss-prose">
-      <p>Այս բաժինը տեղեկատվական է և կարող է օգնել հասկանալ, թե երբ վերականգնողական խորհրդատվությունը կարող է հարմար լինել։ 
-      Էջերը չեն տալիս ախտորոշում և չեն երաշխավորում բուժման արդյունք։</p>
-    </div>
-    <section class="seo-service-section">
-      <h2>Հասանելի թեմաներ</h2>
-      <ul class="hss-list">${pages
-        .map(
-          (c, i) =>
-            `<li><a href="/knowledge/${esc(LAUNCHED_KNOWLEDGE_SLUGS[i])}"><strong>${esc(c.h1)}</strong></a> — ${esc(c.tagline)}</li>`
-        )
-        .join('')}</ul>
-    </section>
-    <p><a href="/services" class="hss-link">Ծառայություններ</a> · <a href="/conditions" class="hss-link">Ախտորոշումներ</a> · <a href="/contact" class="hss-link">Կապ</a> · <a href="/locations" class="hss-link">Հասցե</a></p>
-    ${ctaBlock()}
+    ${breadcrumbNavHtml([{ href: '#', label: u.knowledge }], lang)}
+    <div class="hss-prose"><p>${esc(hub.intro)}</p></div>
+    <section class="seo-service-section"><h2>${esc(hub.topicsHeading)}</h2><ul class="hss-list">${pages
+      .map(
+        (c, i) =>
+          `<li><a href="/knowledge/${esc(LAUNCHED_KNOWLEDGE_SLUGS[i])}"><strong>${esc(c.h1)}</strong></a> — ${esc(c.tagline)}</li>`
+      )
+      .join('')}</ul></section>
+    <p><a href="/services" class="hss-link">${esc(u.services)}</a> · <a href="/conditions" class="hss-link">${esc(u.conditions)}</a></p>
   </article>`;
 }
 
-function hubJsonLd(data, url) {
+function articleBodyHtml(data, slug, config, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  const symptomList = (config.symptoms || []).map((s) => `<li>${esc(s)}</li>`).join('');
+  const causeList = (config.causes || []).map((s) => `<li>${esc(s)}</li>`).join('');
+  const whenList = (config.whenToSeek || []).map((s) => `<li>${esc(s)}</li>`).join('');
+  const faqHeading = lang === 'ru' ? 'Часто задаваемые вопросы' : lang === 'en' ? 'Frequently asked questions' : 'Հաճախ տրվող հարցեր';
+  const faq =
+    (config.faq || []).length
+      ? `<section class="seo-service-section"><h2>${esc(faqHeading)}</h2><dl class="hss-faq">${config.faq
+          .map((f) => `<dt>${esc(f.q)}</dt><dd>${esc(f.a)}</dd>`)
+          .join('')}</dl></section>`
+      : '';
+  return `<article class="seo-crawl-content seo-knowledge-article" id="seo-crawl-content">
+    ${breadcrumbNavHtml(
+      [
+        { href: '/knowledge', label: u.knowledge },
+        { href: '#', label: config.h1 }
+      ],
+      lang
+    )}
+    <div class="hss-prose"><p>${esc(config.intro)}</p><p>${esc(u.disclaimer)}</p></div>
+    ${symptomList ? `<section class="seo-service-section"><h2>${esc(u.symptoms)}</h2><ul class="hss-list">${symptomList}</ul></section>` : ''}
+    ${causeList ? `<section class="seo-service-section"><h2>${lang === 'ru' ? 'Возможные причины' : lang === 'en' ? 'Possible causes' : 'Պատճառներ'}</h2><ul class="hss-list">${causeList}</ul></section>` : ''}
+    ${whenList ? `<section class="seo-service-section"><h2>${esc(u.whenToSeek)}</h2><ul class="hss-list">${whenList}</ul></section>` : ''}
+    ${faq}
+    ${editorialTrustBlock(lang)}
+    ${emergencyRedFlagBlock(lang)}
+    <p><a href="/services" class="hss-link">${esc(u.services)}</a> · <a href="/conditions" class="hss-link">${esc(u.conditions)}</a> · <a href="/consultation-process" class="hss-link">${esc(u.consultation)}</a> · <a href="/find-a-doctor" class="hss-link">${esc(u.findDoctors)}</a></p>
+    <p><a href="/knowledge" class="hss-link">← ${esc(u.knowledge)}</a></p>
+  </article>`;
+}
+
+function hubJsonLd(data, url, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  const meta = hubMeta(data, lang);
   return [
     {
       '@type': 'WebPage',
-      name: 'Գիտելիքների կենտրոն',
+      name: u.knowledge,
       url,
-      description: hubMeta(data).description,
-      isPartOf: { '@type': 'WebSite', name: clinicName(data), url: `${BASE}/` }
+      description: meta.description,
+      isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: `${BASE}/` }
     },
     clinicNode(data),
-    breadcrumb([
-      { name: 'Գլխավոր', item: `${BASE}/` },
-      { name: 'Գիտելիքների կենտրոն', item: url }
-    ])
+    jsonLdBreadcrumb(BASE, lang, { name: u.knowledge, item: url })
   ];
 }
 
-function prepareHtml(fileName, meta, canonicalPath, bodyHtml, jsonLdGraphs) {
+function articleJsonLd(data, config, url, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  return [
+    {
+      '@type': 'MedicalWebPage',
+      name: config.h1,
+      url,
+      description: config.description,
+      isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: `${BASE}/` },
+      publisher: clinicNode(data)
+    },
+    clinicNode(data),
+    jsonLdBreadcrumb(
+      BASE,
+      lang,
+      { name: u.knowledge, item: `${BASE}/knowledge` },
+      { name: config.h1, item: url }
+    )
+  ];
+}
+
+function prepareHtml(fileName, meta, canonicalPath, bodyHtml, jsonLdGraphs, lang = 'hy') {
   const filePath = path.join(SITE_ROOT, fileName);
   if (!fs.existsSync(filePath)) return null;
-
   let html = fs.readFileSync(filePath, 'utf8');
-
   html = html.replace(/<meta name="description"[^>]*>/gi, '');
   html = html.replace(/<meta name="robots"[^>]*>/gi, '');
   html = html.replace(/<link rel="canonical"[^>]*>/gi, '');
@@ -275,50 +385,43 @@ function prepareHtml(fileName, meta, canonicalPath, bodyHtml, jsonLdGraphs) {
   html = html.replace(/<meta property="og:[^"]+"[^>]*>/gi, '');
   html = html.replace(/<meta name="twitter:[^"]+"[^>]*>/gi, '');
   html = html.replace(/<script type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, '');
-
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(meta.title)}</title>`);
-  html = html.replace(
-    '</head>',
-    `${headTags(meta, canonicalPath)}\n${injectJsonLdScript(jsonLdGraphs)}\n</head>`
-  );
-
+  html = html.replace('</head>', `${headTags(meta, canonicalPath)}\n${injectJsonLdScript(jsonLdGraphs)}\n</head>`);
   html = html.replace(/(<h1[^>]*data-i18n="pages\.[^"]+"[^>]*>)[^<]*(<\/h1>)/, `$1${esc(meta.h1)}$2`);
   html = html.replace(/(<h1 id="knowledge-hero-title">)[^<]*(<\/h1>)/, `$1${esc(meta.h1)}$2`);
   html = html.replace(/(<h1 id="knowledge-article-hero-title">)[^<]*(<\/h1>)/, `$1${esc(meta.h1)}$2`);
   html = html.replace(/(<p class="hss-hero__tagline"[^>]*>)[^<]*(<\/p>)/, `$1${esc(meta.tagline)}$2`);
   html = html.replace(/(<p class="hss-hero__tagline" id="knowledge-article-hero-tagline">)[^<]*(<\/p>)/, `$1${esc(meta.tagline)}$2`);
-
   const rootId = fileName === 'knowledge.html' ? 'knowledge-hub-root' : 'knowledge-article-root';
   if (html.includes(`id="${rootId}"`)) {
     html = html.replace(new RegExp(`(<div class="hss-wrap" id="${rootId}">)\\s*(</div>)`), `$1${bodyHtml}$2`);
   }
-
   html = html.replace(/<body([^>]*)>/, `<body$1 data-seo-canonical="${esc(canonicalPath)}">`);
-
+  html = applyHtmlLang(html, lang);
+  html = injectLocaleIntoLinks(html, lang);
   return normalizeRootAssetPaths(html);
 }
 
-function serveKnowledgeHub() {
-  const data = buildPublicContent('hy');
-  const meta = hubMeta(data);
-  const body = hubBodyHtml();
+function serveKnowledgeHub(lang = 'hy') {
+  lang = normalizeLang(lang);
+  const data = localizeData(buildPublicContent(lang), lang);
+  const meta = hubMeta(data, lang);
+  const body = hubBodyHtml(lang);
   const url = `${BASE}/knowledge`;
-  return prepareHtml('knowledge.html', meta, '/knowledge', body, hubJsonLd(data, url));
+  return prepareHtml('knowledge.html', meta, '/knowledge', body, hubJsonLd(data, url, lang), lang);
 }
 
-function serveKnowledgeArticle(slug) {
+function serveKnowledgeArticle(slug, lang = 'hy') {
   if (!LAUNCHED_KNOWLEDGE_SLUGS.includes(slug)) return null;
-  const config = KNOWLEDGE_CONFIG[slug];
+  lang = normalizeLang(lang);
+  const config = getKnowledgeConfig(slug, lang);
   if (!config) return null;
-
-  const data = buildPublicContent('hy');
-  const meta = articleMeta(config, data);
-  const body = articleBodyHtml(data, slug, config);
+  const data = localizeData(buildPublicContent(lang), lang);
+  const meta = articleMeta(config, data, lang);
+  const body = articleBodyHtml(data, slug, config, lang);
   const url = `${BASE}/knowledge/${slug}`;
-  const html = prepareHtml('knowledge-article.html', meta, `/knowledge/${slug}`, body, articleJsonLd(data, config, url));
-  if (html) {
-    return html.replace('data-knowledge-slug=""', `data-knowledge-slug="${esc(slug)}"`);
-  }
+  const html = prepareHtml('knowledge-article.html', meta, `/knowledge/${slug}`, body, articleJsonLd(data, config, url, lang), lang);
+  if (html) return html.replace('data-knowledge-slug=""', `data-knowledge-slug="${esc(slug)}"`);
   return html;
 }
 

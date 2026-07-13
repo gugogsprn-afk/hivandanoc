@@ -1,0 +1,99 @@
+{
+  "generated": "2026-07-06",
+  "baselineCommit": "ac8e174",
+  "source": "npm run seo:audit",
+  "totalFailures": 108,
+  "totalPasses": 1615,
+  "introducedByPhaseG": 0,
+  "p0Count": 0,
+  "p1Count": 25,
+  "p2Count": 83,
+  "p3Count": 0,
+  "severity": {
+    "P0": {
+      "label": "Production blockers",
+      "count": 0,
+      "items": []
+    },
+    "P1": {
+      "label": "High SEO priority",
+      "count": 25,
+      "items": [
+        {
+          "issue": "Legal/policy pages missing visible H1",
+          "routes": ["/privacy-policy", "/terms", "/cookies-policy", "/patient-information"],
+          "count": 4
+        },
+        {
+          "issue": "Placeholder email info@healthyspine.am in public contact blocks",
+          "routes": ["/", "/contact", "/locations"],
+          "count": 3
+        },
+        {
+          "issue": "Services hub missing link to /conditions",
+          "routes": ["/services"],
+          "count": 1
+        },
+        {
+          "issue": "Service page missing knowledge cross-link",
+          "routes": ["/services/manual-therapy"],
+          "count": 1
+        },
+        {
+          "issue": "Launched service pages missing MedicalWebPage schema",
+          "routes": [
+            "/services/manual-therapy",
+            "/services/osteopathy",
+            "/services/physiotherapy",
+            "/services/hernia-treatment",
+            "/services/scoliosis",
+            "/services/consult-spine",
+            "/services/consult-neuro",
+            "/services/kinesiotherapy",
+            "/services/massage",
+            "/services/acupuncture",
+            "/services/traction",
+            "/services/electrotherapy",
+            "/services/osteochondrosis",
+            "/services/radiculitis",
+            "/services/arthrosis",
+            "/services/sports-rehab",
+            "/services/rehab-surgery"
+          ],
+          "count": 16
+        }
+      ]
+    },
+    "P2": {
+      "label": "Medium — schema and internal links on knowledge articles",
+      "count": 83,
+      "items": [
+        {
+          "issue": "Knowledge articles missing /contact link in body",
+          "count": 42
+        },
+        {
+          "issue": "Knowledge articles missing FAQPage schema (audit expects schema when FAQ exists in config)",
+          "count": 41
+        }
+      ]
+    },
+    "P3": {
+      "label": "Low / noise",
+      "count": 0,
+      "items": []
+    }
+  },
+  "topActionable": [
+    "Add visible H1 to legal SSR pages (privacy, terms, cookies, patient-information)",
+    "Replace placeholder info@healthyspine.am with production contact email where still present",
+    "Add /conditions link on /services hub",
+    "Add knowledge cross-link on /services/manual-therapy",
+    "Batch-add MedicalWebPage JSON-LD to launched service templates",
+    "Batch-add /contact CTA link block to knowledge article SSR template",
+    "Emit FAQPage schema on knowledge pages that render FAQ sections"
+  ],
+  "recommendedNextPhase": "Phase H — SEO hygiene batch (P1 legal H1 + contact email + services hub link; defer P2 schema batch)",
+  "excludedFromMaintenanceGate": true,
+  "exclusionReason": "108 pre-existing failures; not introduced by Phase E/F/G"
+}

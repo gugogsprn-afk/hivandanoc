@@ -107,7 +107,41 @@ function medicalClinicProvider(data) {
     name: clinicName(data),
     url: `${BASE}/`,
     telephone: h.phone || '',
-    email: h.email || ''
+    email: h.email || 'info@healthyspine.am'
+  };
+}
+
+function physicianNode(doctor, data, pageUrl) {
+  if (!doctor) return null;
+  const h = data?.hospital || {};
+  const imagePath = doctor.image || '';
+  const image = imagePath.startsWith('http')
+    ? imagePath
+    : imagePath
+      ? `${BASE}/${String(imagePath).replace(/^\//, '')}`
+      : undefined;
+  const node = {
+    '@type': 'Physician',
+    name: doctor.name,
+    url: pageUrl,
+    medicalSpecialty: doctor.role || undefined,
+    worksFor: medicalClinicProvider(data),
+    telephone: h.phone || '',
+    email: h.email || 'info@healthyspine.am'
+  };
+  if (image) node.image = image;
+  if (doctor.languages) node.knowsLanguage = doctor.languages;
+  if (doctor.bio) node.description = String(doctor.bio).slice(0, 500);
+  return node;
+}
+
+function medicalConditionNode(config, pageUrl) {
+  if (!config?.h1) return null;
+  return {
+    '@type': 'MedicalCondition',
+    name: config.h1,
+    url: pageUrl,
+    description: config.description || config.intro || ''
   };
 }
 
@@ -118,6 +152,8 @@ module.exports = {
   clinicNode,
   localBusinessNode,
   medicalClinicProvider,
+  physicianNode,
+  medicalConditionNode,
   verifiedSameAs,
   parseOpeningHoursSpecification,
   entityGeo,

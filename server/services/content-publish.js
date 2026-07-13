@@ -12,6 +12,7 @@ const LANGS = ['hy', 'ru', 'en'];
 
 let publishTimer = null;
 let publishing = false;
+let republishQueued = false;
 
 function getPublishStatus() {
   return getSetting('publish_status', {
@@ -33,7 +34,11 @@ function readPublishedContent(lang) {
 }
 
 async function publishAll() {
-  if (publishing) return getPublishStatus();
+  if (publishing) {
+    republishQueued = true;
+    const status = getPublishStatus();
+    return { ...status, pending: true, queued: true };
+  }
   publishing = true;
 
   try {
@@ -77,6 +82,12 @@ async function publishAll() {
     throw err;
   } finally {
     publishing = false;
+    if (republishQueued) {
+      republishQueued = false;
+      setImmediate(() => {
+        publishAll().catch((err) => console.error('[cms:publish] queued', err.message));
+      });
+    }
   }
 }
 

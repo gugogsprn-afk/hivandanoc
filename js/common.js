@@ -263,10 +263,82 @@ const HospitalApp = (function () {
     return rootAsset(url);
   }
 
-  /** Root-relative route — works on nested clean URLs */
+  const LEGACY_HTML_ROUTES = {
+    index: '/',
+    about: '/about',
+    contact: '/contact',
+    contacts: '/locations',
+    departments: '/patient-care',
+    doctors: '/find-a-doctor',
+    appointment: '/appointment',
+    reviews: '/reviews',
+    'move-better': '/move-better',
+    'submit-story': '/submit-story',
+    'patient-story': '/patient-story',
+    'privacy-policy': '/privacy-policy',
+    'cookies-policy': '/cookies-policy',
+    terms: '/terms',
+    'patient-information': '/patient-information',
+    services: '/services',
+    conditions: '/conditions',
+    knowledge: '/knowledge'
+  };
+
+  /** Map legacy *.html paths to clean public routes (preserves ?query and #hash). */
+  function normalizeInternalPath(path) {
+    const raw = String(path || '').trim();
+    if (!raw || /^(https?:|mailto:|tel:|javascript:)/i.test(raw)) return raw;
+
+    let rest = raw;
+    let hash = '';
+    const hashIdx = rest.indexOf('#');
+    if (hashIdx >= 0) {
+      hash = rest.slice(hashIdx);
+      rest = rest.slice(0, hashIdx);
+    }
+
+    let pathname = rest;
+    let search = '';
+    const qIdx = rest.indexOf('?');
+    if (qIdx >= 0) {
+      pathname = rest.slice(0, qIdx);
+      search = rest.slice(qIdx);
+    }
+
+    if (!pathname.startsWith('/')) pathname = `/${pathname.replace(/^\.\//, '')}`;
+
+    const segments = pathname.split('/').filter(Boolean);
+    const file = segments[segments.length - 1] || '';
+    if (/\.html$/i.test(file)) {
+      const stem = file.replace(/\.html$/i, '').toLowerCase();
+      const mapped = LEGACY_HTML_ROUTES[stem];
+      pathname = mapped != null ? mapped : `/${segments.slice(0, -1).concat(stem).join('/') || ''}` || '/';
+      if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.replace(/\/+$/, '');
+    } else if (segments.length === 1 && LEGACY_HTML_ROUTES[segments[0].toLowerCase()]) {
+      pathname = LEGACY_HTML_ROUTES[segments[0].toLowerCase()];
+    }
+
+    if (pathname === '/contacts') pathname = '/locations';
+    if (pathname === '/departments') pathname = '/patient-care';
+    if (pathname === '/doctors') pathname = '/find-a-doctor';
+
+    return `${pathname || '/'}${search}${hash}`;
+  }
+
+  /** Root-relative route — works on nested clean URLs; preserves ?lang=en|ru from URL */
   function routeHref(path) {
-    const normalized = path.startsWith('/') ? path : `/${path}`;
-    return isAdminPath() ? `../${normalized.replace(/^\//, '')}` : normalized;
+    const normalized = normalizeInternalPath(path);
+    const base = isAdminPath()
+      ? `../${normalized.replace(/^\//, '')}`
+      : normalized.startsWith('/')
+        ? normalized
+        : `/${normalized.replace(/^\//, '')}`;
+    if (typeof LocalePolicy !== 'undefined' && typeof LocalePolicy.withLang === 'function') {
+      const lang =
+        typeof LocalePolicy.getActiveLang === 'function' ? LocalePolicy.getActiveLang() : 'hy';
+      return LocalePolicy.withLang(base, lang);
+    }
+    return base;
   }
 
   function logoPath() {
@@ -342,7 +414,7 @@ const HospitalApp = (function () {
     return out;
   }
 
-  function mergeById(baseList, locList) {
+  function mergeById(baseList, locList, fillGapsOnly = false) {
     if (!locList?.length) return baseList;
     const TEXT = [
       'name', 'role', 'bio', 'experience', 'location', 'description', 'title', 'text',
@@ -353,9 +425,13 @@ const HospitalApp = (function () {
       if (!tr) return item;
       const out = { ...item };
       for (const key of TEXT) {
-        if (tr[key]) out[key] = tr[key];
+        if (fillGapsOnly) {
+          if (!(out[key] && String(out[key]).trim()) && tr[key]) out[key] = tr[key];
+        } else if (tr[key]) {
+          out[key] = tr[key];
+        }
       }
-      if (tr.services?.length) out.services = tr.services;
+      if (tr.services?.length && !(out.services && out.services.length)) out.services = tr.services;
       return out;
     });
   }
@@ -365,11 +441,11 @@ const HospitalApp = (function () {
     return {
       ...data,
       departments: loc.departments?.length
-        ? mergeById(data.departments || [], loc.departments)
+        ? mergeById(data.departments || [], loc.departments, true)
         : data.departments,
-      doctors: loc.doctors?.length ? mergeById(data.doctors || [], loc.doctors) : data.doctors,
+      doctors: loc.doctors?.length ? mergeById(data.doctors || [], loc.doctors, true) : data.doctors,
       serviceCategories: loc.serviceCategories?.length
-        ? mergeById(data.serviceCategories || [], loc.serviceCategories)
+        ? mergeById(data.serviceCategories || [], loc.serviceCategories, true)
         : data.serviceCategories,
       news: loc.news?.length ? mergeById(data.news || [], loc.news) : data.news,
       storyVideos: loc.storyVideos?.length
@@ -940,7 +1016,7 @@ const HospitalApp = (function () {
     let data = {
       hospital,
       advantages: loc.advantages || base.advantages,
-      serviceCategories: mergeById(base.serviceCategories || [], loc.serviceCategories),
+      serviceCategories: mergeById(base.serviceCategories || [], loc.serviceCategories, true),
       trustPoints: loc.trustPoints || base.trustPoints || [],
       conditions: loc.conditions || base.conditions || [],
       introParagraphs: loc.introParagraphs || base.introParagraphs || [],
@@ -958,8 +1034,8 @@ const HospitalApp = (function () {
       equipment: mergeById(base.equipment || [], loc.equipment),
       programs: mergeById(base.programs || [], loc.programs),
       reviews: mergeById(base.reviews || [], loc.reviews),
-      departments: mergeById(base.departments, loc.departments),
-      doctors: mergeById(base.doctors, loc.doctors),
+      departments: mergeById(base.departments, loc.departments, true),
+      doctors: mergeById(base.doctors, loc.doctors, true),
       moveBetter: mergeMoveBetter(base.moveBetter, loc.moveBetter),
       timeSlots: base.timeSlots
     };
@@ -1255,7 +1331,13 @@ const HospitalApp = (function () {
     } catch {
       /* fallback */
     }
-    el.innerHTML = `I agree to the <a href="${routeHref('/privacy-policy')}">Privacy Policy</a>.`;
+    el.innerHTML =
+      {
+        hy: `Ես համաձայն եմ <a href="${routeHref('/privacy-policy')}">Գաղտնիության քաղաքականության</a> հետ։`,
+        ru: `Я согласен(на) с <a href="${routeHref('/privacy-policy')}">Политикой конфиденциальности</a>.`,
+        en: `I agree to the <a href="${routeHref('/privacy-policy')}">Privacy Policy</a>.`
+      }[I18n.getLang()] ||
+      `I agree to the <a href="${routeHref('/privacy-policy')}">Privacy Policy</a>.`;
   }
 
   async function refreshLanguage() {
@@ -1518,7 +1600,7 @@ const HospitalApp = (function () {
   if (!/[?&]cms-edit=1/.test(location.search)) return;
   const base = (document.querySelector('script[src*="common.js"]')?.src || '').replace(/\/js\/common\.js.*$/, '/');
   const s = document.createElement('script');
-  const build = new URLSearchParams(location.search).get('cms_build') || window.CMS_BUILD || '20260628';
+  const build = new URLSearchParams(location.search).get('cms_build') || window.CMS_BUILD || '20260780';
   s.src = `${base}js/cms-edit-mode.js?v=${build}`;
   document.body.appendChild(s);
 })();

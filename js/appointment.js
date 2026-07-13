@@ -76,30 +76,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       comment: fd.get('comment') || ''
     };
 
-    HospitalStorage.addAppointment(record);
-
-    const api = typeof FormApi !== 'undefined' ? await FormApi.submitAppointment(record) : { offline: true };
-
     const msg = document.getElementById('appointment-success');
-    if (api.ok) {
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    let api = { offline: true };
+    try {
+      api = typeof FormApi !== 'undefined' ? await FormApi.submitAppointment(record) : { offline: true };
+    } catch (err) {
+      api = { ok: false, offline: true, error: err?.message || 'Network error' };
+    }
+
+    // Only store locally after a confirmed CMS save (avoids 30s rate-limit blocking retries)
+    if (api.ok && api.persisted !== false) {
+      try {
+        HospitalStorage.addAppointment(record);
+      } catch {
+        /* ignore local rate-limit / quota */
+      }
+    }
+
+    if (api.ok && (api.cms || api.persisted !== false) && !api.offline) {
       msg.hidden = false;
+      msg.textContent =
+        typeof I18n !== 'undefined'
+          ? I18n.t('pages.appointment.success') || msg.textContent
+          : msg.textContent;
       form.reset();
       fillAppointmentForm();
       window.scrollTo({ top: msg.offsetTop - 100, behavior: 'smooth' });
     } else if (api.offline || api.status === 503) {
-      msg.hidden = false;
-      form.reset();
-      fillAppointmentForm();
-      window.scrollTo({ top: msg.offsetTop - 100, behavior: 'smooth' });
-    } else if (api.viaFormSubmit) {
       alert(
-        api.error ||
-          api.message ||
-          'Проверьте почту gugogsprn@gmail.com — возможно, нужно подтвердить FormSubmit (см. КАК-РАБОТАЮТ-ЗАЯВКИ.txt).'
+        (typeof I18n !== 'undefined' && I18n.t('pages.appointment.offlineError')) ||
+          'Server is temporarily unavailable. Please try again or call us.'
       );
+    } else if (api.viaFormSubmit) {
+      alert(api.error || api.message || 'Could not send the request. Please try again.');
     } else {
-      alert(api.error || 'Не удалось отправить уведомление. Заявка сохранена локально.');
+      alert(api.error || 'Could not save the appointment. Please try again or call us.');
     }
+    if (submitBtn) submitBtn.disabled = false;
   });
 
   window.addEventListener('hospital:refresh', () => {

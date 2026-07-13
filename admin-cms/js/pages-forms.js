@@ -32,7 +32,12 @@ const PagesForms = (function () {
     { key: 'home-experts-image', label: 'Experts section image / video', type: 'image' },
     { key: 'home-experts-text', label: 'Experts text', type: 'textarea' },
     { key: 'home-imaging-image', label: 'Equipment section image / video', type: 'image' },
-    { key: 'home-imaging-text', label: 'Equipment text', type: 'textarea' }
+    { key: 'home-imaging-text', label: 'Equipment text', type: 'textarea' },
+    { key: 'home-conditions', label: 'Conditions list (one per line)', type: 'textarea' },
+    { key: 'home-imaging-list', label: 'Equipment list (name|description per line)', type: 'textarea' },
+    { key: 'home-expertise-links', label: 'Expertise links (text|url per line)', type: 'textarea' },
+    { key: 'home-awards', label: 'Award cards (title|description per line)', type: 'textarea' },
+    { key: 'home-news', label: 'News cards (title|category|image per line)', type: 'textarea' }
   ];
 
   const I18N_FIELDS = {

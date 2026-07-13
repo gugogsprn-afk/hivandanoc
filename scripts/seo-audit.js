@@ -9,6 +9,7 @@ const { URL } = require('url');
 const { getLaunchedServiceSlugs } = require('../server/services/service-pages');
 const { getLaunchedKnowledgeSlugs } = require('../server/services/knowledge-pages');
 const { LAUNCHED_AUTHORITY_SLUGS } = require('../server/services/local-authority-pages');
+const { buildSitemapEntries } = require('../server/services/sitemap');
 
 const BASE = (process.env.SEO_AUDIT_BASE || 'https://healthyspinedoc.com').replace(/\/$/, '');
 const FAILURES = [];
@@ -24,7 +25,15 @@ const CORE_URLS = [
   { path: '/contact', label: 'Contact' },
   { path: '/locations', label: 'Locations' },
   { path: '/knowledge', label: 'Knowledge Hub' },
-  { path: '/consultation-process', label: 'Consultation Process' }
+  { path: '/consultation-process', label: 'Consultation Process' },
+  { path: '/appointment', label: 'Appointment' },
+  { path: '/reviews', label: 'Reviews' },
+  { path: '/move-better', label: 'Move Better' },
+  { path: '/submit-story', label: 'Submit Story' },
+  { path: '/privacy-policy', label: 'Privacy Policy' },
+  { path: '/terms', label: 'Terms' },
+  { path: '/cookies-policy', label: 'Cookies Policy' },
+  { path: '/patient-information', label: 'Patient Information' }
 ];
 
 const LAUNCHED_SERVICE_URLS = getLaunchedServiceSlugs().map((slug) => ({
@@ -184,7 +193,7 @@ async function auditSitemap() {
   if (res.status !== 200) return fail(`sitemap.xml returned ${res.status}`);
   pass('sitemap.xml returns 200');
   const locs = extractLocs(res.body);
-  const expected = SITEMAP_URLS.map((u) => (u.path === '/' ? `${BASE}/` : `${BASE}${u.path}`));
+  const expected = buildSitemapEntries().map((e) => e.loc);
   if (locs.length !== expected.length) {
     fail(`sitemap should contain exactly ${expected.length} URLs (found ${locs.length})`);
   } else {

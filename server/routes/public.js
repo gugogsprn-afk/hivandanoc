@@ -7,8 +7,13 @@ const { publicFormLimiter } = require('../middleware/rateLimit');
 const { validateLead, sanitizeString, sanitizeEmail } = require('../middleware/validate');
 const { notifyForm } = require('../notify');
 const { buildSitemapXml } = require('../services/sitemap');
+const { parseLangParam } = require('../services/i18n-ssr');
 
 const router = express.Router();
+
+function requestLang(req) {
+  return parseLangParam(req.query.lang) || 'hy';
+}
 
 const { buildMapEmbedUrl, clinicCoords } = require('../services/clinic-map');
 
@@ -50,7 +55,7 @@ router.get('/version', (_req, res) => {
 });
 
 router.get('/content', (req, res) => {
-  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const lang = requestLang(req);
   const status = getPublishStatus();
   const content = buildPublicContent(lang);
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -60,7 +65,7 @@ router.get('/content', (req, res) => {
 });
 
 router.get('/content-snapshot', (req, res) => {
-  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const lang = requestLang(req);
   const snapshot = readPublishedContent(lang);
   if (!snapshot) {
     const content = buildPublicContent(lang);
@@ -73,13 +78,13 @@ router.get('/content-snapshot', (req, res) => {
 });
 
 router.get('/doctors', (req, res) => {
-  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const lang = requestLang(req);
   const content = buildPublicContent(lang);
   res.json({ ok: true, doctors: content.doctors });
 });
 
 router.get('/services', (req, res) => {
-  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const lang = requestLang(req);
   const content = buildPublicContent(lang);
   const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
   const catalog = buildServiceCatalog(content, category || null);
@@ -128,7 +133,14 @@ router.post('/leads/appointment', publicFormLimiter, async (req, res) => {
     console.error('[cms] appointment notify', err.message);
   }
 
-  res.status(201).json({ ok: true, id: result.lastInsertRowid });
+  try {
+    const { persistAfterChange } = require('../services/cms-persistence');
+    persistAfterChange('lead');
+  } catch {
+    /* optional */
+  }
+
+  res.status(201).json({ ok: true, id: result.lastInsertRowid, persisted: true });
 });
 
 router.post('/leads/contact', publicFormLimiter, async (req, res) => {
@@ -162,7 +174,14 @@ router.post('/leads/contact', publicFormLimiter, async (req, res) => {
     console.error('[cms] contact notify', err.message);
   }
 
-  res.status(201).json({ ok: true, id: result.lastInsertRowid });
+  try {
+    const { persistAfterChange } = require('../services/cms-persistence');
+    persistAfterChange('lead');
+  } catch {
+    /* optional */
+  }
+
+  res.status(201).json({ ok: true, id: result.lastInsertRowid, persisted: true });
 });
 
 router.post('/leads/review', publicFormLimiter, async (req, res) => {
@@ -173,7 +192,7 @@ router.post('/leads/review', publicFormLimiter, async (req, res) => {
     [firstName, lastName].filter(Boolean).join(' ').trim() || sanitizeString(req.body.name, 200);
   const text = sanitizeString(req.body.text || req.body.comment || req.body.description, 5000);
   const email = sanitizeEmail(req.body.email) || '';
-  const lang = ['hy', 'ru', 'en'].includes(req.body.lang) ? req.body.lang : 'hy';
+  const lang = parseLangParam(req.body.lang) || 'hy';
 
   if (!rating || !name || !text) {
     return res.status(400).json({ ok: false, error: 'Rating, name, and review text required' });
@@ -215,7 +234,7 @@ router.post('/leads/review', publicFormLimiter, async (req, res) => {
 });
 
 router.get('/reviews', (req, res) => {
-  const lang = ['hy', 'ru', 'en'].includes(req.query.lang) ? req.query.lang : 'hy';
+  const lang = requestLang(req);
   const nameCol = lang === 'ru' ? 'name_ru' : lang === 'en' ? 'name_en' : 'name_hy';
   const textCol = lang === 'ru' ? 'text_ru' : lang === 'en' ? 'text_en' : 'text_hy';
   const rows = getDb()

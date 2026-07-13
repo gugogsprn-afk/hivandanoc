@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { buildPublicContent } = require('../db/helpers');
-const { clinicNode, clinicName } = require('./entity-schema');
+const { clinicNode, clinicName, medicalConditionNode } = require('./entity-schema');
 const { getKnowledgeLinksForCondition, KNOWLEDGE_CONFIG } = require('./knowledge-pages');
 const { normalizeRootAssetPaths } = require('./html-utils');
 
@@ -14,14 +14,14 @@ const LAUNCHED_CONDITION_SLUGS = ['back-pain-treatment', 'neck-pain-treatment', 
 const CONDITION_CONFIG = {
   'back-pain-treatment': {
     h1: 'Մեջքի ցավ և վերականգնում',
-    tagline: 'Կոնսերվատիվ մոտեցում պոզանոցի և գոտկային ցավի գնահատման և վերականգնման համար Երևանում',
+    tagline: 'Կոնսերվատիվ մոտեցում ողնաշարի և գոտկային ցավի գնահատման և վերականգնման համար Երևանում',
     titleSuffix: 'Մեջքի ցավ — վերականգնում և խորհրդատվություն',
     description:
-      'Պոզանոցի և գոտկային ցավի գնահատում և վերականգնողական աջակցություն «Առողջ ողնաշար» կենտրոնում Երևանում։ Մանուալ թերապիա, ֆիզիոթերապիա և կոնսերվատիվ բուժում։',
+      'Ողնաշարի և գոտկային ցավի գնահատում և վերականգնողական աջակցություն «Առողջ ողնաշար» կենտրոնում Երևանում։ Մանուալ թերապիա, ֆիզիոթերապիա և կոնսերվատիվ բուժում։',
     intro: `Մեջքի ցավը հաճախ հանդիպող բողոք է, որը կարող է առաջանալ տարբեր պատճառներով՝ մկանային լարվածությունից մինչև դիսկի խնդիրներ կամ երկարատև նստած աշխատանք։ 
-      «Առողջ ողնաշար» վերականգնողական կենտրոնը Երևանում կարող է առաջարկել կոնսերվատիվ գնահատում և վերականգնողական ծրագրեր՝ պոզանոցի և գոտկային շրջանի ցավի կառավարման աջակցության համար, մասնագետի խորհրդատվությունից հետո։`,
+      «Առողջ ողնաշար» վերականգնողական կենտրոնը Երևանում կարող է առաջարկել կոնսերվատիվ գնահատում և վերականգնողական ծրագրեր՝ ողնաշարի և գոտկային շրջանի ցավի կառավարման աջակցության համար, մասնագետի խորհրդատվությունից հետո։`,
     symptoms: [
-      'Ցավ պոզանոցի կամ գոտկային շրջանում, մի կողմում կամ երկու կողմում',
+      'Ցավ ողնաշարի կամ գոտկային շրջանում, մի կողմում կամ երկու կողմում',
       'Շարժման կամ կեցվածքի փոփոխության ժամանակ ցավի ուժգնացում',
       'Մկանների կարկամություն կամ լարվածություն',
       'Շարժունակության սահմանափակում',
@@ -44,7 +44,7 @@ const CONDITION_CONFIG = {
     titleSuffix: 'Պարանոցի ցավ — վերականգնում և խորհրդատվություն',
     description:
       'Պարանոցի ցավի և կարկամության գնահատում և վերականգնողական աջակցություն «Առողջ ողնաշար» կենտրոնում Երևանում։ Մանուալ թերապիա, ֆիզիոթերապիա, օստեոպաթիա։',
-    intro: `Պարանոցի ցավը կարող է կապված լինել մկանների լարվածության, կեցվածքի, երկարատև աշխատանքի համակարգչի դիմաց կամ շարժական համակարգի այլ խնդիրների հետ։ 
+    intro: `Պարանոցի ցավը կարող է կապված լինել մկանների լարվածության, կեցվածքի, երկարատև աշխատանքի համակարգչի դիմաց կամ հենաշարժական համակարգի այլ խնդիրների հետ։
       «Առողջ ողնաշար» կենտրոնը Երևանում կարող է առաջարկել կոնսերվատիվ գնահատում և վերականգնողական ծրագրեր՝ պարանոցի ցավի և շարժունակության աջակցության համար, առանց բժշկական ախտորոշում տալու կամ բուժման երաշխիքի։`,
     symptoms: [
       'Պարանոցի կարկամություն կամ ցավ շարժման ժամանակ',
@@ -401,48 +401,95 @@ function findService(data, slug) {
   return (data?.departments || []).find((s) => s.id === slug);
 }
 
-function ctaBlock() {
+
+const CONDITION_I18N = require('./condition-i18n');
+const CONDITION_I18N_EXPANDED = require('./condition-i18n-expanded');
+const {
+  missingConditionConfig,
+  logMissingTranslation,
+  CONDITIONS_HUB,
+  CONDITIONS_HUB_DISPLAY,
+  applyHubDisplay,
+  localizeData
+} = require('./locale-content');
+const {
+  normalizeLang,
+  ui,
+  clinicDisplayName,
+  breadcrumbNavHtml,
+  jsonLdBreadcrumb,
+  applyHtmlLang,
+  injectLocaleIntoLinks,
+  pageMetaFromDict,
+  localizedAddress,
+  emergencyRedFlagBlock,
+  editorialTrustBlock
+} = require('./i18n-ssr');
+
+function getConditionConfig(slug, lang) {
+  lang = normalizeLang(lang);
+  if (lang === 'hy') return CONDITION_CONFIG[slug];
+  const expanded = CONDITION_I18N_EXPANDED[lang]?.[slug];
+  if (expanded) return expanded;
+  const overlay = CONDITION_I18N[lang]?.[slug] || CONDITION_I18N.en?.[slug];
+  if (overlay) return overlay;
+  logMissingTranslation('condition', slug, lang);
+  return missingConditionConfig(slug, lang);
+}
+
+function ctaBlock(lang = 'hy') {
+  const u = ui(lang);
   return `<nav class="seo-service-cta" aria-label="Next steps">
-    <p><a href="/contact" class="hss-btn hss-btn--primary">Գրանցվել ընդունելության</a>
-    <a href="/contact" class="hss-btn hss-btn--outline">Կապ</a>
-    <a href="/locations" class="hss-link">Հասցե և ժամեր</a></p>
+    <p><a href="/contact" class="hss-btn hss-btn--primary">${esc(u.bookAppointment)}</a>
+    <a href="/contact" class="hss-btn hss-btn--outline">${esc(u.contact)}</a>
+    <a href="/locations" class="hss-link">${esc(u.locations)}</a></p>
   </nav>`;
 }
 
-function safetyNote() {
+function safetyNote(lang = 'hy') {
+  const u = ui(lang);
+  const h2 = lang === 'ru' ? 'Важное примечание' : lang === 'en' ? 'Important note' : 'Կարևոր նշում';
   return `<section class="seo-service-section">
-    <h2>Կարևոր նշում</h2>
-    <div class="hss-prose">
-      <p>Այս էջը տեղեկատվական է և չի փոխարինում բժշկական ախտորոշումը կամ խորհրդատվությունը։ Յուրաքանչյուր դեպք գնահատվում է առանձին՝ հաշվի առնելով բողոքները, պատմությունը և առկա ուսումնասիրությունները։</p>
-      <p>Բուժման արդյունքները կարող են տարբեր լինել։ Կենտրոնը չի երաշխավորում կոնկրետ արդյունքներ կամ ամբողջական ազատում ցավից։</p>
-    </div>
+    <h2>${esc(h2)}</h2>
+    <div class="hss-prose"><p>${esc(u.disclaimer)}</p></div>
   </section>`;
 }
 
-function conditionMeta(config, data) {
-  const name = clinicName(data);
+function conditionMeta(config, data, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const name = clinicDisplayName(data, lang);
+  const city = ui(lang).yerevan;
   return {
-    title: `${config.titleSuffix} — ${name} | Երևան`,
+    title: `${config.titleSuffix} — ${name} | ${city}`,
     description: config.description.slice(0, 160),
     h1: config.h1,
     tagline: config.tagline
   };
 }
 
-function knowledgeLinksHtml(slugs) {
+function knowledgeLinksHtml(slugs, lang = 'hy') {
+  const u = ui(lang);
   const list = slugs
     .map((id) => {
-      const c = KNOWLEDGE_CONFIG[id];
+      const c = getKnowledgeConfig(id, lang);
       if (!c) return '';
       return `<li><a href="/knowledge/${esc(id)}"><strong>${esc(c.h1)}</strong></a></li>`;
     })
     .join('');
   return list
-    ? `<section class="seo-service-section"><h2>Կապված հոդվածներ</h2><ul class="hss-list">${list}</ul><p><a href="/knowledge" class="hss-link">Գիտելիքների կենտրոն</a></p></section>`
+    ? `<section class="seo-service-section"><h2>${esc(u.relatedArticles)}</h2><ul class="hss-list">${list}</ul><p><a href="/knowledge" class="hss-link">${esc(u.knowledge)}</a></p></section>`
     : '';
 }
 
-function serviceLinksHtml(data, slugs, intro) {
+function getKnowledgeConfig(slug, lang) {
+  lang = normalizeLang(lang);
+  if (lang === 'hy') return KNOWLEDGE_CONFIG[slug];
+  const KNOWLEDGE_I18N = require('./knowledge-i18n');
+  return KNOWLEDGE_I18N[lang]?.[slug];
+}
+
+function serviceLinksHtml(data, slugs, intro, lang = 'hy') {
+  const u = ui(lang);
   const items = slugs
     .map((id) => findService(data, id))
     .filter(Boolean)
@@ -452,94 +499,131 @@ function serviceLinksHtml(data, slugs, intro) {
     )
     .join('');
   return `<section class="seo-service-section">
-    <h2>Կապված ծառայություններ կենտրոնում</h2>
-    <div class="hss-prose"><p>${intro}</p></div>
+    <h2>${esc(u.relatedServices)}</h2>
+    <div class="hss-prose"><p>${esc(intro)}</p></div>
     <ul class="hss-list">${items}</ul>
-    <p><a href="/services" class="hss-link">Բոլոր ծառայությունները</a> · <a href="/conditions" class="hss-link">Այլ ախտորոշումներ</a></p>
+    <p><a href="/services" class="hss-link">${esc(u.allServices)}</a> · <a href="/conditions" class="hss-link">${esc(u.conditions)}</a></p>
   </section>`;
 }
 
-function conditionBodyHtml(data, slug, config) {
+function conditionBodyHtml(data, slug, config, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
   const h = data?.hospital || {};
-  const symptomList = config.symptoms.map((s) => `<li>${esc(s)}</li>`).join('');
-  const whenList = config.whenToSeek.map((s) => `<li>${esc(s)}</li>`).join('');
+  const symptomList = (config.symptoms || []).map((s) => `<li>${esc(s)}</li>`).join('');
+  const whenList = (config.whenToSeek || []).map((s) => `<li>${esc(s)}</li>`).join('');
+  const extra =
+    lang === 'hy'
+      ? 'Կենտրոնը մասնագիտացված է ողնաշարի, հոդերի և հենաշարժական համակարգի կոնսերվատիվ վերականգնման վրա։ Խորհրդատվությունը կարող է օգնել պարզել, թե որ վերականգնողական մոտեցումները կարող են հարմար լինել ձեր բողոքներին։'
+      : u.hubIntro;
+  const symptomsLead =
+    lang === 'ru'
+      ? 'Ниже — симптомы, которые пациенты часто описывают. Они не равны диагнозу и требуют очной оценки.'
+      : lang === 'en'
+        ? 'Below are symptoms people often describe. They are not a diagnosis and require in-person assessment.'
+        : 'Ստորև ներկայացված են ախտանիշներ, որոնք մարդիկ հաճախ նկարագրում են։ Դրանք չեն հավասարեցվում ախտորոշման և պահանջում են մասնագետի գնահատում։';
+  const whenH =
+    lang === 'ru' ? 'Когда может помочь оценка' : lang === 'en' ? 'When assessment may help' : 'Երբ կարող է օգտակար լինել գնահատումը';
+  const clinicH =
+    lang === 'ru' ? 'Чего ожидать в клинике' : lang === 'en' ? 'What to expect at the clinic' : 'Ինչ սպասել կլինիկայում';
+  const clinicP =
+    lang === 'ru'
+      ? 'На первом визите специалист может собрать анамнез, провести осмотр и обсудить следующие шаги. План реабилитации, если он предложен, формируется индивидуально; результаты могут отличаться.'
+      : lang === 'en'
+        ? 'At the first visit, a specialist may take history, examine you, and discuss next steps. Any rehabilitation plan is individual; results may vary.'
+        : 'Առաջին այցի ժամանակ մասնագետը կարող է հավաքել բողոքների պատմությունը, կատարել ստուգում և քննարկել հնարավոր հաջորդ քայլերը։ Վերականգնողական պլանը, եթե առաջարկվի, կարող է ներառել մի քանի հանդիպում և տնային խորհուրդներ՝ ըստ անհատական գնահատման։';
+  const addr = localizedAddress(h, lang);
 
   return `<article class="seo-crawl-content seo-condition-page" id="seo-crawl-content">
-    <nav class="seo-breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Գլխավոր</a> › <a href="/conditions">Ախտորոշումներ</a> › <span>${esc(config.h1)}</span>
-    </nav>
-    <div class="hss-prose">
-      <p>${config.intro}</p>
-      <p>Կենտրոնը մասնագիտացված է պոզանոցի, հոդերի և շարժական համակարգի կոնսերվատիվ վերականգնման վրա։ 
-      Խորհրդատվությունը կարող է օգնել պարզել, թե որ վերականգնողական մոտեցումները կարող են հարմար լինել ձեր բողոքներին։</p>
-    </div>
+    ${breadcrumbNavHtml(
+      [
+        { href: '/conditions', label: u.conditions },
+        { href: '#', label: config.h1 }
+      ],
+      lang
+    )}
+    <div class="hss-prose"><p>${esc(config.intro)}</p><p>${esc(extra)}</p></div>
     <section class="seo-service-section">
-      <h2>Հաճախ հանդիպող ախտանիշներ</h2>
-      <p class="hss-prose">Ստորև ներկայացված են ախտանիշներ, որոնք մարդիկ հաճախ նկարագրում են։ Դրանք չեն հավասարեցվում ախտորոշման և պահանջում են մասնագետի գնահատում։</p>
+      <h2>${esc(u.symptoms)}</h2>
+      <p class="hss-prose">${esc(symptomsLead)}</p>
       <ul class="hss-list">${symptomList}</ul>
     </section>
     <section class="seo-service-section">
-      <h2>Երբ կարող է օգտակար լինել գնահատումը</h2>
+      <h2>${esc(whenH)}</h2>
       <ul class="hss-list">${whenList}</ul>
     </section>
-    ${serviceLinksHtml(data, config.serviceSlugs, config.servicesIntro)}
-    ${knowledgeLinksHtml(getKnowledgeLinksForCondition(slug))}
+    ${serviceLinksHtml(data, config.serviceSlugs, config.servicesIntro, lang)}
+    ${knowledgeLinksHtml(getKnowledgeLinksForCondition(slug), lang)}
     <section class="seo-service-section">
-      <h2>Ինչ սպասել կլինիկայում</h2>
-      <div class="hss-prose">
-        <p>Առաջին այցի ժամանակ մասնագետը կարող է հավաքել բողոքների պատմությունը, կատարել ստուգում և քննարկել հնարավոր հաջորդ քայլերը։ 
-        Վերականգնողական պլանը, եթե առաջարկվի, կարող է ներառել մի քանի հանդիպում և տնային խորհուրդներ՝ ըստ անհատական գնահատման։</p>
-        <p><strong>Հասցե:</strong> ${esc(h.address || 'Yerevan, Armenia')} · <strong>Հեռախոս:</strong> ${esc(h.phone || '')}</p>
-      </div>
+      <h2>${esc(clinicH)}</h2>
+      <div class="hss-prose"><p>${esc(clinicP)}</p>
+      <p><strong>${esc(u.address)}</strong> ${esc(addr)} · <strong>${esc(u.phone)}</strong> ${esc(h.phone || '')}</p></div>
     </section>
-    ${safetyNote()}
-    <p><a href="/conditions" class="hss-link">← Բոլոր ախտորոշումները</a></p>
-    ${ctaBlock()}
+    ${editorialTrustBlock(lang)}
+    ${emergencyRedFlagBlock(lang)}
+    ${safetyNote(lang)}
+    <p><a href="/find-a-doctor" class="hss-link">${esc(u.findDoctors)}</a> · <a href="/conditions" class="hss-link">← ${esc(u.conditions)}</a></p>
+    ${ctaBlock(lang)}
   </article>`;
 }
 
-function conditionJsonLd(data, config, url) {
+function conditionJsonLd(data, config, url, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
   return [
     {
       '@type': 'MedicalWebPage',
       name: config.h1,
       url,
       description: config.description,
-      isPartOf: { '@type': 'WebSite', name: clinicName(data), url: `${BASE}/` },
-      publisher: clinicNode(data)
+      isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: `${BASE}/` },
+      publisher: clinicNode(data),
+      about: medicalConditionNode(config, url)
     },
+    medicalConditionNode(config, url),
     clinicNode(data),
-    breadcrumb([
-      { name: 'Գլխավոր', item: `${BASE}/` },
-      { name: 'Ախտորոշումներ', item: `${BASE}/conditions` },
-      { name: config.h1, item: url }
-    ])
+    jsonLdBreadcrumb(BASE, lang, { name: u.conditions, item: `${BASE}/conditions` }, { name: config.h1, item: url })
   ];
 }
 
-function hubMeta(data) {
-  const name = clinicName(data);
+function hubMeta(data, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const name = clinicDisplayName(data, lang);
+  const city = ui(lang).yerevan;
+  if (lang === 'hy') {
+    return {
+      title: `${name} — Ախտորոշումներ և ցավի գնահատում | ${city}`,
+      description:
+        'Մեջքի և պարանոցի ցավի վերաբերյալ տեղեկատվություն և վերականգնողական խորհրդատվություն «Առողջ ողնաշար» կենտրոնում Երևանում։',
+      h1: 'Ախտորոշումներ և ցավի թեմաներ',
+      tagline: CONDITIONS_HUB.hy.tagline
+    };
+  }
+  const hub = CONDITIONS_HUB[lang];
+  const u = ui(lang);
   return {
-    title: `${name} — Ախտորոշումներ և ցավի գնահատում | Երևան`,
+    title: `${name} — ${u.conditions} | ${city}`,
     description:
-      'Մեջքի և պարանոցի ցավի վերաբերյալ տեղեկատվություն և վերականգնողական խորհրդատվություն «Առողջ ողնաշար» կենտրոնում Երևանում։',
-    h1: 'Ախտորոշումներ և ցավի թեմաներ',
-    tagline: 'Տեղեկատվականան էջեր՝ ախտանիշային որոնումից ծառայությունների վերականգնողական մոտեցումներ'
+      lang === 'ru'
+        ? `Информация о боли в спине и шее и реабилитационная поддержка в центре ${name} в ${city}.`
+        : `Information about back and neck pain and rehabilitation support at ${name} in ${city}.`,
+    h1: u.conditions,
+    tagline: hub.tagline
   };
 }
 
-function hubBodyHtml() {
-  const pages = LAUNCHED_CONDITION_SLUGS.map((slug) => CONDITION_CONFIG[slug]);
+function hubBodyHtml(lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  const hub = CONDITIONS_HUB[lang];
+  const pages = LAUNCHED_CONDITION_SLUGS.map((slug) =>
+    applyHubDisplay(getConditionConfig(slug, lang), slug, lang, CONDITIONS_HUB_DISPLAY)
+  );
   return `<article class="seo-crawl-content seo-conditions-hub" id="seo-crawl-content">
-    <nav class="seo-breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Գլխավոր</a> › <span>Ախտորոշումներ</span>
-    </nav>
-    <div class="hss-prose">
-      <p>Այս բաժինը տեղեկատվական է և կարող է օգնել հասկանալ, թե երբ վերականգնողական խորհրդատվությունը կարող է հարմար լինել։ 
-      Էջերը չեն տալիս ախտորոշում և չեն երաշխավորում բուժման արդյունք։</p>
-    </div>
+    ${breadcrumbNavHtml([{ href: '#', label: u.conditions }], lang)}
+    <div class="hss-prose"><p>${esc(hub.intro)}</p></div>
     <section class="seo-service-section">
-      <h2>Հասանելի թեմաներ</h2>
+      <h2>${esc(hub.topicsHeading)}</h2>
       <ul class="hss-list">${pages
         .map(
           (c, i) =>
@@ -547,34 +631,33 @@ function hubBodyHtml() {
         )
         .join('')}</ul>
     </section>
-    <p><a href="/services" class="hss-link">Ծառայություններ</a> · <a href="/knowledge" class="hss-link">Գիտելիքների կենտրոն</a> · <a href="/contact" class="hss-link">Կապ</a> · <a href="/locations" class="hss-link">Հասցե</a> · <a href="/about-doctor" class="hss-link">Բժշկի մասին</a> · <a href="/spine-specialist-yerevan" class="hss-link">Ողնաշարի մասնագետ</a></p>
-    ${ctaBlock()}
+    <p><a href="/services" class="hss-link">${esc(u.services)}</a> · <a href="/knowledge" class="hss-link">${esc(u.knowledge)}</a> · <a href="/contact" class="hss-link">${esc(u.contact)}</a></p>
+    ${ctaBlock(lang)}
   </article>`;
 }
 
-function hubJsonLd(data, url) {
+function hubJsonLd(data, url, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  const meta = hubMeta(data, lang);
   return [
     {
       '@type': 'WebPage',
-      name: 'Ախտորոշումներ',
+      name: u.conditions,
       url,
-      description: hubMeta(data).description,
-      isPartOf: { '@type': 'WebSite', name: clinicName(data), url: `${BASE}/` }
+      description: meta.description,
+      isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: `${BASE}/` }
     },
     clinicNode(data),
-    breadcrumb([
-      { name: 'Գլխավոր', item: `${BASE}/` },
-      { name: 'Ախտորոշումներ', item: url }
-    ])
+    jsonLdBreadcrumb(BASE, lang, { name: u.conditions, item: url })
   ];
 }
 
-function prepareHtml(fileName, meta, canonicalPath, bodyHtml, jsonLdGraphs) {
+function prepareHtml(fileName, meta, canonicalPath, bodyHtml, jsonLdGraphs, lang = 'hy') {
   const filePath = path.join(SITE_ROOT, fileName);
   if (!fs.existsSync(filePath)) return null;
 
   let html = fs.readFileSync(filePath, 'utf8');
-
   html = html.replace(/<meta name="description"[^>]*>/gi, '');
   html = html.replace(/<meta name="robots"[^>]*>/gi, '');
   html = html.replace(/<link rel="canonical"[^>]*>/gi, '');
@@ -600,28 +683,31 @@ function prepareHtml(fileName, meta, canonicalPath, bodyHtml, jsonLdGraphs) {
   }
 
   html = html.replace(/<body([^>]*)>/, `<body$1 data-seo-canonical="${esc(canonicalPath)}">`);
-
+  html = applyHtmlLang(html, lang);
+  html = injectLocaleIntoLinks(html, lang);
   return normalizeRootAssetPaths(html);
 }
 
-function serveConditionsHub() {
-  const data = buildPublicContent('hy');
-  const meta = hubMeta(data);
-  const body = hubBodyHtml();
+function serveConditionsHub(lang = 'hy') {
+  lang = normalizeLang(lang);
+  const data = localizeData(buildPublicContent(lang), lang);
+  const meta = hubMeta(data, lang);
+  const body = hubBodyHtml(lang);
   const url = `${BASE}/conditions`;
-  return prepareHtml('conditions.html', meta, '/conditions', body, hubJsonLd(data, url));
+  return prepareHtml('conditions.html', meta, '/conditions', body, hubJsonLd(data, url, lang), lang);
 }
 
-function serveConditionPage(slug) {
+function serveConditionPage(slug, lang = 'hy') {
   if (!LAUNCHED_CONDITION_SLUGS.includes(slug)) return null;
-  const config = CONDITION_CONFIG[slug];
+  lang = normalizeLang(lang);
+  const config = getConditionConfig(slug, lang);
   if (!config) return null;
 
-  const data = buildPublicContent('hy');
-  const meta = conditionMeta(config, data);
-  const body = conditionBodyHtml(data, slug, config);
+  const data = localizeData(buildPublicContent(lang), lang);
+  const meta = conditionMeta(config, data, lang);
+  const body = conditionBodyHtml(data, slug, config, lang);
   const url = `${BASE}/conditions/${slug}`;
-  const html = prepareHtml('condition.html', meta, `/conditions/${slug}`, body, conditionJsonLd(data, config, url));
+  const html = prepareHtml('condition.html', meta, `/conditions/${slug}`, body, conditionJsonLd(data, config, url, lang), lang);
   if (html) {
     return html.replace('data-condition-slug=""', `data-condition-slug="${esc(slug)}"`);
   }
@@ -637,5 +723,6 @@ module.exports = {
   CONDITION_CONFIG,
   serveConditionsHub,
   serveConditionPage,
-  getLaunchedConditionSlugs
+  getLaunchedConditionSlugs,
+  getConditionConfig
 };

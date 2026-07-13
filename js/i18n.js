@@ -182,7 +182,25 @@ const I18n = (function () {
   }
 
   async function setLanguage(lang) {
-    if (!supportedCodes().includes(lang) || lang === currentLang) return;
+    if (!supportedCodes().includes(lang)) return;
+
+    try {
+      localStorage.setItem(config.storageKey || 'gkb_lang', lang);
+    } catch {
+      /* private mode */
+    }
+
+    if (typeof LocalePolicy !== 'undefined' && typeof LocalePolicy.langUrl === 'function') {
+      const dest = LocalePolicy.langUrl(lang);
+      const current = window.location.pathname + window.location.search + window.location.hash;
+      if (dest !== current) {
+        window.location.assign(dest);
+        return;
+      }
+    }
+
+    if (lang === currentLang) return;
+
     await loadLanguage(lang);
     applyDOM();
     updateSwitcherUI();
@@ -211,7 +229,23 @@ const I18n = (function () {
         /* ignore */
       }
       const codes = supportedCodes();
-      const lang = codes.includes(saved) ? saved : config.default || 'hy';
+      let urlLang = null;
+      if (typeof LocalePolicy !== 'undefined' && typeof LocalePolicy.resolveLangFromSearch === 'function') {
+        urlLang = LocalePolicy.resolveLangFromSearch();
+      } else {
+        try {
+          urlLang = new URLSearchParams(window.location.search).get('lang');
+          if (urlLang) urlLang = urlLang.trim().toLowerCase();
+        } catch {
+          /* ignore */
+        }
+      }
+      const lang =
+        urlLang && codes.includes(urlLang)
+          ? urlLang
+          : codes.includes(saved)
+            ? saved
+            : config.default || 'hy';
       await loadLanguage(lang);
       applyDOM();
       return currentLang;

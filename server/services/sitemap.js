@@ -4,6 +4,7 @@ const { getLaunchedServiceSlugs } = require('./service-pages');
 const { getLaunchedConditionSlugs } = require('./condition-pages');
 const { getLaunchedKnowledgeSlugs } = require('./knowledge-pages');
 const { LAUNCHED_AUTHORITY_SLUGS } = require('./local-authority-pages');
+const { buildPublicContent } = require('../db/helpers');
 
 const SITE_ROOT = path.join(__dirname, '../..');
 
@@ -17,7 +18,15 @@ const CORE_ROUTES = [
   { path: '/contact', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
   { path: '/locations', file: 'contacts.html', priority: '0.85', changefreq: 'monthly' },
   { path: '/knowledge', file: 'knowledge.html', priority: '0.92', changefreq: 'weekly' },
-  { path: '/consultation-process', file: 'consultation-process.html', priority: '0.85', changefreq: 'monthly' }
+  { path: '/consultation-process', file: 'consultation-process.html', priority: '0.85', changefreq: 'monthly' },
+  { path: '/appointment', file: 'appointment.html', priority: '0.88', changefreq: 'monthly' },
+  { path: '/reviews', file: 'reviews.html', priority: '0.75', changefreq: 'monthly' },
+  { path: '/move-better', file: 'move-better.html', priority: '0.72', changefreq: 'weekly' },
+  { path: '/submit-story', file: 'submit-story.html', priority: '0.65', changefreq: 'monthly' },
+  { path: '/privacy-policy', file: 'privacy-policy.html', priority: '0.35', changefreq: 'yearly' },
+  { path: '/terms', file: 'terms.html', priority: '0.35', changefreq: 'yearly' },
+  { path: '/cookies-policy', file: 'cookies-policy.html', priority: '0.35', changefreq: 'yearly' },
+  { path: '/patient-information', file: 'patient-information.html', priority: '0.35', changefreq: 'yearly' }
 ];
 
 function siteBase() {
@@ -99,6 +108,22 @@ function buildSitemapEntries() {
       changefreq: 'monthly',
       priority: '0.85'
     });
+  }
+
+  try {
+    const doctors = buildPublicContent('hy').doctors || [];
+    for (const d of doctors) {
+      const slug = d.slug || d.id;
+      if (!slug) continue;
+      entries.push({
+        loc: `${base}/doctors/${slug}`,
+        lastmod: today,
+        changefreq: 'monthly',
+        priority: '0.86'
+      });
+    }
+  } catch {
+    /* keep sitemap without doctor profiles if CMS unavailable */
   }
 
   return entries;

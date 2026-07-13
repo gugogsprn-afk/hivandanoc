@@ -4,30 +4,22 @@ const { buildPublicContent } = require('../db/helpers');
 const { getLaunchedServiceSlugs } = require('./service-pages');
 const { clinicNode, localBusinessNode, clinicName } = require('./entity-schema');
 const { normalizeRootAssetPaths } = require('./html-utils');
+const {
+  ui,
+  clinicDisplayName,
+  pageMetaFromDict,
+  jsonLdBreadcrumb,
+  breadcrumbNavHtml,
+  applyHtmlLang,
+  contactBlockHtml,
+  normalizeLang,
+  loadLangDict,
+  dictPath,
+  injectLocaleIntoLinks
+} = require('./i18n-ssr');
 
 const SITE_ROOT = path.join(__dirname, '../..');
 const BASE = (process.env.PUBLIC_SITE_URL || 'https://healthyspinedoc.com').replace(/\/$/, '');
-
-let hyDictCache = null;
-
-function loadLangDict(lang = 'hy') {
-  if (lang === 'hy' && hyDictCache) return hyDictCache;
-  try {
-    const dict = JSON.parse(fs.readFileSync(path.join(SITE_ROOT, `lang/${lang}.json`), 'utf8'));
-    if (lang === 'hy') hyDictCache = dict;
-    return dict;
-  } catch {
-    return {};
-  }
-}
-
-function dictPath(dict, key) {
-  return key.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), dict);
-}
-
-function normalizeLang(raw) {
-  return ['hy', 'ru', 'en'].includes(raw) ? raw : 'hy';
-}
 
 const HOME_CRAWL = {
   hy: {
@@ -179,48 +171,47 @@ const ROUTES = {
       };
     },
     bodyHtml: (data, lang) => homeCrawlBlock(data, lang),
-    jsonLd: (data, url) => [clinicNode(data), breadcrumb(url, 'Գլխավոր')]
+    jsonLd: (data, url, lang = 'hy') => [clinicNode(data), breadcrumb(url, ui(lang).home, lang)]
   },
   '/find-a-doctor': {
     file: 'doctors.html',
     pageKey: 'doctors',
-    title: 'Գտնել բժիշկ — Առողջ ողնաշար',
-    description:
-      'Գտեք ողնաշարի, հոդերի և վերականգնողական մասնագետներ «Առողջ ողնաշար» կենտրոնում։ Որոնեք ըստ մասնագիտության և գրանցվեք առցանց։',
-    h1: 'Գտնել բժիշկ',
-    tagline: 'Մասնագետներ ողնաշարի, հոդերի և հենաշարժական համակարգի վերականգնման ոլորտում։',
-    bodyHtml: (data) => {
+    resolveMeta: (data, lang = 'hy') => pageMetaFromDict('doctors', lang, data),
+    bodyHtml: (data, lang = 'hy') => {
+      const u = ui(lang);
       const items = (data.doctors || [])
         .slice(0, 24)
         .map(
-          (d) =>
-            `<li><strong>${esc(d.name)}</strong> — ${esc(d.role || '')}${d.location ? ` (${esc(d.location)})` : ''}</li>`
+          (d) => {
+            const slug = d.slug || d.id;
+            return `<li><a href="/doctors/${esc(slug)}"><strong>${esc(d.name)}</strong></a> — ${esc(d.role || '')}${d.location ? ` (${esc(d.location)})` : ''}</li>`;
+          }
         )
         .join('');
-      return `<section class="seo-crawl-content" id="seo-crawl-content"><h2>Մեր բժիշկները</h2><ul>${items}</ul></section>`;
+      return `<section class="seo-crawl-content" id="seo-crawl-content"><h2>${esc(u.ourDoctors)}</h2><ul>${items}</ul></section>`;
     },
-    jsonLd: (data, url) => [
-      clinicNode(data),
-      breadcrumb(url, 'Գտնել բժիշկ'),
-      {
-        '@type': 'WebPage',
-        name: 'Գտնել բժիշկ',
-        url,
-        description:
-          'Գտեք ողնաշարի, հոդերի և վերականգնողական մասնագետներ «Առողջ ողնաշար» կենտրոնում։',
-        isPartOf: { '@type': 'WebSite', name: clinicName(data), url: `${BASE}/` }
-      }
-    ]
+    jsonLd: (data, url, lang = 'hy') => {
+      const meta = pageMetaFromDict('doctors', lang, data);
+      const u = ui(lang);
+      return [
+        clinicNode(data),
+        breadcrumb(url, u.findDoctor, lang),
+        {
+          '@type': 'WebPage',
+          name: meta.h1,
+          url,
+          description: meta.description,
+          isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: `${BASE}/` }
+        }
+      ];
+    }
   },
   '/patient-care': {
     file: 'departments.html',
     pageKey: 'departments',
-    title: 'Բուժում և ծառայություններ — Առողջ ողնաշար',
-    description:
-      'Ողնաշարի, հոդերի և հենաշարժական համակարգի վերականգնողական ծառայություններ «Առողջ ողնաշար» կենտրոնում — ֆիզիոթերապիա, ախտորոշում և վերականգնման ծրագրեր։',
-    h1: 'Բուժում և ծառայություններ',
-    tagline: 'Ողնաշարի և հոդերի համապարփակ վերականգնողական և բուժման ծրագրեր։',
-    bodyHtml: (data) => {
+    resolveMeta: (data, lang = 'hy') => pageMetaFromDict('departments', lang, data),
+    bodyHtml: (data, lang = 'hy') => {
+      const u = ui(lang);
       const launched = getLaunchedServiceSlugs();
       const items = (data.departments || [])
         .slice(0, 30)
@@ -231,18 +222,25 @@ const ROUTES = {
           return `<li>${link}${s.description ? ` — ${esc(s.description)}` : ''}</li>`;
         })
         .join('');
+      const lead =
+        lang === 'hy'
+          ? 'Ողնաշարի և հոդերի վերականգնողական ծառայություններ Երևանում։'
+          : lang === 'ru'
+            ? 'Реабилитационные услуги для позвоночника и суставов в Ереване.'
+            : 'Rehabilitation services for spine and joints in Yerevan.';
       return `<section class="seo-crawl-content" id="seo-crawl-content">
-        <p><a href="/services">Ծառայությունների հիմնական էջ</a> — ողնաշարի և հոդերի վերականգնողական ծառայություններ Երևանում։</p>
-        <h2>Ծառայություններ և ծրագրեր</h2><ul>${items}</ul></section>`;
+        <p><a href="/services">${esc(u.services)}</a> — ${esc(lead)}</p>
+        <h2>${esc(u.services)}</h2><ul>${items}</ul></section>`;
     },
-    jsonLd: (data, url) => {
-      const graphs = [clinicNode(data), breadcrumb(url, 'Բուժում և ծառայություններ')];
+    jsonLd: (data, url, lang = 'hy') => {
+      const u = ui(lang);
+      const graphs = [clinicNode(data), breadcrumb(url, u.patientCare, lang)];
       (data.departments || []).slice(0, 30).forEach((s) => {
         graphs.push({
           '@type': 'MedicalTherapy',
           name: s.name,
           description: s.description || '',
-          provider: { '@type': 'MedicalClinic', name: clinicName(data) }
+          provider: { '@type': 'MedicalClinic', name: clinicDisplayName(data, lang) }
         });
       });
       return graphs;
@@ -251,103 +249,225 @@ const ROUTES = {
   '/about': {
     file: 'about.html',
     pageKey: 'about',
-    title: 'Մեր մասին — Առողջ ողնաշար',
-    description:
-      '«Առողջ ողնաշար» վերականգնողական կենտրոնի մասին — առաքելություն, թիմ, արժեքներ և ապացուցված ողնաշարի և հոդերի խնամք։',
-    h1: 'Մեր մասին',
-    tagline: 'Կենտրոնի պատմություն, առաքելություն և արժեքներ։',
-    bodyHtml: (data) => {
+    resolveMeta: (data, lang = 'hy') => pageMetaFromDict('about', lang, data),
+    bodyHtml: (data, lang = 'hy') => {
       const h = data.hospital || {};
-      return `<section class="seo-crawl-content" id="seo-crawl-content"><p>${esc(h.about || h.mission || '«Առողջ ողնաշար» վերականգնողական կենտրոն Երևանում։')}</p></section>`;
+      const fallback =
+        lang === 'ru'
+          ? 'Реабилитационный центр «Здоровый позвоночник» в Ереване.'
+          : lang === 'en'
+            ? 'Healthy Spine rehabilitation center in Yerevan.'
+            : '«Առողջ ողնաշար» վերականգնողական կենտրոն Երևանում։';
+      return `<section class="seo-crawl-content" id="seo-crawl-content"><p>${esc(h.about || h.mission || fallback)}</p></section>`;
     },
-    jsonLd: (data, url) => [clinicNode(data), breadcrumb(url, 'Մեր մասին')]
+    jsonLd: (data, url, lang = 'hy') => {
+      const meta = pageMetaFromDict('about', lang, data);
+      return [clinicNode(data), breadcrumb(url, meta.h1, lang)];
+    }
   },
   '/contact': {
     file: 'contacts.html',
     pageKey: 'contacts',
-    title: 'Կապ — Առողջ ողնաշար',
-    description:
-      'Կապ «Առողջ ողնաշար» կենտրոնի հետ — հեռախոս, էլ. փոստ, աշխատանքային ժամեր և առցանց գրանցում Երևանում։',
-    h1: 'Կապ',
-    tagline: 'Զանգահարեք, գրեք կամ ուղարկեք հաղորդագրություն գրանցման համար։',
-    bodyHtml: (data) => contactBlock(data, 'contact'),
-    jsonLd: (data, url) => [localBusinessNode(data, url), breadcrumb(url, 'Կապ')]
+    resolveMeta: (data, lang = 'hy') => pageMetaFromDict('contacts', lang, data),
+    bodyHtml: (data, lang = 'hy') => contactBlock(data, 'contact', lang),
+    jsonLd: (data, url, lang = 'hy') => {
+      const meta = pageMetaFromDict('contacts', lang, data);
+      return [localBusinessNode(data, url), breadcrumb(url, meta.h1, lang)];
+    }
   },
   '/consultation-process': {
     file: 'consultation-process.html',
     pageKey: 'consultation-process',
-    title: 'Խորհրդատվության գործընթաց — Առողջ ողնաշար',
-    description:
-      'Ինչպես է անցնում խորհրդատվությունը «Առողջ ողնաշար» վերականգնողական կենտրոնում՝ գնահատում, պլանավորում և հսկողություն։',
-    h1: 'Խորհրդատվության գործընթաց',
-    tagline: 'Ինչ սպասել առաջին այցից մինչև վերականգնողական պլանի ավարտը',
-    bodyHtml: (data) => consultationBodyHtml(data),
-    jsonLd: (data, url) => consultationJsonLd(data, url)
+    resolveMeta: (data, lang = 'hy') => {
+      lang = normalizeLang(lang);
+      const name = clinicDisplayName(data, lang);
+      const u = ui(lang);
+      if (lang === 'hy') {
+        return {
+          title: `Խորհրդատվության գործընթաց — ${name}`,
+          description:
+            'Ինչպես է անցնում խորհրդատվությունը «Առողջ ողնաշար» վերականգնողական կենտրոնում՝ գնահատում, պլանավորում և հսկողություն։',
+          h1: u.consultation,
+          tagline: 'Ինչ սպասել առաջին այցից մինչև վերականգնողական պլանի ավարտը'
+        };
+      }
+      return {
+        title: `${u.consultation} — ${name}`,
+        description:
+          lang === 'ru'
+            ? 'Как проходит консультация в центре: оценка, план и наблюдение.'
+            : 'How consultation works at the center: assessment, plan, and follow-up.',
+        h1: u.consultation,
+        tagline:
+          lang === 'ru'
+            ? 'Чего ожидать от первого визита до завершения плана'
+            : 'What to expect from the first visit through your plan'
+      };
+    },
+    bodyHtml: (data, lang = 'hy') => consultationBodyHtml(data, lang),
+    jsonLd: (data, url, lang = 'hy') => consultationJsonLd(data, url, lang)
   },
   '/locations': {
     file: 'contacts.html',
     pageKey: 'locations',
-    title: 'Հասցեներ — Առողջ ողնաշար',
-    description:
-      '«Առողջ ողնաշար» կլինիկայի հասցեն Երևանում — հասցե, ուղղություններ, հեռախոս և աշխատանքային ժամեր։',
-    h1: 'Մեր հասցեն',
-    tagline: '«Առողջ ողնաշար» վերականգնողական կենտրոնը Երևանում։',
-    bodyHtml: (data) => contactBlock(data, 'locations'),
-    jsonLd: (data, url) => [localBusinessNode(data, url), breadcrumb(url, 'Հասցեներ')]
-  }
+    resolveMeta: (data, lang = 'hy') => {
+      lang = normalizeLang(lang);
+      const name = clinicDisplayName(data, lang);
+      const u = ui(lang);
+      if (lang === 'hy') {
+        return {
+          title: `Հասցեներ — ${name}`,
+          description: '«Առողջ ողնաշար» կլինիկայի հասցեն Երևանում — հասցե, ուղղություններ, հեռախոս և աշխատանքային ժամեր։',
+          h1: 'Մեր հասցեն',
+          tagline: '«Առողջ ողնաշար» վերականգնողական կենտրոնը Երևանում։'
+        };
+      }
+      return {
+        title: `${u.locations} — ${name}`,
+        description:
+          lang === 'ru'
+            ? `Адрес клиники ${name} в Ереване, телефон и режим работы.`
+            : `Clinic address for ${name} in Yerevan, phone and hours.`,
+        h1: u.locations,
+        tagline: lang === 'ru' ? `${name} в Ереване` : `${name} in Yerevan`
+      };
+    },
+    bodyHtml: (data, lang = 'hy') => contactBlock(data, 'locations', lang),
+    jsonLd: (data, url, lang = 'hy') => {
+      const u = ui(lang);
+      return [localBusinessNode(data, url), breadcrumb(url, u.locations, lang)];
+    }
+  },
+  '/appointment': simpleDictPageRoute('appointment.html', 'appointment'),
+  '/reviews': simpleDictPageRoute('reviews.html', 'reviews'),
+  '/move-better': simpleDictPageRoute('move-better.html', 'moveBetter'),
+  '/submit-story': simpleDictPageRoute('submit-story.html', 'submitStory'),
+  '/patient-story': simpleDictPageRoute('patient-story.html', 'patientStory'),
+  '/privacy-policy': footerDictPageRoute('privacy-policy.html', 'footer.policyPrivacy'),
+  '/terms': footerDictPageRoute('terms.html', 'footer.policyTerms'),
+  '/cookies-policy': footerDictPageRoute('cookies-policy.html', 'footer.policyCookies'),
+  '/patient-information': footerDictPageRoute('patient-information.html', 'footer.policyPatient')
 };
 
+function simpleDictPageRoute(file, pageKey) {
+  return {
+    file,
+    pageKey,
+    fillDictionary: true,
+    resolveMeta: (data, lang) => pageMetaFromDict(pageKey, lang, data),
+    bodyHtml: (data, lang) => {
+      const meta = pageMetaFromDict(pageKey, lang, data);
+      const text = meta.description || meta.tagline;
+      if (!text) return '';
+      return `<section class="seo-crawl-content" id="seo-crawl-content"><p>${esc(text)}</p></section>`;
+    },
+    jsonLd: (data, url, lang) => {
+      const meta = pageMetaFromDict(pageKey, lang, data);
+      return [clinicNode(data), breadcrumb(url, meta.h1, lang)];
+    }
+  };
+}
 
-function consultationBodyHtml(data) {
+function footerDictPageRoute(file, footerKey) {
+  const pageKey = file.replace('.html', '');
+  return {
+    file,
+    pageKey,
+    fillDictionary: true,
+    resolveMeta: (data, lang) => {
+      lang = normalizeLang(lang);
+      const dict = loadLangDict(lang);
+      const label = dictPath(dict, footerKey) || '';
+      const name = clinicDisplayName(data, lang);
+      return {
+        title: label ? `${label} — ${name}` : name,
+        description: dict.meta?.siteDescription || '',
+        h1: label || name,
+        tagline: ''
+      };
+    },
+    bodyHtml: (data, lang) => {
+      lang = normalizeLang(lang);
+      const dict = loadLangDict(lang);
+      const label = dictPath(dict, footerKey) || '';
+      if (!label) return '';
+      return `<section class="seo-crawl-content" id="seo-crawl-content"><p>${esc(label)}</p></section>`;
+    },
+    jsonLd: (data, url, lang) => {
+      lang = normalizeLang(lang);
+      const dict = loadLangDict(lang);
+      const label = dictPath(dict, footerKey) || ui(lang).home;
+      return [clinicNode(data), breadcrumb(url, label, lang)];
+    }
+  };
+}
+function consultationBodyHtml(data, lang = 'hy') {
+  lang = normalizeLang(lang);
   const h = data?.hospital || {};
+  const u = ui(lang);
+  const intro =
+    lang === 'hy'
+      ? '«Առողջ ողնաշար» վերականգնողական կենտրոնը Երևանում աշխատում է կոնսերվատիվ մոտեցմամբ՝ գնահատումից մինչև վերականգնողական պլանի կազմում։'
+      : lang === 'ru'
+        ? 'Реабилитационный центр «Здоровый позвоночник» в Ереване работает консервативно: от первичной оценки до составления индивидуального плана реабилитации. Информация на этой странице не заменяет очную консультацию; результаты могут отличаться.'
+        : 'Healthy Spine in Yerevan follows a conservative pathway from initial assessment to an individual rehabilitation plan. This page is informational and does not replace an in-person visit; results may vary.';
+  const context =
+    lang === 'hy'
+      ? ''
+      : lang === 'ru'
+        ? '<div class="hss-prose"><p>На консультации специалист уточняет жалобы, собирает анамнез и проводит осмотр. При необходимости могут быть назначены дополнительные исследования. Рекомендации по мануальной терапии, ЛФК, физиотерапии или другим методам даются только после оценки и могут корректироваться при наблюдении.</p><p>Центр не обещает излечение, не ставит диагноз по телефону и не гарантирует отказ от операции. При острых или нарастающих симптомах обратитесь за медицинской помощью без отлагательств.</p></div>'
+        : '<div class="hss-prose"><p>At consultation, a specialist reviews complaints, history, and examination findings. Further tests may be ordered when needed. Recommendations for manual therapy, exercise, physiotherapy, or other methods are made only after assessment and may change during follow-up.</p><p>The center does not promise cure, diagnose by phone, or guarantee surgery avoidance. Seek prompt medical care for acute or worsening symptoms.</p></div>';
+  const steps =
+    lang === 'hy'
+      ? [
+          ['Փուլ 1 — Կապ հաստատել', 'Կապ հաստատեք կլինիկայի հետ հեռախոսով կամ օնլայն ձևով։'],
+          ['Փուլ 2 — Սկզբնական գնահատում', 'Առաջին այցի ժամանակ մասնագետը կհավաքի բողոքների պատմությունը և կկատարի ստուգում։'],
+          ['Փուլ 3 — Վերականգնողական պլան', 'Գնահատումից հետո մասնագետը կարող է առաջարկել անհատականացված պլան։'],
+          ['Փուլ 4 — Հսկողություն', 'Արդյունքները կարող են տարբեր լինել; պլանը կարող է հարմարեցվել։']
+        ]
+      : lang === 'ru'
+        ? [
+            ['Шаг 1 — Связаться', 'Свяжитесь с клиникой по телефону или через онлайн-форму.'],
+            ['Шаг 2 — Оценка', 'На первом визите специалист соберёт анамнез и проведёт осмотр.'],
+            ['Шаг 3 — План', 'После оценки может быть предложен индивидуальный план.'],
+            ['Шаг 4 — Наблюдение', 'Результаты могут отличаться; план может корректироваться.']
+          ]
+        : [
+            ['Step 1 — Contact', 'Contact the clinic by phone or online form.'],
+            ['Step 2 — Assessment', 'At the first visit, a specialist takes history and examines you.'],
+            ['Step 3 — Plan', 'After assessment, an individual plan may be proposed.'],
+            ['Step 4 — Follow-up', 'Results may vary; the plan may be adjusted.']
+          ];
+  const stepsHtml = steps
+    .map(([t, p]) => `<section class="seo-service-section"><h2>${esc(t)}</h2><div class="hss-prose"><p>${esc(p)}</p></div></section>`)
+    .join('');
+  const noteH = lang === 'ru' ? 'Важное примечание' : lang === 'en' ? 'Important note' : 'Կարևոր նշում';
   return `<article class="seo-crawl-content" id="seo-crawl-content">
-    <nav class="seo-breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Գլխավոր</a> › <span>Խորհրդատվության գործընթաց</span>
-    </nav>
-    <div class="hss-prose">
-      <p>«Առողջ ողնաշար» վերականգնողական կենտրոնը Երևանում աշխատում է կոնսերվատիվ մոտեցմամբ՝ գնահատումից մինչև վերականգնողական պլանի կազմում։</p>
-    </div>
-    <section class="seo-service-section">
-      <h2>Փուլ 1 — Կապ հաստատել</h2>
-      <div class="hss-prose"><p>Կապ հաստատեք կլինիկայի հետ հեռախոսով կամ օնլայն ձևով։ Ներկայացրեք ձեր բողոքները և առկա ուսումնասիրությունների արդյունքները, եթե դրանք ունեք։</p></div>
-    </section>
-    <section class="seo-service-section">
-      <h2>Փուլ 2 — Սկզբնական գնահատում</h2>
-      <div class="hss-prose"><p>Առաջին այցի ժամանակ մասնագետը կհավաքի բողոքների պատմությունը, կկատարի ստուգում և կքննարկի հնարավոր հաջորդ քայլերը։ Գնահատումը կարող է տևել 20–40 րոպե։</p></div>
-    </section>
-    <section class="seo-service-section">
-      <h2>Փուլ 3 — Վերականգնողական պլան</h2>
-      <div class="hss-prose"><p>Գնահատումից հետո մասնագետը կարող է առաջարկել անհատականացված վերականգնողական պլան՝ ներառյալ թերապիաների համակցում, հանդիպումների քանակը և տնային խորհուրդները։</p></div>
-    </section>
-    <section class="seo-service-section">
-      <h2>Փուլ 4 — Հսկողություն և հարմարեցում</h2>
-      <div class="hss-prose"><p>Վերականգնողական ընթացքում մասնագետը կհետևի գնահատման արդյունքները և կառաջարկի պլանի հարմարեցումը, եթե անհրաժեշտ։ Արդյունքները կարող են տարբեր լինել։</p></div>
-    </section>
-    <section class="seo-service-section">
-      <h2>Կարևոր նշում</h2>
-      <div class="hss-prose"><p>Այս էջը տեղեկատվական է և չի փոխարինում բժշկական ախտորոշումը կամ խորհրդատվությունը։ Կենտրոնը չի երաշխավորում կոնկրետ արդյունքներ կամ ամբողջական ազատում ցավից։</p></div>
-    </section>
-    <p><a href="/services" class="hss-link">Ծառայություններ</a> · <a href="/conditions" class="hss-link">Ախտորոշումներ</a> · <a href="/knowledge" class="hss-link">Գիտելիքների կենտրոն</a></p>
-    <section class="seo-service-section hss-contact-block">
-      <h2>Կապ հաստատել</h2>
-      <p><strong>Հեռախոս՝</strong> <a href="tel:${(h.phone || '').replace(/[^+\d]/g, '')}" class="hss-tel">${esc(h.phone || '')}</a></p>
-      <p><strong>Էլ. փոստ՝</strong> <a href="mailto:${esc(h.email || '')}">${esc(h.email || '')}</a></p>
-      <p><strong>Հասցե՝</strong> <a href="https://maps.google.com/?q=${encodeURIComponent(h.mapsQuery || h.address || '')}" target="_blank" rel="noopener">${esc(h.address || '')}</a></p>
-      <p><strong>Աշխատանքային ժամեր՝</strong> ${esc(h.hours || '')}</p>
-    </section>
-    <nav class="seo-service-cta" aria-label="Next steps">
-      <p><a href="/contact" class="hss-btn hss-btn--primary">Գրանցվել ընդունելության</a>
-      <a href="/contact" class="hss-btn hss-btn--outline">Կապ</a>
-      <a href="/locations" class="hss-link">Հասցե և ժամեր</a></p>
-    </nav>
+    ${breadcrumbNavHtml([{ href: '#', label: u.consultation }], lang)}
+    <div class="hss-prose"><p>${esc(intro)}</p></div>
+    ${context}
+    ${stepsHtml}
+    <section class="seo-service-section"><h2>${esc(noteH)}</h2><div class="hss-prose"><p>${esc(u.disclaimer)}</p></div></section>
+    <p><a href="/services" class="hss-link">${esc(u.services)}</a> · <a href="/conditions" class="hss-link">${esc(u.conditions)}</a> · <a href="/knowledge" class="hss-link">${esc(u.knowledge)}</a> · <a href="/find-a-doctor" class="hss-link">${esc(u.findDoctors)}</a></p>
+    ${contactBlockHtml(data, lang, 'contact', { nested: true })}
+    <nav class="seo-service-cta" aria-label="Next steps"><p><a href="/contact" class="hss-btn hss-btn--primary">${esc(u.bookAppointment)}</a> <a href="/contact" class="hss-btn hss-btn--outline">${esc(u.contact)}</a></p></nav>
   </article>`;
 }
 
-function consultationJsonLd(data, url) {
+function consultationJsonLd(data, url, lang = 'hy') {
+  lang = normalizeLang(lang);
+  const u = ui(lang);
+  const meta = pageMetaFromDict('contacts', lang, data);
   return [
-    { '@type': 'WebPage', name: 'Խորհրդատվության գործընթաց', url, description: 'Ինչպես է անցնում խորհրդատվությունը կենտրոնում։', isPartOf: { '@type': 'WebSite', name: clinicName(data), url: BASE + '/' } },
+    {
+      '@type': 'WebPage',
+      name: u.consultation,
+      url,
+      description: meta.description,
+      isPartOf: { '@type': 'WebSite', name: clinicDisplayName(data, lang), url: BASE + '/' }
+    },
     clinicNode(data),
-    breadcrumb(url, 'Խորհրդատվության գործընթաց')
+    breadcrumb(url, u.consultation, lang)
   ];
 }
 
@@ -366,33 +486,13 @@ function wrapSeoDock(body) {
   </section>`;
 }
 
-function breadcrumb(url, name) {
-  return {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Գլխավոր', item: `${BASE}/` },
-      { '@type': 'ListItem', position: 2, name, item: url }
-    ]
-  };
+function breadcrumb(url, name, lang = 'hy') {
+  lang = normalizeLang(lang);
+  return jsonLdBreadcrumb(BASE, lang, { name, item: url });
 }
 
-function contactBlock(data, variant) {
-  const h = data?.hospital || {};
-  const phone = h.phone || '';
-  const phoneClean = phone.replace(/[^+\d]/g, '');
-  const email = h.email || '';
-  const address = h.address || 'Երևան, Հայաստան';
-  const map =
-    variant === 'locations'
-      ? `<p><strong>Հասցե.</strong> <a href="https://maps.google.com/?q=${encodeURIComponent(h.mapsQuery || address)}" target="_blank" rel="noopener">${esc(address)}</a></p><p>Քարտեզը և ուղղությունները հասանելի են այս էջում։</p>`
-      : '';
-  return `<section class="seo-crawl-content hss-contact-block" id="seo-crawl-content">
-    <p><strong>Հեռախոս.</strong> <a href="tel:${phoneClean}" class="hss-tel">${esc(phone)}</a></p>
-    <p><strong>Էլ. փոստ.</strong> <a href="mailto:${esc(email)}">${esc(email)}</a></p>
-    <p><strong>Աշխատանքային ժամեր.</strong> ${esc(h.hours || '')}</p>
-    ${map}
-    <p style="margin-top:0.5em"><a href="/consultation-process" class="hss-link hss-cta-link">→ Գրանցվել խորհրդատվության</a></p>
-  </section>`;
+function contactBlock(data, variant, lang = 'hy') {
+  return contactBlockHtml(data, lang, variant === 'locations' ? 'locations' : 'contact');
 }
 
 function fillI18nPlaceholders(html, lang = 'hy') {
@@ -499,6 +599,9 @@ function serveSeoPage(routePath, lang = 'hy') {
   if (!fs.existsSync(filePath)) return null;
 
   const data = buildPublicContent(lang);
+  if (data?.hospital) {
+    data.hospital = { ...data.hospital, name: clinicDisplayName(data, lang) };
+  }
   let html = fs.readFileSync(filePath, 'utf8');
   const url = `${BASE}${routePath}`;
 
@@ -512,7 +615,8 @@ function serveSeoPage(routePath, lang = 'hy') {
 
   const meta = resolveRouteMeta(route, data, lang);
   const tags = headTags(meta, routePath);
-  html = html.replace('</head>', `${tags}\n${injectJsonLdScript(route.jsonLd(data, url))}\n</head>`);
+  const jsonLdGraphs = typeof route.jsonLd === 'function' ? route.jsonLd(data, url, lang) : [];
+  html = html.replace('</head>', `${tags}\n${injectJsonLdScript(jsonLdGraphs)}\n</head>`);
 
   html = html.replace(/<html lang="[^"]*">/, `<html lang="${lang}">`);
 
@@ -526,6 +630,8 @@ function serveSeoPage(routePath, lang = 'hy') {
     if (phoneDigits) {
       html = html.replace(/tel:\+37410000000/g, `tel:+${phoneDigits}`);
     }
+  } else if (route.fillDictionary) {
+    html = fillI18nPlaceholders(html, lang);
   }
 
   if (route.pageKey === 'contacts' || route.pageKey === 'locations') {
@@ -551,6 +657,8 @@ function serveSeoPage(routePath, lang = 'hy') {
     `<body data-seo-canonical="${esc(routePath)}" data-seo-page="${esc(route.pageKey)}"`
   );
 
+  html = applyHtmlLang(html, lang);
+  html = injectLocaleIntoLinks(html, lang);
   return normalizeRootAssetPaths(html);
 }
 

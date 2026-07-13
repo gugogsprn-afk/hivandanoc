@@ -4,6 +4,8 @@ const { authRequired, requireRole } = require('../../middleware/auth');
 const { logActivity, pick } = require('../../db/helpers');
 const { parseLangFields, sanitizeString } = require('../../middleware/validate');
 const { v4: uuidv4 } = require('uuid');
+const { schedulePublish, getPublishStatus } = require('../../services/content-publish');
+const { persistAfterChange } = require('../../services/cms-persistence');
 
 const router = express.Router();
 const LANG_FIELDS = ['name', 'role', 'location', 'bio', 'education', 'languages', 'seo_title', 'seo_desc'];
@@ -11,6 +13,11 @@ const LANG_FIELDS = ['name', 'role', 'location', 'bio', 'education', 'languages'
 function rowToDoctor(row) {
   if (!row) return null;
   return { ...row, is_surgeon: !!row.is_surgeon };
+}
+
+function afterDoctorWrite() {
+  persistAfterChange('doctor');
+  return schedulePublish(1500);
 }
 
 router.get('/', authRequired, (_req, res) => {
@@ -77,7 +84,8 @@ router.post('/', authRequired, requireRole('super_admin', 'manager'), (req, res)
     );
 
   logActivity(req.user.sub, 'create', 'doctor', id, null, req.ip);
-  res.status(201).json({ ok: true, id });
+  const publish = afterDoctorWrite();
+  res.status(201).json({ ok: true, id, publish: { ...getPublishStatus(), ...publish } });
 });
 
 router.put('/:id', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
@@ -134,14 +142,16 @@ router.put('/:id', authRequired, requireRole('super_admin', 'manager'), (req, re
     );
 
   logActivity(req.user.sub, 'update', 'doctor', req.params.id, null, req.ip);
-  res.json({ ok: true });
+  const publish = afterDoctorWrite();
+  res.json({ ok: true, publish: { ...getPublishStatus(), ...publish } });
 });
 
 router.delete('/:id', authRequired, requireRole('super_admin', 'manager'), (req, res) => {
   const r = getDb().prepare('DELETE FROM doctors WHERE id = ?').run(req.params.id);
   if (!r.changes) return res.status(404).json({ ok: false, error: 'Doctor not found' });
   logActivity(req.user.sub, 'delete', 'doctor', req.params.id, null, req.ip);
-  res.json({ ok: true });
+  const publish = afterDoctorWrite();
+  res.json({ ok: true, publish: { ...getPublishStatus(), ...publish } });
 });
 
 module.exports = router;

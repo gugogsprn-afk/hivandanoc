@@ -44,7 +44,7 @@ const CmsContent = (function () {
     }
   }
 
-  function mergeLocalizedById(primary, localized) {
+  function mergeLocalizedById(primary, localized, fillGapsOnly = false) {
     if (!localized?.length) return primary;
     const map = new Map(localized.map((x) => [x.id, x]));
     const TEXT = ['name', 'role', 'bio', 'experience', 'location', 'education', 'languages'];
@@ -53,9 +53,13 @@ const CmsContent = (function () {
       if (!tr) return item;
       const out = { ...item };
       for (const key of TEXT) {
-        if (tr[key]) out[key] = tr[key];
+        if (fillGapsOnly) {
+          if (!(out[key] && String(out[key]).trim()) && tr[key]) out[key] = tr[key];
+        } else if (tr[key]) {
+          out[key] = tr[key];
+        }
       }
-      if (tr.services?.length) out.services = tr.services;
+      if (tr.services?.length && !(out.services && out.services.length)) out.services = tr.services;
       return out;
     });
   }
@@ -109,15 +113,15 @@ const CmsContent = (function () {
     }
     if (cms.departments?.length) {
       const locDepts = typeof I18n !== 'undefined' ? I18n.getContent()?.departments : null;
-      merged.departments = mergeLocalizedById(cms.departments, locDepts);
+      merged.departments = mergeLocalizedById(cms.departments, locDepts, true);
     }
     if (cms.doctors?.length) {
       const locDocs = typeof I18n !== 'undefined' ? I18n.getContent()?.doctors : null;
-      merged.doctors = mergeLocalizedById(cms.doctors, locDocs);
+      merged.doctors = mergeLocalizedById(cms.doctors, locDocs, true);
     }
     if (cms.serviceCategories?.length) {
       const locCats = typeof I18n !== 'undefined' ? I18n.getContent()?.serviceCategories : null;
-      merged.serviceCategories = mergeLocalizedById(cms.serviceCategories, locCats);
+      merged.serviceCategories = mergeLocalizedById(cms.serviceCategories, locCats, true);
     }
     if (cms.testimonials?.length) merged.reviews = cms.testimonials;
 

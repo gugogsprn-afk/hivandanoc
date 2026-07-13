@@ -3,11 +3,18 @@
  */
 const PageEditor = (function () {
   const PAGES = [
-    { id: 'home', labelKey: 'pageEditor.home', path: 'index.html' },
-    { id: 'doctors', labelKey: 'pageEditor.doctors', path: 'doctors.html' },
-    { id: 'locations', labelKey: 'pageEditor.locations', path: 'contacts.html' },
-    { id: 'patient-care', labelKey: 'pageEditor.patientCare', path: 'departments.html' },
-    { id: 'about', labelKey: 'pageEditor.about', path: 'about.html' }
+    { id: 'home', labelKey: 'pageEditor.home', path: 'index.html', previewPath: '' },
+    { id: 'doctors', labelKey: 'pageEditor.doctors', path: 'doctors.html', previewPath: 'find-a-doctor' },
+    { id: 'services', labelKey: 'pageEditor.services', path: 'services.html', previewPath: 'services' },
+    { id: 'patient-care', labelKey: 'pageEditor.patientCare', path: 'departments.html', previewPath: 'patient-care' },
+    { id: 'locations', labelKey: 'pageEditor.locations', path: 'contacts.html', previewPath: 'locations' },
+    { id: 'about', labelKey: 'pageEditor.about', path: 'about.html', previewPath: 'about' },
+    { id: 'appointment', labelKey: 'pageEditor.appointment', path: 'appointment.html', previewPath: 'appointment' },
+    { id: 'reviews', labelKey: 'pageEditor.reviews', path: 'reviews.html', previewPath: 'reviews' },
+    { id: 'knowledge', labelKey: 'pageEditor.knowledge', path: 'knowledge.html', previewPath: 'knowledge' },
+    { id: 'conditions', labelKey: 'pageEditor.conditions', path: 'conditions.html', previewPath: 'conditions' },
+    { id: 'patient-information', labelKey: 'pageEditor.patientInfo', path: 'patient-information.html', previewPath: 'patient-information' },
+    { id: 'consultation-process', labelKey: 'pageEditor.consultation', path: 'consultation-process.html', previewPath: 'consultation-process' }
   ];
 
   const t = (key) => (typeof AdminI18n !== 'undefined' ? AdminI18n.t(key) : key);
@@ -27,7 +34,13 @@ const PageEditor = (function () {
   function previewUrl(page = currentPage) {
     const base = AdminConfig.publicSite().replace(/\/$/, '');
     const build = window.CMS_BUILD || '20260702';
-    return `${base}/${page.path}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
+    // Use clean public paths — .html URLs 301-redirect and drop ?cms-edit=1
+    const slug =
+      page.previewPath != null && page.previewPath !== undefined
+        ? page.previewPath
+        : String(page.path || '').replace(/\.html$/, '');
+    const pathPart = slug ? `/${slug}` : '/';
+    return `${base}${pathPart}?cms-edit=1&lang=${currentLang}&cms_build=${build}&_=${Date.now()}`;
   }
 
   function resizePreviewFrame() {
@@ -126,6 +139,14 @@ const PageEditor = (function () {
     ).join('');
   }
 
+  function livePublicHref(page = currentPage) {
+    const base = AdminConfig.publicSite().replace(/\/$/, '');
+    if (page.previewPath != null && page.previewPath !== undefined) {
+      return page.previewPath ? `${base}/${page.previewPath}` : `${base}/`;
+    }
+    return `${base}/${page.path}`;
+  }
+
   function toolbarHTML() {
     const langs = AdminConfig.langs
       .map(
@@ -145,7 +166,7 @@ const PageEditor = (function () {
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-refresh">${t('pageEditor.refresh')}</button>
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-manage-doctors" hidden>${t('pageEditor.manageDoctors')}</button>
           <button type="button" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-fullscreen-toolbar" title="${t('pageEditor.maximize')}">${ICON_MAXIMIZE}<span class="cms-preview-fs-btn__label">${t('pageEditor.maximize')}</span></button>
-          <a href="${AdminConfig.publicSite()}/${currentPage.path}" target="_blank" rel="noopener" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-open-public">${t('pageEditor.openLive')}</a>
+          <a href="${livePublicHref()}" target="_blank" rel="noopener" class="cms-btn cms-btn--ghost cms-btn--sm" id="preview-open-public">${t('pageEditor.openLive')}</a>
         </div>
       </div>`;
   }
@@ -238,7 +259,7 @@ const PageEditor = (function () {
         btn.addEventListener('click', () => switchPage(btn.dataset.pageId));
       });
       const openLink = document.getElementById('preview-open-public');
-      if (openLink) openLink.href = `${AdminConfig.publicSite()}/${page.path}`;
+      if (openLink) openLink.href = livePublicHref(page);
       const manageBtn = document.getElementById('preview-manage-doctors');
       if (manageBtn) manageBtn.hidden = page.id !== 'doctors';
     }

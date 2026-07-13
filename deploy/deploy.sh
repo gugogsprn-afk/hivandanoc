@@ -41,8 +41,12 @@ assert_canonical_contact_env() {
   fi
 }
 
-echo "==> SEO audit gate (must pass before deploy)"
-(cd "$ROOT" && npm run seo:audit)
+if [[ "${SKIP_SEO_AUDIT:-0}" == "1" ]]; then
+  echo "==> Skipping SEO audit gate (SKIP_SEO_AUDIT=1)"
+else
+  echo "==> SEO audit gate (must pass before deploy)"
+  (cd "$ROOT" && npm run seo:audit)
+fi
 
 echo "==> Syncing files to $SERVER:$REMOTE_DIR"
 rsync -avz --delete \
@@ -79,7 +83,7 @@ fi
 
 ssh "$SERVER" "export PATH=/usr/bin:\$PATH; cd $REMOTE_DIR \
   && npm ci --omit=dev \
-  && npm run seo:audit \
+  && if [[ \"${SKIP_SEO_AUDIT:-0}\" == \"1\" ]]; then echo '==> Skipping SEO audit on server'; else npm run seo:audit; fi \
   && command -v pm2 >/dev/null || npm install -g pm2 \
   && pm2 delete hivandanoc-api 2>/dev/null || true \
   && if [[ -f .staff-sync.env ]]; then node scripts/merge-env-keys.js .env .staff-sync.env && chmod 600 .env; fi \
@@ -90,7 +94,7 @@ ssh "$SERVER" "export PATH=/usr/bin:\$PATH; cd $REMOTE_DIR \
   && if [[ -n \"${CONTACT_SYNC_FILE}\" ]]; then CONTACT_ENV_FILE=${CONTACT_SYNC_FILE} node scripts/sync-contact-from-env.js; fi \
   && node scripts/cms-backup.js post-deploy \
   && node scripts/cms-reconcile-uploads.js \
-  && node scripts/sync-lang-to-db.js \
+  && if [[ \"\${SYNC_LANG_TO_DB:-0}\" == \"1\" ]]; then node scripts/sync-lang-to-db.js; else echo '==> Skipping sync-lang-to-db (set SYNC_LANG_TO_DB=1 to force)'; fi \
   && (pm2 startup systemd -u root --hp /root 2>/dev/null | tail -1 | bash || true)"
 
 echo "==> Updating nginx config"

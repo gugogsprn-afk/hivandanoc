@@ -18,15 +18,25 @@ function pick(row, field, lang) {
   return '';
 }
 
-/** Triplet object { hy, ru, en } — same language only, then English. */
+const ARMENIAN_SCRIPT = /[\u0531-\u0556\u0561-\u0587]/;
+
+function isUsableForLang(text, lang) {
+  if (!text || typeof text !== 'string') return false;
+  if (lang === 'hy') return true;
+  // RU/EN slots must not serve Armenian copy left over from bad syncs
+  return !ARMENIAN_SCRIPT.test(text);
+}
+
+/** Triplet object { hy, ru, en } — same language only, then English (never HY for RU/EN). */
 function pickTriplet(obj, lang) {
   if (!obj) return '';
   if (typeof obj === 'string') return obj;
-  const v = obj[lang];
-  if (v) return v;
-  if (lang === 'hy') return obj.en || '';
-  if (lang === 'ru') return obj.en || '';
-  return obj.en || obj.ru || obj.hy || '';
+  const primary = obj[lang];
+  if (isUsableForLang(primary, lang)) return primary;
+  if (lang === 'hy') return obj.en || obj.ru || '';
+  if (isUsableForLang(obj.en, 'en')) return obj.en;
+  if (lang === 'ru' && isUsableForLang(obj.ru, 'ru')) return obj.ru;
+  return '';
 }
 
 function triplet(value) {
@@ -119,28 +129,35 @@ function getPageFieldsMap(lang = 'hy') {
     grouped[k].types[r.lang] = r.value_type;
   }
 
-  const langOrder = [lang, 'hy', 'ru', 'en'].filter((code, i, arr) => arr.indexOf(code) === i);
   const out = {};
 
   for (const entry of Object.values(grouped)) {
     const { page_key, field_key, langs, types } = entry;
-    let value = langs[lang] || '';
+    let value = Object.prototype.hasOwnProperty.call(langs, lang) ? langs[lang] : undefined;
     let valueType = types[lang] || 'text';
     const sharedMedia = Object.keys(langs).some((code) =>
       isSharedMediaFieldValue(langs[code], types[code])
     );
 
-    if (!value) {
-      for (const code of langOrder) {
-        if (langs[code]) {
-          value = langs[code];
-          valueType = types[code] || valueType;
-          break;
+    // Text: never fall back across languages (prevents Russian on HY / Armenian on RU).
+    // Media URLs may be shared across locales when the active lang has no override.
+    if (value === undefined || value === null || value === '') {
+      if (sharedMedia) {
+        for (const code of [lang, 'hy', 'ru', 'en']) {
+          if (langs[code] && isSharedMediaFieldValue(langs[code], types[code])) {
+            value = langs[code];
+            valueType = types[code] || valueType;
+            break;
+          }
         }
+      } else if (value === '') {
+        // Explicit empty string for this lang — keep it so CMS clear works
+        value = '';
+      } else {
+        continue;
       }
     }
 
-    if (!value) continue;
     if (!out[page_key]) out[page_key] = {};
     out[page_key][field_key] = value;
     valueType = inferPageFieldValueType(value, valueType);

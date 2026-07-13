@@ -61,9 +61,16 @@ const AdminI18n = (function () {
       'pageEditor.fullscreenTitle': 'Խմբագրելի էջի նախադիտում',
       'pageEditor.home': 'Գլխավոր',
       'pageEditor.doctors': 'Գտնել բժիշկ',
+      'pageEditor.services': 'Ծառայություններ',
       'pageEditor.locations': 'Հասցեներ',
       'pageEditor.patientCare': 'Բուժում',
-      'pageEditor.about': 'Մեր մասին'
+      'pageEditor.about': 'Մեր մասին',
+      'pageEditor.appointment': 'Գրանցում',
+      'pageEditor.reviews': 'Կարծիքներ',
+      'pageEditor.knowledge': 'Գիտելիքներ',
+      'pageEditor.conditions': 'Ախտորոշումներ',
+      'pageEditor.patientInfo': 'Հիվանդի տեղեկատվություն',
+      'pageEditor.consultation': 'Խորհրդատվության ընթացք'
     },
     ru: {
       'login.title': 'Здоровый позвоночник',
@@ -120,9 +127,16 @@ const AdminI18n = (function () {
       'pageEditor.fullscreenTitle': 'Редактируемая страница',
       'pageEditor.home': 'Главная',
       'pageEditor.doctors': 'Найти врача',
+      'pageEditor.services': 'Услуги',
       'pageEditor.locations': 'Адреса',
       'pageEditor.patientCare': 'Услуги',
-      'pageEditor.about': 'О клинике'
+      'pageEditor.about': 'О клинике',
+      'pageEditor.appointment': 'Запись',
+      'pageEditor.reviews': 'Отзывы',
+      'pageEditor.knowledge': 'База знаний',
+      'pageEditor.conditions': 'Диагнозы',
+      'pageEditor.patientInfo': 'Информация пациентам',
+      'pageEditor.consultation': 'Процесс консультации'
     },
     en: {
       'login.title': 'Healthy Spine',
@@ -179,9 +193,16 @@ const AdminI18n = (function () {
       'pageEditor.fullscreenTitle': 'Editable page preview',
       'pageEditor.home': 'Home page',
       'pageEditor.doctors': 'Find a Doctor',
+      'pageEditor.services': 'Services',
       'pageEditor.locations': 'Locations',
       'pageEditor.patientCare': 'Patient Care',
-      'pageEditor.about': 'About'
+      'pageEditor.about': 'About',
+      'pageEditor.appointment': 'Appointment',
+      'pageEditor.reviews': 'Reviews',
+      'pageEditor.knowledge': 'Knowledge',
+      'pageEditor.conditions': 'Conditions',
+      'pageEditor.patientInfo': 'Patient information',
+      'pageEditor.consultation': 'Consultation process'
     }
   };
 
