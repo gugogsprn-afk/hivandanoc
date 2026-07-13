@@ -4,10 +4,10 @@ const HospitalApp = (function () {
   const NAV_ITEMS = [
     { href: '/services', key: 'nav.services', id: 'services' },
     { href: '/conditions', key: 'nav.conditions', id: 'conditions' },
+    { href: '/about', key: 'nav.about', id: 'about' },
     { href: '/knowledge', key: 'nav.knowledge', id: 'knowledge' },
     { href: '/find-a-doctor', key: 'nav.doctors', id: 'doctors' },
-    { href: '/locations', key: 'nav.locations', id: 'contacts' },
-    { href: '/about', key: 'nav.about', id: 'about' }
+    { href: '/locations', key: 'nav.locations', id: 'contacts' }
   ];
 
   let baseData = null;
